@@ -1,0 +1,13 @@
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+    <info organisation="The Siris Team" module="core" revision="1.0" />
+    <dependencies>
+	  <dependency org="org.scala-lang" name="scala-library-all" rev="2.11.0" />
+      <dependency org="org.simplex3d" name="simplex3d-math-float_2.10" rev="2.4.7"/>
+      <dependency org="com.typesafe.akka" name="akka-remote_2.11" rev="2.3.2" />
+	  <dependency org="org.apache.logging.log4j" name="log4j-slf4j-impl" rev="2.0-rc1" />
+	  <dependency org="org.apache.logging.log4j" name="log4j-1.2-api" rev="2.0-rc1" />
+	  <!--dependency org="com.github.romix.akka" name="akka-kryo-serialization_2.10" rev="0.3.0" /-->
+      <dependency org="javax.jmdns" name="jmdns" rev="3.4.1" />
+    </dependencies>
+</ivy-module>
+
