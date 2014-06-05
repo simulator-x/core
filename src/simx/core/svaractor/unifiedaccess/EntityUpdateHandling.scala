@@ -55,6 +55,7 @@ trait EntityUpdateHandling extends SVarActor{
   private var eRefs = Map[java.util.UUID, Entity]()
   private var observedEntities = Set[java.util.UUID]()
   private var onUpdates = Map[java.util.UUID, Map[java.util.UUID, StateParticleAccess => Any]]()
+  private var storedIds = Map[Any, java.util.UUID]()
 
   protected[core] def addInternalUpdater(ref : SVar[Entity], handler : StateParticleAccess => Any) = {
     val id = java.util.UUID.randomUUID()
@@ -63,6 +64,14 @@ trait EntityUpdateHandling extends SVarActor{
       updateObserve(ref, Set())
     id
   }
+
+  protected[core] def storeUpdateId(id : java.util.UUID, ref : Any){
+    storedIds = storedIds + (ref -> id)
+  }
+
+  protected[core] def getUpdateId(ref : Any) =
+    storedIds.get(ref)
+
 
   protected[core] def removeInternalUpdater(ref : SVar[Entity], id : java.util.UUID){
     onUpdates = onUpdates.updated(ref.id, onUpdates.getOrElse(ref.id, Map()) - id)

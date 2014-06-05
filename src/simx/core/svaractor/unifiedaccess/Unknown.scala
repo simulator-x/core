@@ -32,17 +32,19 @@ import simx.core.svaractor.SVarActor
 /**
  * Created by dwiebusch on 04.03.14
  */
-abstract class Unknown private[unifiedaccess]()
-abstract class UnknownTuple private[unifiedaccess]()
-protected case class LeftUnknownTuple[+T](_2 : T) extends UnknownTuple
-protected case class RightUnknownTuple[+T](_1 : T) extends UnknownTuple
+sealed trait Unknown
+protected case class LeftUnknownTuple[+T](getValue : T) extends UnknownTuple[T]
+protected case class RightUnknownTuple[+T](getValue : T) extends UnknownTuple[T]
+sealed abstract class UnknownTuple[+T]{
+  val getValue : T
+}
 
 object ? extends Unknown{
   def is[S <: Entity : TypeTag, O <: Entity : TypeTag](rDesc : RelationDescription[S, O]) =
     ->(rDesc)
 
   def ->[S <: Entity : TypeTag, O <: Entity : TypeTag ](rDesc : RelationDescription[S, O])  =
-    (a : O, b : EntityUpdateHandling) => LeftRequest(rDesc, a)
+    (a : O, b : EntityUpdateHandling) => LeftRequest[S, O](rDesc, a)
 
   def ->[T <: RelationAccess : ClassTag](x : T) =
     LeftUnknownTuple(x)

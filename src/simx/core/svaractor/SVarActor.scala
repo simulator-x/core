@@ -69,17 +69,17 @@ object SVarActor {
           }
         }
       }
-    """
+                                 """
     else {
       if( profiling ) {
         "akka.scheduler.tick-duration=" + JVMTools.minTickDuration + "\n" + "akka.actor.provider = \"akka.actor.profiling.LocalProfilingActorRefProvider\""
       } else
-      """
+        """
         akka {
           log-dead-letters = 1
           scheduler.tick-duration=""" + JVMTools.minTickDuration + """
         }
-      """
+                                                                   """
     }
 
   private def getConfig : Config =
@@ -250,14 +250,14 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     case _ => false
   }
 
-//  def observe(e : RelationalEntity){
-//
-//  }
-//
-//  def entityObserve[T](svars : List[StateParticle[T]])(handler : Map[RelationalEntity#AnnotationSet, T] => Any){
-//
-//  }
-//
+  //  def observe(e : RelationalEntity){
+  //
+  //  }
+  //
+  //  def entityObserve[T](svars : List[StateParticle[T]])(handler : Map[RelationalEntity#AnnotationSet, T] => Any){
+  //
+  //  }
+  //
 
 
 
@@ -318,9 +318,8 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    *
    * @param handler The handler, that gets called when the value of the State Variable has changed.
    */
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit)  {
+  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) =
     observe(sVar, Set[SVarActor.Ref]())(handler)
-  }
 
   // self observes future value changes. The supplied handle is reused.
   /**
@@ -341,7 +340,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    * @param handler The handler, that gets called when the value of the State Variable has changed.
    * @param ignoredWriters Value changes by SVarActors contained in this set are ignored.
    */
-  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) ={
+  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) =
     sVar match {
       case convertedSVar : ConvertedSVar[_, T] =>
         convertedSVar.observe(handler, ignoredWriters)
@@ -352,7 +351,6 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
           owner( sVar ) ! ObserveSVarMessage( sVar, self, ignoredWriters )
         addSVarObserveHandler(sVar)(handler)
     }
-  }
 
   /**
    *  This method returns the last known owner of the state variable.
@@ -825,7 +823,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
 trait SVarFunctions{
   protected[svaractor] def set[T](sVar : SVar[T], value: T) : Boolean
   protected[svaractor] def get[T : ClassTag : TypeTag](sVar : StateParticle[T])(consume: T => Unit)
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit)
+  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) : java.util.UUID
   protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) : java.util.UUID
   protected[svaractor] def ignore[T](sVar : SVar[T] )
   protected[svaractor] def owner[T](sVar : SVar[T], newOwner: SVarActor.Ref)
