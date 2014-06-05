@@ -435,7 +435,7 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
         }
 
         if (finalPath.head == Symbols.component.value.toSymbol)
-          result.get(types.Component).first {
+          result.get(types.Component).head {
             component => ask(component, FinalizeComponentConfigMsg(result)) {
               _ : Any => registerEntity(finalPath, result)
             }

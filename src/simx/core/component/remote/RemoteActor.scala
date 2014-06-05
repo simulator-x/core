@@ -92,7 +92,7 @@ protected class RemoteActor extends SVarActor with EntityCreationHandling with E
 
   addHandler[Instantiate]{
     msg => ComponentEntityDescription(msg.aspect).realize{
-      componentEntity => componentEntity.get(ontology.types.Component).first{
+      componentEntity => componentEntity.get(ontology.types.Component).head{
         component => msg.sender ! Started(msg.id, getAddressOf(component))
       }
     }

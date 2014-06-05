@@ -130,13 +130,25 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
 //          e : Entity => println(dad + ": " + e)
 //        }
 
-        dad.observe(fatherOf -> ?){
-          (_, s) => println("dad.observe(fatherOf -> ?)", s)
+        val onChangeId = dad.observe(fatherOf -> ?).onChange{
+          case change => println("detected change: " + change)
+        }
+
+//        dad.ignore(onChangeId)
+
+        fatherOf.observe(dad -> son)
+
+        dad.observe(fatherOf -> ?)(
+          s => println("dad.observe(fatherOf -> ?)", s)
+        )
+
+        dad.observe(fatherOf -> son){
+          println(_)
         }
 
       ?.get(fatherOf -> dad)
       ?.observe(fatherOf -> son).foreach{
-        (_, e) => println("!!" + e)
+        (_, e) => println("father of son " + e)
       }
 
 //        son.observe{
@@ -165,14 +177,15 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
           (_, e) => println("fatherOf.get(? -> son)", e)
         }
 
+
         fatherOf.get(son -> ?).foreach{
           (_, e) => println("fatherOf.get(? -> son)", e)
         }
 //
+//        fatherOf.observe(? -> son)
 
-
-//        fatherOf.remove(dad -> son)
-//        dad.set(fatherOf -> son)
+        fatherOf.remove(dad -> son)
+        dad.set(fatherOf -> son)
     }
   }
 }

@@ -33,7 +33,10 @@ trait EntityRelationAccess extends RelationAccess with StateParticleAccess{
     get(request(this).asRequest)
 
   final def get[T <: Entity : ClassTag](request :  Request[T, _]) : AccessSet[Relation, T] =
-    new AccessSet[Relation, T](access(request.desc, _), _.accessValue, request.accessValue)
+    new AccessSet[Relation, T](access(request.description, _), _.accessValue, request.accessValue)
+
+  final def get[T <: Entity](r : RightRelationPart[SelfType, T]) : AccessSet[Relation, Relation] =
+    new AccessSet[Relation, Relation](access(r.complete(asSelfType).description, _), _.accessValue, x => x)
 
   final def observe[T <: Entity](request : this.type => PartialRequest[T]) : ObservableAccessSet[Relation, T] =
     observe(request, Set[SVarActor.Ref]())
@@ -44,8 +47,18 @@ trait EntityRelationAccess extends RelationAccess with StateParticleAccess{
   final def observe[T <: Entity](request : Request[T, _]) : ObservableAccessSet[Relation, T] =
     observe(request, Set[SVarActor.Ref]())
 
+  final def observe[T <: Entity](r : RightRelationPart[SelfType , T]) : ObservableAccessSet[Relation, Relation] =
+    observe(r, Set[SVarActor.Ref]())
+
   final def observe[T <: Entity](request : Request[T, _], ignored : Set[SVarActor.Ref]) : ObservableAccessSet[Relation, T] =
-    new ObservableAccessSet(this, access(request.desc, _), _.observe(ignored), request.accessValue)
+    _observe[T](request.description, ignored, request.accessValue)
+
+  final def observe[T <: Entity](r : RightRelationPart[SelfType , T], ignored : Set[SVarActor.Ref]) : ObservableAccessSet[Relation, Relation] =
+    _observe[Relation](r.complete(asSelfType).description, ignored, x => x)
+
+  private def _observe[T](desc : ConvertibleTrait[Relation], ignored : Set[SVarActor.Ref],
+                          convert : Relation => T) : ObservableAccessSet[Relation, T] =
+    new ObservableAccessSet(this, access(desc, _), _.observe(ignored), convert)
 
   def remove[T](c : ConvertibleTrait[T], handler : SelfType => Any = _ => {})(implicit actor : EntityUpdateHandling)
 }

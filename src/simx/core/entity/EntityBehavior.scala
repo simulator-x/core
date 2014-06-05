@@ -48,7 +48,7 @@ abstract class BaseBehavior(entity : Entity) extends SVarActor with EventProvide
 
 
   def observe[T](c : ConvertibleTrait[T])(handler : T => Any ){
-    entity.observe(c).first{
+    entity.observe(c).head{
       newValue  =>
         handler(newValue)
         valueMap = valueMap.updated(c, newValue)

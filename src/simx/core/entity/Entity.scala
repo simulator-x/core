@@ -43,6 +43,8 @@ class Entity protected(val description : GeneralEntityDescription[_, _],
 {
   override type SelfType = Entity
 
+  protected def asSelfType = this
+
   private var inRemoval = false
 
   override protected final val selfSVar =
@@ -54,8 +56,7 @@ class Entity protected(val description : GeneralEntityDescription[_, _],
   def this(description : GeneralEntityDescription[_, _] = new EntityDescription().desc)(implicit creator : SVarActor) =
     this(description, java.util.UUID.randomUUID(), Map(), Set(creator.self), creator, None)
 
-  protected def getSimpleName =
-    toString
+  def getSimpleName = description.path.map(_.name).mkString(" / ")
 
   //svar access
   override protected def access[T](c: ConvertibleTrait[T], actorContext : EntityUpdateHandling) =

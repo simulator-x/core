@@ -21,6 +21,7 @@
 package simx.core.components.renderer.setup
 
 import simplex3d.math.floatx.{Vec3f, Mat4x3f, ConstMat4f}
+import simplex3d.math.float.ConstMat4
 
 /**
  * This object creates a display description for single display rendering setup.
@@ -51,5 +52,94 @@ object BasicDisplayConfiguration {
       new CamDesc( 0, Eye.RightEye, Some( 0.0f ) )
     )
     new DisplaySetupDesc().addDevice( new DisplayDevice( None, displayDesc :: Nil, LinkType.SingleDisplay ), 0 )
+  }
+}
+
+class ConfigurableDisplayConfiguration {
+  private var fullscreen = false
+  private var resolution = (800, 600)
+  private var sizeOfScreen = (0.8 , 0.45)
+  private var linkType = LinkType.SingleDisplay
+  private var hardwareHandle : Option[(Int, Int, Int)] = None
+  private var transformation =  ConstMat4(Mat4x3f.translate( Vec3f( 0.0f, 0.0f, -0.6f ) ) )
+
+  override def toString : String = {
+    "DisplayConfig with \n\t" +
+      "sizeOfScreen\t = " + sizeOfScreen._1 + "m x " + sizeOfScreen._2 + "m (W x H)\n\t" +
+      "resolution\t\t = " + resolution._1 + " x " + resolution._2 + " (W x H)\n\t" +
+      "fullscreen\t\t = " + fullscreen + "\n\t" +
+      "linkType\t\t = " + linkType + "\n\t" +
+      "hardwareHandle\t = " + (if (hardwareHandle.isDefined) "display: " + hardwareHandle.get._1 + ", screen: " + hardwareHandle.get._2 + ", channel: " + hardwareHandle.get._3 else "undefined") + "\n\t" +
+      "transformInMetersRelativeToWorldRoot = \n " + transformation
+  }
+
+  def setFullscrean(enabled : Boolean) {
+    fullscreen = enabled
+  }
+
+  def setResolution(width : Int, height : Int){
+    resolution = width -> height
+  }
+
+  def setSizeOfScreen(widthInMeters : Double, heightInMeters : Double){
+    sizeOfScreen = widthInMeters -> heightInMeters
+  }
+
+  def setLinkType(link : LinkType.Value){
+    linkType = link
+  }
+
+  def setHardwareHandle(display : Int, screen : Int, channel : Int){
+    hardwareHandle = Some((display, screen, channel))
+  }
+
+  def setScreenTransform(transformInMetersRelativeToWorldRoot : ConstMat4){
+    transformation = transformInMetersRelativeToWorldRoot
+  }
+
+  def clearHardwareHandle(){
+    hardwareHandle = None
+  }
+
+  def getScreenTransform =
+    transformation
+
+  def getFullscrean =
+    fullscreen
+
+  def getResolution =
+    resolution
+
+  def getSizeOfScreen =
+    sizeOfScreen
+
+  def getLinkType =
+    linkType
+
+  def getHardwareHandle =
+    hardwareHandle
+
+  def getDescription = {
+    //TODO: support multiple cams
+    val cams = linkType match {
+      case LinkType.AnaglyphStereo => new CamDesc( 0, Eye.RightEye, Some( 0.06f ) ) :: Nil
+      case LinkType.FrameSequential => new CamDesc( 0, Eye.RightEye, Some( 0.0f ) ) :: Nil
+      case LinkType.SingleDisplay => new CamDesc( 0, Eye.RightEye, Some( 0.0f ) ) :: Nil
+      case LinkType.TopBottomStereo => new CamDesc( 0, Eye.RightEye, Some( 0.06f ) ) :: Nil
+    }
+
+
+    var displayDescs = new DisplayDesc(
+      if (fullscreen) None else Some( resolution ),
+      sizeOfScreen,
+      transformation,
+      cams.head ) :: Nil
+    if (cams.size == 2)
+      displayDescs = new DisplayDesc(
+        if (fullscreen) None else Some( resolution ),
+        sizeOfScreen,
+        transformation,
+        cams.head ) :: displayDescs
+    new DisplaySetupDesc().addDevice( new DisplayDevice( hardwareHandle, displayDescs, linkType ), 0 )
   }
 }

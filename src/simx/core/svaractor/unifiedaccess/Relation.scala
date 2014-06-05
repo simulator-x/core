@@ -24,20 +24,24 @@ import simx.core.entity.Entity
 import simx.core.ontology.{types, SVarDescription, GroundedSymbol}
 import simx.core.worldinterface.WorldInterfaceHandling
 import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.svaractor.SVarActor
 import reflect.runtime.universe.TypeTag
 import reflect.ClassTag
-import simx.core.svaractor.SVarActor
-import scala.language.existentials
 
 
-case class Relation(subj : Entity, desc : RelationDescription[_ <: Entity, _ <: Entity], obj : Entity){
+final class Relation(val subj : Entity, d : RelationDescription[_ <: Entity, _ <: Entity], val obj : Entity){
+  val description = d.setAnnotations(types.RelationSubject(subj), types.RelationObject(obj))
+
   def publish()(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
-    context setRelation (desc.withAnnotations(types.RelationSubject(subj), types.RelationObject(obj)) apply this)
+    context setRelation description(this)
   }
 
   def remove()(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
-    context removeRelation (desc.withAnnotations(types.RelationSubject(subj), types.RelationObject(obj)) apply this)
+    context removeRelation description(this)
   }
+
+  override def toString: String =
+    subj.getSimpleName + " " + description.semantics.value.toString + " " + obj.getSimpleName
 }
 
 abstract class RelationDescription[S <: Entity : TypeTag : ClassTag, O <: Entity : TypeTag : ClassTag]
@@ -45,25 +49,31 @@ abstract class RelationDescription[S <: Entity : TypeTag : ClassTag, O <: Entity
   extends SVarDescription(types.Relation.asConst as relationName)
 {
   def get(right : LeftUnknownTuple[O]) =
-    right._2.get(LeftRequest(this, right._2))
+    right.getValue.get(LeftRequest[S, O](this, right.getValue))
 
-  def get(left : (S, Unknown )) =
-    left._1.get(RightRequest(this, left._1))
+  def get(left : RightUnknownTuple[S] ) =
+    left.getValue.get(RightRequest[S, O](this, left.getValue))
+
+  def get(tuple : (S, O)) =
+    tuple._1.get(RightRelationPart[S#SelfType, O](this, tuple._2))
 
   def observe(right : (Unknown, O), ignoredWriters : Set[SVarActor.Ref]) =
-    right._2.observe(LeftRequest(this, right._2), ignoredWriters)
+    right._2.observe(LeftRequest[S, O](this, right._2), ignoredWriters)
 
   def observe(left : RightUnknownTuple[S], ignoredWriters : Set[SVarActor.Ref]) =
-    left._1.observe(RightRequest(this, left._1), ignoredWriters)
+    left.getValue.observe(RightRequest(this, left.getValue), ignoredWriters)
+
+  def observe(tuple : (S, O)) =
+    tuple._1.observe(RightRelationPart[S#SelfType, O](this, tuple._2))
 
   def set(subj : S, obj : O)(implicit actor : WorldInterfaceHandling with EntityUpdateHandling) : Unit =
-    Relation(subj, this, obj).publish()
+    new Relation(subj, this, obj).publish()
 
   def set(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
     set(tuple._1, tuple._2)
 
   def remove(subj : S, obj : O)(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    Relation(subj, this, obj).remove()
+    new Relation(subj, this, obj).remove()
 
   def remove(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
     remove(tuple._1, tuple._2)
@@ -78,50 +88,47 @@ abstract class RelationDescription[S <: Entity : TypeTag : ClassTag, O <: Entity
     RightRelationPart[S, O](this, x)
 }
 
-protected trait PartialRelation[-X, S <: Entity, O <: Entity]{
-  def complete(subj : X) : Relation
+sealed trait PartialRelation[-X, S <: Entity, O <: Entity]{
+  def complete(missingPart : X) : Relation
 }
 
-case class LeftRelationPart[S <: Entity : ClassTag, O <: Entity : ClassTag : TypeTag] protected[unifiedaccess]
+case class LeftRelationPart[S <: Entity : ClassTag, O <: Entity : ClassTag : TypeTag] private[unifiedaccess]
 (desc : RelationDescription[S, O], subj : S) extends PartialRelation[O, S, O] with PartialRequest[O]
 {
-  def complete(obj: O) = Relation(subj, desc, obj)
+  def complete(obj: O) = new Relation(subj, desc, obj)
   def asRequest: Request[O, S] = RightRequest(desc, subj)
 }
 
-case class RightRelationPart[S <: Entity : ClassTag : TypeTag, O <: Entity : ClassTag] protected[unifiedaccess]
-(desc : RelationDescription[S, O], obj : O) extends PartialRelation[S, S, O] with PartialRequest[S]
+case class RightRelationPart[S <: Entity : ClassTag : TypeTag, O <: Entity : ClassTag] private[unifiedaccess]
+(desc : RelationDescription[_ <: S, _ <: O], obj : O) extends PartialRelation[S, S, O] with PartialRequest[S]
 {
-  def complete(subj: S) = Relation(subj, desc, obj)
+  def complete(subj: S) = new Relation(subj, desc, obj)
   def asRequest: Request[S, O] = LeftRequest(desc, obj)
 }
 
 
-abstract class Request[T <: Entity, V <: Entity] protected[unifiedaccess](val desc : RelationDescription[_, _], val isLeft : Boolean) {
+sealed abstract class Request[T <: Entity, V <: Entity] (val desc : RelationDescription[_, _], val isLeft : Boolean) {
   def accessValue(r: Relation) : T
   def getKnownValue : V
+
+  val description : ConvertibleTrait[Relation] =
+    desc.setAnnotations( if (isLeft) types.RelationObject(getKnownValue) else types.RelationSubject(getKnownValue))
 }
 
-trait PartialRequest[Y <: Entity]{
+sealed trait PartialRequest[Y <: Entity]{
   def asRequest : Request[Y, _]
 }
 
 case class LeftRequest[S <: Entity: TypeTag, O <: Entity] protected[unifiedaccess]
-(d : RelationDescription[S, O], fillRequest: O) extends Request[S, O](d, true)
+(d : RelationDescription[_ <: S, _ <: O], getKnownValue: O) extends Request[S, O](d, true)
 {
   override def accessValue(r: Relation) : S =
     types.Entity.convert(d.leftDesc)(r.subj)
-
-  override def getKnownValue: O =
-    fillRequest
 }
 
 case class RightRequest[S <: Entity, O <: Entity: TypeTag] protected[unifiedaccess]
-(d : RelationDescription[S, O], fillRequest: S) extends Request[O, S](d, false)
+(d : RelationDescription[S, O], getKnownValue: S) extends Request[O, S](d, false)
 {
   override def accessValue(r : Relation) : O =
     types.Entity.convert(d.rightDesc)(r.obj)
-
-  override def getKnownValue: S =
-    fillRequest
 }

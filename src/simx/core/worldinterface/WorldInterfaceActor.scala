@@ -110,7 +110,7 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
 
   private def forwardToForeignActors(msg : ForwardableMessage){
     if (!msg.isForwarded && foreignWorldInterfaceActors.nonEmpty)
-      foreignWorldInterfaceActors.foreach( _.tell(msg.forward(), sender) )
+      foreignWorldInterfaceActors.foreach( _.tell(msg.forward(), sender()) )
   }
 
   override def toString: String =
@@ -334,11 +334,11 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
 
   addHandler[HandleRelationRequest[_, _]]{ msg =>
     if (msg.r.isLeft) {
-      knownRelations.getOrElse(msg.r.desc.sVarIdentifier, Nil).map(_ as msg.r.desc.asConvertibleTrait).
+      knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
         filter(_.obj equals msg.r.getKnownValue).
         map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.subj)).toMap
     } else {
-        knownRelations.getOrElse(msg.r.desc.sVarIdentifier, Nil).map(_ as msg.r.desc.asConvertibleTrait).
+        knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
           filter(_.subj equals msg.r.getKnownValue).
           map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.obj)).toMap
     }

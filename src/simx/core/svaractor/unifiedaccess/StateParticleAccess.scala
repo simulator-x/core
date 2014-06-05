@@ -24,13 +24,15 @@ import simx.core.svaractor.{MultiObserve, SVarActor, StateParticle}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.SVal
 import simx.core.ontology
+import simx.core.entity.Entity
 
 /**
  * Created by dennis on 24.04.14.
  *
  */
 trait StateParticleAccess extends UnifiedAccess{
-  type SelfType >: this.type
+  type SelfType <: Entity
+  protected def asSelfType : SelfType
   protected def access[T](c : ConvertibleTrait[T], actorContext : EntityUpdateHandling ) : (AnnotatedMap[T] => Any) => Unit
   protected def handleNewValue[T](c : SVal[T], handler : SelfType => Any)(implicit actor : EntityUpdateHandling)
 

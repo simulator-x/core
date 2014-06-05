@@ -27,6 +27,9 @@ import simx.core.worldinterface.WorldInterfaceHandling
  *
  */
 trait RelationAccess extends UnifiedAccess{
+  protected implicit def toRightUnknownTuple[V](t : (V, Unknown)) : RightUnknownTuple[V] =
+    RightUnknownTuple(t._1)
+
   final def set(desc : PartialRelation[this.type, _ <: EntityBase , _ <: EntityBase])(implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling){
     desc.complete(this).publish()
   }
