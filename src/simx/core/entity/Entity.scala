@@ -37,6 +37,8 @@ import scala.Some
 class Entity protected[entity]( private val sVars : Map[Symbol, List[SVarContainer[_]]], val id : java.util.UUID )
   extends Serializable
 {
+  self =>
+
   protected var removeObservers = Set[SVarActor.Ref]()
   /**
    *  Copy-C'tor
@@ -158,7 +160,10 @@ class Entity protected[entity]( private val sVars : Map[Symbol, List[SVarContain
    */
   protected[entity] def injectSVar[T](sVarName : Symbol, sVar : SVar[T],
                                       info : ConvertibleTrait[T], annotations : GroundedSymbol*) : Entity =
-    new Entity(sVars.updated(sVarName, SVarContainer(sVar, info, annotations.toSet) :: sVars.getOrElse(sVarName, Nil) ), id)
+    new Entity(sVars.updated(sVarName, SVarContainer(sVar, info, annotations.toSet) :: sVars.getOrElse(sVarName, Nil) ), id){
+      //! returns nice string representation of this entity
+      override def toString: String = self.toString
+    }
 }
 
 //! Some Exception which is thrown when the wrong converter was specified

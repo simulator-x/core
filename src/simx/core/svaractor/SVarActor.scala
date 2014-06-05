@@ -22,7 +22,7 @@ package simx.core.svaractor
 
 import benchmarking.ActorBenchmarking
 import handlersupport.HandlerBenchmarking
-import simx.core.helper.Loggable
+import simx.core.helper.{JVMTools, Loggable}
 import akka.actor.{Address, Deploy, ActorSystem, Props}
 import simx.core.entity.typeconversion.ConvertedSVar
 import collection.mutable
@@ -41,13 +41,15 @@ import scala.reflect.ClassTag
 object SVarActor {
   type Ref = akka.actor.ActorRef
 
+  private val tickDuration = if (JVMTools.isWindows) 10 else 1
+
   private val missing = "missing"
   private val configString =
     if(System.getProperty("simx.remote.hostname", missing) != missing)
       """
       akka {
         scheduler {
-          tick-duration = 1
+          tick-duration = """ + tickDuration + """
         }
         actor {
           provider = "akka.remote.RemoteActorRefProvider"
@@ -62,7 +64,7 @@ object SVarActor {
       }
       """
     else
-      "akka.scheduler.tick-duration=1"
+      "akka.scheduler.tick-duration=" + tickDuration
 
   var config = ConfigFactory.parseString(configString).withFallback(ConfigFactory.load())
   var system = ActorSystem("SVarActor", config)

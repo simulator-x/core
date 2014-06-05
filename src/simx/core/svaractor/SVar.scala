@@ -23,12 +23,16 @@ package simx.core.svaractor
 import scala.reflect.runtime.universe.TypeTag
 import java.util.UUID
 import scala.reflect.ClassTag
+import scala.util.continuations
 
 
 trait SValTrait{
   type dataType
   def containedValueManifest : ClassTag[dataType]
   def get(handler : dataType => Any)(implicit actorContext : SVarActor)
+  def get(implicit actorContext : SVarActor) : dataType @continuations.cpsParam[Any, Unit] = continuations.shift {
+    k : (dataType => Any) => get(k)
+  }
 }
 
 // Static methods for SVars.

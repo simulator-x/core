@@ -1,4 +1,4 @@
-package simx.core.ontology
+package simx.core.ontology 
 
 /*
  * Copyright 2013 The SIRIS Project
@@ -138,7 +138,7 @@ object Key_x extends SVarDescription[scala.Boolean, scala.Boolean](simx.core.ont
 object Key_y extends SVarDescription[scala.Boolean, scala.Boolean](simx.core.ontology.types.Boolean as Symbols.key_y definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_y")
 object Key_z extends SVarDescription[scala.Boolean, scala.Boolean](simx.core.ontology.types.Boolean as Symbols.key_z definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_z")
 object Keyboard extends SVarDescription[simx.core.entity.Entity, simx.core.entity.Entity](simx.core.ontology.types.Entity as Symbols.keyboard definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Keyboard")
-
+ 
 object LeftTexture extends SVarDescription[java.lang.String, java.lang.String](simx.core.ontology.types.String as Symbols.leftTexture definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#LeftTexture")
 object LinearAttenuation extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.linearAttenuation definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#LinearAttenuation")
 object LinearDamping extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.linearDamping definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#LinearDamping")
@@ -182,7 +182,7 @@ object RightTexture extends SVarDescription[java.lang.String, java.lang.String](
 
 object Saturation extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.saturation definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Saturation")
 object Scale extends SVarDescription[simplex3d.math.floatx.ConstMat4f, simplex3d.math.floatx.ConstMat4f](simx.core.ontology.types.Transformation as Symbols.scale definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Scale")
-object ScreenCoordinates extends SVarDescription[scala.collection.immutable.List[simplex3d.math.float.Vec2], scala.collection.immutable.List[simplex3d.math.float.Vec2]](simx.core.ontology.types.NullType as Symbols.screenCoordinates createdBy List[simplex3d.math.float.Vec2]() definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ScreenCoordinates")
+object ScreenCoordinates extends SVarDescription[scala.collection.immutable.List[simplex3d.math.float.ConstVec2], scala.collection.immutable.List[simplex3d.math.float.ConstVec2]](simx.core.ontology.types.NullType as Symbols.screenCoordinates createdBy List[simplex3d.math.float.ConstVec2]() definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ScreenCoordinates")
 object ShadowBias extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.shadowBias definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ShadowBias")
 object ShowHeightMap extends SVarDescription[scala.Boolean, scala.Boolean](simx.core.ontology.types.Boolean as Symbols.showHeightMap definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ShowHeightMap")
 object SimulationSpeed extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.simulationSpeed definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#SimulationSpeed")
@@ -202,8 +202,8 @@ object Thickness extends SVarDescription[scala.Float, scala.Float](simx.core.ont
 object Threshold extends SVarDescription[scala.Float, scala.Float](simx.core.ontology.types.Real as Symbols.threshold definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Threshold")
 object Time extends SVarDescription[scala.Long, scala.Long](simx.core.ontology.types.Long as Symbols.time definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Time")
 object Transformation extends SVarDescription[simplex3d.math.floatx.ConstMat4f, simplex3d.math.floatx.ConstMat4f](simx.core.ontology.types.Matrix as Symbols.transformation createdBy simplex3d.math.floatx.Mat4f.Identity definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Transformation")
-object TuioCursors extends SVarDescription[scala.collection.immutable.HashMap[Symbol,simplex3d.math.float.Vec2], scala.collection.immutable.HashMap[Symbol,simplex3d.math.float.Vec2]](simx.core.ontology.types.NullType as Symbols.tuioCursors createdBy (scala.collection.immutable.HashMap[Symbol, simplex3d.math.float.Vec2]()) definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioCursors")
-object TuioObjects extends SVarDescription[scala.collection.immutable.Map[Symbol,(simplex3d.math.float.Vec2,Float)], scala.collection.immutable.Map[Symbol,(simplex3d.math.float.Vec2,Float)]](simx.core.ontology.types.NullType as Symbols.tuioObjects createdBy (scala.collection.immutable.Map[Symbol,(simplex3d.math.float.Vec2,Float)]()) definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioObjects")
+object TuioCursors extends SVarDescription[scala.collection.immutable.HashMap[Symbol,simplex3d.math.float.ConstVec2], scala.collection.immutable.HashMap[Symbol,simplex3d.math.float.ConstVec2]](simx.core.ontology.types.NullType as Symbols.tuioCursors createdBy (scala.collection.immutable.HashMap[Symbol, simplex3d.math.float.ConstVec2]()) definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioCursors")
+object TuioObjects extends SVarDescription[scala.collection.immutable.Map[Symbol,(simplex3d.math.float.ConstVec2,Float)], scala.collection.immutable.Map[Symbol,(simplex3d.math.float.ConstVec2,Float)]](simx.core.ontology.types.NullType as Symbols.tuioObjects createdBy (scala.collection.immutable.Map[Symbol,(simplex3d.math.float.ConstVec2,Float)]()) definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioObjects")
 
 object UpTexture extends SVarDescription[java.lang.String, java.lang.String](simx.core.ontology.types.String as Symbols.upTexture definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#UpTexture")
 object UpVector extends SVarDescription[simplex3d.math.floatx.ConstVec3f, simplex3d.math.floatx.ConstVec3f](simx.core.ontology.types.Vector3 as Symbols.upVector definedAt "http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#UpVector")
