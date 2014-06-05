@@ -162,7 +162,7 @@ object Reverter{
     if (NC._canConvert(outputHint, inputHint))
       NC.asInstanceOf[IReverter[T, O]]
     else registeredReverters.getOrElse(getId(outputHint), throw NoReverterFoundException(inputHint, outputHint)).
-      getOrElse(getId(inputHint), throw NoReverterFoundException(inputHint, outputHint)).asInstanceOf[IReverter[T, O]]
+      getOrElse(getId(inputHint.getBase), throw NoReverterFoundException(inputHint, outputHint)).asInstanceOf[IReverter[T, O]]
 }
 
 /**

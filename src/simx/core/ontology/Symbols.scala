@@ -316,6 +316,7 @@ object Symbols{
 	val thickness = OntologySymbol(Symbol("Thickness"))
 	val threshold = OntologySymbol(Symbol("Threshold"))
 	val time = OntologySymbol(Symbol("Time"))
+	val timeInSeconds = OntologySymbol(Symbol("TimeInSeconds"))
 	val token = OntologySymbol(Symbol("Token"))
 	val top = OntologySymbol(Symbol("top"))
 	val torqueImpulse = OntologySymbol(Symbol("TorqueImpulse"))

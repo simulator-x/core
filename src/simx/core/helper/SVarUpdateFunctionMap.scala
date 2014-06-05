@@ -58,7 +58,9 @@ trait SVarUpdateFunctionMap extends SVarActor {
   def collectSVars(e: Entity, toGet: ConvertibleTrait[_]*)
                   (handler: SValSet => Unit, keepRegistered: Boolean = false) {
 
-    var retrievedValues = new SValSet()
+    //Number of actual existing sVars in the entity that match toGet
+    val targetSize = (for(ct <- toGet.toSeq) yield e.get(ct).size).foldLeft(0)(_+_)
+    var retrievedValues = Map[SVar[_], SVal[_]]()//new SValSet()
 
     toGet.foreach((ct: ConvertibleTrait[_]) => {init(ct)})
 
