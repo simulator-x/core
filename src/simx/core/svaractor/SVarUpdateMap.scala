@@ -22,8 +22,9 @@ package simx.core.svaractor
 
 import scala.collection.mutable
 
-import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.Entity
+import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 
 
 /**
@@ -31,13 +32,16 @@ import simx.core.entity.Entity
  * Date: 13.05.13
  * Time: 10:49
  */
-trait SVarUpdateMap extends SVarActorContext {
+trait SVarUpdateMap extends SVarActor with EntityUpdateHandling {
   private type updateHandlerType[T] = T => Any
   private val storedValues = mutable.Map[SVar[_], Any]()
   private val updateFuncs = mutable.Map[SVar[_], updateHandlerType[_]]()
 
-  private def execOnFirstSVar[T, U](e : Entity, svarDesc : ConvertibleTrait[T])(handler : SVar[T] => U) : Option[U] =
-    e.get(svarDesc).headOption.collect{ case svar => handler(svar) }
+  private def execOnFirstSVar[T, U](e : Entity, svarDesc : ConvertibleTrait[T])(handler : SVar[T] => U) {
+    e.getSVars(svarDesc).headOption.collect {
+      case (_, svar: SVar[T]) => handler(svar)
+    }
+  }
 
   def execHandlerFor[T](sVar : SVar[T]){
     updateFuncs.get(sVar).collect{ case handler : (T => Any) => getValue(sVar).collect{ case value => handler(value) } }
@@ -88,7 +92,7 @@ trait SVarUpdateMap extends SVarActorContext {
     execOnFirstSVar(e, svarDesc)(removeObserveHandler[T])
   }
 
-  def getValue[T](e : Entity, svarDesc : ConvertibleTrait[T]) : Option[T] =
-    execOnFirstSVar(e, svarDesc)(getValue[T]).getOrElse(None)
+//  def getValue[T](e : Entity, svarDesc : ConvertibleTrait[T]) : Option[T] =
+//    execOnFirstSVar(e, svarDesc)(getValue[T]).getOrElse(None)
 
 }

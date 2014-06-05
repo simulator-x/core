@@ -22,6 +22,7 @@ package simx.core.components.renderer.messages
 
 import simx.core.svaractor.{SVarActor, SimXMessage}
 import simx.core.components.renderer.setup.DisplaySetupDesc
+import scala.annotation.meta.param
 
 
 /**
@@ -29,7 +30,7 @@ import simx.core.components.renderer.setup.DisplaySetupDesc
  *
  * @author Stephan Rehfeld
  */
-abstract class RendererMessage()(implicit @transient actor : SVarActor.Ref) extends SimXMessage with Serializable
+abstract class RendererMessage()(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage with Serializable
 
 /**
  * This class sends a configuration to a rendering connector.
@@ -41,7 +42,7 @@ abstract class RendererMessage()(implicit @transient actor : SVarActor.Ref) exte
  *
  */
 case class ConfigureRenderer( displaySetup: DisplaySetupDesc, effectsConfiguration : EffectsConfiguration )
-                            (implicit @transient actor : SVarActor.Ref) extends RendererMessage {
+                            (implicit @(transient @param) actor : SVarActor.Ref) extends RendererMessage {
   require( displaySetup != null, "The parameter 'displaySetup' must not be 'null'!")
   require( effectsConfiguration != null, "The parameter 'effectsConfiguration' must not be 'null'!")
 }
@@ -63,4 +64,4 @@ case class EffectsConfiguration( shadowQuality : String, mirrorQuality : String 
  * @author Alexander Strehler
  * switching left and right eye
  */
-case class SwitchEyes()(implicit @transient actor : SVarActor.Ref) extends RendererMessage
+case class SwitchEyes()(implicit @(transient @param) actor : SVarActor.Ref) extends RendererMessage

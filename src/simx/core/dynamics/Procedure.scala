@@ -22,6 +22,7 @@ package simx.core.dynamics
 
 import simx.core.svaractor.{SimXMessage, SVarActor}
 import simx.core.ontology.GroundedSymbol
+import scala.annotation.meta.param
 
 
 /**
@@ -31,7 +32,7 @@ import simx.core.ontology.GroundedSymbol
  * Time: 10:42
  */
 
-case class WakeUp()(implicit @transient actor : SVarActor.Ref) extends SimXMessage
+case class WakeUp()(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage
 
 abstract class Procedure( override val name : GroundedSymbol, var frequency : Double )
   extends SVarActor with Method

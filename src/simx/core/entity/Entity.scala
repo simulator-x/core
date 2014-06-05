@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The SIRIS Project
+ * Copyright 2014 The SIRIS Project
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,168 +20,238 @@
 
 package simx.core.entity
 
-import simx.core.svaractor.{SVarActor, SimXMessage, SVar}
-import description.GeneralEntityDescription
-import simx.core.ontology.GroundedSymbol
-import typeconversion._
-import scala.Some
+import simx.core.ontology._
+import simx.core.svaractor._
+import simx.core.svaractor.unifiedaccess._
+import simx.core.entity.typeconversion.{IReverter, ConvertibleTrait}
+import simx.core.entity.description.{EntityAspect, SVal, GeneralEntityDescription}
+import simx.core.svaractor.unifiedaccess.AnnotationSet
+import simx.core.worldinterface.WorldInterfaceHandling
+import reflect.ClassTag
 
-
-/* author: dwiebusch
-* date: 27.08.2010
-*/
 
 /**
- *  the entity class
+ * Created by dwiebusch on 27.08.2010
+ * updated 10.03.14
  */
-class Entity protected[entity]( private val sVars : Map[Symbol, List[SVarContainer[_]]], val id : java.util.UUID )
-  extends Serializable
+class Entity protected(val description : GeneralEntityDescription[_, _],
+                       val id : java.util.UUID,
+                       val sVars : Map[Symbol, List[SVarContainer[_]]],
+                       private val removeObservers : Set[SVarActor.Ref],
+                       creator : SVarActor, self : Option[SVar[Entity]])
+  extends EntityBase with Observability[Entity] with Accessibility[Entity]
 {
-  self =>
+  override type SelfType = Entity
 
-  protected var removeObservers = Set[SVarActor.Ref]()
-  /**
-   *  Copy-C'tor
-   */
-  protected[core] def this( e : Entity ) =
-    this(e.sVars, e.id)
+  protected def asSelfType = this
 
-  /**
-   *  creates an empty entity
-   */
-  def this() =
-    this(Map[Symbol, List[SVarContainer[_]]](), java.util.UUID.randomUUID)
+  private var inRemoval = false
 
-  /**
-   *  Returns the sVarNames of all SVars of this Entity
-   */
-  def getAllSVarNames =
-    sVars.keySet
+  override protected final val selfSVar =
+    self getOrElse SVarImpl(types.Entity withType classOf[SelfType] apply this)(creator, implicitly[ClassTag[Entity]])
 
-  def getAllSVars : Iterable[(Symbol, ConvertibleTrait[_], SVar[_])] =
-    sVars.flatMap( x => x._2.map( y => (x._1, y.info, y.svar) ) )
+  def this(e : Entity)(implicit creator : SVarActor) =
+    this(e.description, e.id, e.sVars, e.removeObservers + creator.self, creator, Some(e.selfSVar))
 
-  def contains[T]( typeInfo : TypeInfo[T] ) =
-    sVars.contains(typeInfo.semantics.toSymbol)
+  def this(description : GeneralEntityDescription[_, _] = new EntityDescription().desc)(implicit creator : SVarActor) =
+    this(description, java.util.UUID.randomUUID(), Map(), Set(creator.self), creator, None)
 
-  def execOnSVars[T, U]( info : ConvertibleTrait[T], annotations : GroundedSymbol* )( f : SVar[T] => U ){
-    implicit val classTag = info.classTag
-    get(info, annotations :_*).map(f.apply)
-  }
+  def getSimpleName = description.path.map(_.name).mkString(" / ")
 
-  //for debugging purposes
-  private var name : Option[String] = None
-
-  def setName(n : String){
-    name = Some(n)
-  }
-
-  def remove()(implicit actor : SVarActor.Ref) {
-    GeneralEntityDescription.propagateEntityRemoval( this )
-    removeObservers.foreach( _ ! RemoveEntityMessage(this ) )
-  }
-
-  def getRemoveObservers =
-    removeObservers
-
-  def setRemoveObservers(newSet : Set[SVarActor.Ref]){
-    removeObservers = newSet
-  }
-
-  /**
-   *  injects a svar into this entity
-   * @param sVar the svar to be injected
-   * @param info a convertible trait representing the svar's type
-   * @return an entity containing the given svar
-   */
-  def injectSVar[T](sVar : SVar[T], info : ConvertibleTrait[T], annotations : GroundedSymbol*) : Entity =
-    injectSVar(info.sVarIdentifier, sVar, info, annotations :_* )
-
-  /**
-   *  returns a svar retrieved by using the svaridentifier from the convertible trait. converts it to match the
-   * given convertible trait
-   * @param out the convertible trait specifiying the name and type of the svar to be returned
-   * @return a list of svars matching the given convertible trait's description and annotations
-   */
-  def get[T](out : ConvertibleTrait[T], annotations : GroundedSymbol*) : List[SVar[T]] =
-    accessFiltered(out, annotations :_*).map( _ convertSVar out )
-
-  /**
-   *  returns a svar retrieved by using the svaridentifier from the convertible trait. converts it to match the
-   * given convertible trait. Using the given reverter is enforced
-   * @param out the convertible trait specifiying the name and type of the svar to be returned
-   * @param reverter the reverter to be used
-   * @return a svar matching the given convertible trait's description
-   */
-  def get[T](out : ConvertibleTrait[T], reverter : IReverter[T, _], annotations : GroundedSymbol*) : List[SVar[T]] =
-    accessFiltered(out, annotations :_*).map{ _.as(out, Some(reverter) ).svar }
-
-//  def get[T, O](request : Require[O, T]) : List[SVar[T]] = {
-//    val internal = request.wrapped.to
-//    accessFiltered(internal).map(x => x.convertSVar(request.wrapped.from, Some(request.wrapped.bindReverter(x.svar))))
-//  }
-
-  def getAnnotationsFor[T]( c : ConvertibleTrait[T], annotations : GroundedSymbol* ) : List[Set[GroundedSymbol]] =
-    accessFiltered(c, annotations :_*).map{ _.annotations }
-
-  protected def accessFiltered[T]( out : ConvertibleTrait[T], annotations : GroundedSymbol*) : List[SVarContainer[T]]=
-    sVars.getOrElse(out.sVarIdentifier, Nil).asInstanceOf[List[SVarContainer[T]]].filter{
-      c => annotations.forall(c.annotations.contains)
+  //svar access
+  override protected def access[T](c: ConvertibleTrait[T], actorContext : EntityUpdateHandling) =
+    ( f : AnnotatedMap[T] => Any) => accessMostRecent(actorContext) {
+      e => f apply filterSVars(c, e.sVars.getOrElse(c.sVarIdentifier, Nil)).map(_.as(c).toAnnotatedMapEntry ).toMap
     }
 
-  protected def getSimpleName : String =
-    getClass.getSimpleName
+  override protected def handleNewValue[T](c: SVal[T], handler : SelfType => Any)(implicit actor: EntityUpdateHandling){
+    doIfSelf( update(addOrUpdate(_, c, actor), handler, actor))({ HandleEntityUpdate(this, c)}, handler)
+  }
 
-  //! returns nice string representation of this entity
-  override def toString =
-    if (sVars.isEmpty)
-      getSimpleName + "(" + name.getOrElse(id) + ")"
-    else
-      getSimpleName + "("+ name.getOrElse(id) + ") with " + sVars.map{
-        t => t._1.name + (if (t._2.size > 1 ) "("+t._2.size+"x)" else "")
+  def remove[T](c : ConvertibleTrait[T], handler : SelfType => Any = _ => {})(implicit actor : EntityUpdateHandling){
+    doIfSelf( update(remove(_, c), handler, actor) )({ HandleEntityRemove(this, c) }, handler )
+  }
+
+  //instant access (may be not the most recent version of the entity)
+  def containsSVars(c : ConvertibleTrait[_]) =
+    sVars.get(c.sVarIdentifier).collect{
+      case y => c.annotations.isEmpty || y.exists(z => c.annotations.forall(z.annotations.contains))
+    }.getOrElse(false)
+
+  // aspect related access
+  def enableAspect(asp : EntityAspect, handler : Boolean => Unit = b => {})(implicit context : WorldInterfaceHandling){
+    if (description.aspects.exists(_.aspectType equals asp.aspectType))
+      context.enableAspect(this, asp, handler)
+  }
+
+  def disableAspect(asp : EntityAspect, handler : Boolean => Unit = b => {})(implicit context : WorldInterfaceHandling){
+    if (description.aspects.exists(_.aspectType equals asp.aspectType))
+      context.disableAspect(this, asp, handler)
+
+  }
+
+  //Entity Related access
+  def observe(handler : Entity => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
+    actorContext match {
+      case updateHandler : EntityUpdateHandling => updateHandler.updateObserve(selfSVar, handler)
+      case _ => selfSVar.observe(handler, ignoredWriters)
+    }
+
+  def get(handler: Entity => Unit)(implicit actorContext: SVarActor){
+    accessMostRecent(handler)
+  }
+
+  def getAllStateParticles(implicit context : EntityUpdateHandling) =
+    getMostRecent(context).sVars.flatMap{
+      tuple => tuple._2.map(x => (tuple._1, x.annotations, x.svar))
+    }
+
+  def getSVars[T](out : ConvertibleTrait[T])(implicit context : EntityUpdateHandling) =
+    filterSVars(out, getMostRecent(context).sVars.getOrElse(out.sVarIdentifier, Nil)).map( x => x.annotations -> x.as(out).svar )
+
+  def addRemoveObservers(observers : Set[SVarActor.Ref], handler : Entity => Any = _ => {})(implicit actorContext : SVarActor){
+    doIfSelf( e => handler(e.addObservers(observers)))( HandleObserverUpdate(this, observers), handler )
+  }
+
+  def addRemoveObserver(observer : SVarActor.Ref, handler : Entity => Any = _ => {})(implicit actorContext : SVarActor){
+    addRemoveObservers(Set(observer), handler)
+  }
+
+  def remove()(implicit actor : SVarActor){
+    doIfSelf{ e =>
+      inRemoval = true
+      selfSVar.get( _.removeObservers.foreach(sendRemovalMsg(_)(actor.self)) )
+    }(HandleRemoveEntity(this))
+  }
+
+  def onUpdate(handler : StateParticleAccess => Any)(implicit actorContext : EntityUpdateHandling) : java.util.UUID =
+    actorContext.addInternalUpdater(selfSVar, handler)
+
+  def ignore(id : java.util.UUID)(implicit actorContext : EntityUpdateHandling) =
+    actorContext.removeInternalUpdater(selfSVar, id)
+
+  protected[entity] def injectSVar[T](sVarName : Symbol, sVar : StateParticle[T],
+                                      info : ConvertibleTrait[T], annotations : Annotation*)
+                                     (handler : SelfType => Unit)(implicit actor : SVarActor){
+    setSelf(setSVars(insertParticle(sVarName, sVar, info.addAnnotations(annotations :_*), sVars)))
+    selfSVar.get(handler)
+  }
+
+  // private methods
+  private def filterSVars(c : ConvertibleTrait[_], svars : List[SVarContainer[_]]) =
+    svars.filter{ x => c.annotations.forall(x.annotations.contains) }
+
+  private def setSVars(newSVars : Map[Symbol, List[SVarContainer[_]]]) =
+    new Entity(description, id, newSVars, removeObservers, creator, Some(selfSVar))
+
+  private def addObservers(observers : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
+    if (inRemoval){
+      observers.foreach(sendRemovalMsg(_)(actorContext.self))
+      this
+    } else
+      setSelf(new Entity(description, id, sVars, removeObservers ++ observers, creator, Some(selfSVar)))
+
+  private def sendRemovalMsg(receiver : SVarActor.Ref)(implicit sender: SVarActor.Ref){
+    receiver ! RemoveEntityMessage(this)
+  }
+
+  private def addOrUpdate[T](in : Map[Symbol, List[SVarContainer[_]]], c : SVal[T], actor : SVarActor) =
+    in.getOrElse(c.typedSemantics.sVarIdentifier, Nil).find( _.annotations equals c.typedSemantics.annotations) match {
+      case Some(thing : SVarContainer[T]) =>
+        thing.svar.set(c.value)(actor)
+        false -> in
+      case Some(thing) =>
+        throw new Exception("impossible type mismatch")
+      case None =>
+        true -> insertParticle(c.typedSemantics.sVarIdentifier, SVarImpl.apply(c)(actor, c.typedSemantics.classTag), c.typedSemantics.asConvertibleTrait, in)
+    }
+
+  private[entity] def insertParticle[T](sVarName : Symbol, toInsert : StateParticle[T], c : ConvertibleTrait[T], in : Map[Symbol, List[SVarContainer[_]]]) =
+    in.updated(sVarName, SVarContainer( toInsert, c ) :: in.getOrElse(c.sVarIdentifier, Nil) )
+
+  private def remove[T](in : Map[Symbol, List[SVarContainer[_]]], c : ConvertibleTrait[T]) : (Boolean, Map[Symbol, List[SVarContainer[_]]]) =
+    in.getOrElse(c.sVarIdentifier, Nil) match {
+      case Nil => false -> in
+      case oldValues => oldValues.filterNot(_.annotations equals c.annotations) match{
+        case Nil => true -> (in - c.sVarIdentifier)
+        case newValues if newValues.size == oldValues.size => false -> in
+        case newValues => true -> in.updated(c.sVarIdentifier, newValues)
       }
+    }
 
-  //! redirects the hashCode method call to the UUIDs hashCode method
-  override def hashCode =
-    id.hashCode
+  private def doIfSelf(doIf : Entity => Unit )(msg : => Any, handler : Entity => Any = _ => {})(implicit actor : SVarActor){
+    if (creator == actor) accessMostRecent(doIf)(actor) else actor.ask[Entity](creator.self, msg)(handler)
+  }
 
-  //! redirects the equals method call to the UUIDs equals method
-  override def equals(obj: Any) = obj match {
-    case that : Entity => that.id == id
+  //convenience
+  private def getMostRecent(actorContext : EntityUpdateHandling) : Entity =
+    actorContext.get(selfSVar).getOrElse(this)
+
+  private def accessMostRecent(actorContext : EntityUpdateHandling)(handler : Entity => Unit){
+    actorContext.get(selfSVar) match {
+      case Some(thing) => handler(thing)
+      case None => accessMostRecent(handler)(actorContext)
+    }
+  }
+
+  private def accessMostRecent(handler : Entity => Unit)(implicit actorContext : SVarActor){
+    selfSVar.get(handler)
+  }
+
+
+  protected def update(createSVars : Map[Symbol, List[SVarContainer[_]]] => (Boolean, Map[Symbol, List[SVarContainer[_]]]),
+                       handler : Entity => Any, actor : EntityUpdateHandling)(oldVal : Entity){
+    accessMostRecent(actor){ e =>
+      val (updated, newSVars) = createSVars(e.sVars)
+      if (updated)
+        handler(setSelf(e.setSVars(newSVars))(actor))
+      else
+        handler(e)
+    }
+  }
+
+  override def hashCode(): Int = id.hashCode()
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case that : Entity => that.id == this.id
     case _ => false
   }
 
-  /**
-   *  injects a svar into this entity
-   * @param sVarName the symbol used to inject the svar
-   * @param sVar the svar to be injected
-   * @param info a convertible trait representing the svar's type
-   * @return an entity containing the given svar
-   */
-  protected[entity] def injectSVar[T](sVarName : Symbol, sVar : SVar[T],
-                                      info : ConvertibleTrait[T], annotations : GroundedSymbol*) : Entity =
-    new Entity(sVars.updated(sVarName, SVarContainer(sVar, info, annotations.toSet) :: sVars.getOrElse(sVarName, Nil) ), id){
-      //! returns nice string representation of this entity
-      override def toString: String = self.toString
-    }
+  override def toString: String = description.path.map(_.name).mkString(" / ") + " / " + id + (
+    if (sVars.nonEmpty)
+      " with StateParticles " + sVars.map(tuple => tuple._1.name -> tuple._2.mkString(", ")).mkString(", ")
+    else
+      " without any StateParticles"
+    )
 }
 
-//! Some Exception which is thrown when the wrong converter was specified
-class InvalidConverterException extends Exception
-//! Some Exception which is thrown when the requested svar does not exist within an entity
-class SVarDoesNotExistException( val name : Symbol ) extends Exception(name.toString())
-//! message to inform an actor about the removal of an entity
-protected[entity] case class RemoveEntityMessage( e : Entity )
-                                                (implicit @transient actor : SVarActor.Ref) extends SimXMessage
 
 /**
- * implementation of the SVarContainerBase trait
- * For internal use 
+ * implementation of the NewSVarContainerBase trait
+ * For internal use
  */
-protected case class SVarContainer[T]( svar : SVar[T], info : ConvertibleTrait[T], annotations : Set[GroundedSymbol] ){
-  def as[O]( out : ConvertibleTrait[O], reverter : Option[IReverter[O, _]] = None) : SVarContainer[O] =
-    SVarContainer(convertSVar(out, reverter), out, annotations)
+protected object SVarContainer{
+  type TypedStateParticle[T] = (ConvertibleTrait[T], StateParticle[T])
+}
 
-  def convertSVar[O]( out : ConvertibleTrait[O], reverter : Option[IReverter[O, _]] = None) : SVar[O] =
+protected case class SVarContainer[T]( svar : StateParticle[T], info : ConvertibleTrait[T]){
+  def convertSVar[O]( out : ConvertibleTrait[O], reverter : Option[IReverter[O, _]] = None) : StateParticle[O] = {
+    implicit val ct = out.classTag
     info.createConverter(svar, out, reverter)
+  }
+
+  def as[O]( out : ConvertibleTrait[O], reverter : Option[IReverter[O, _]] = None) : SVarContainer[O] =
+    SVarContainer(convertSVar(out, reverter), out.setAnnotations(annotations.toSeq :_*))
+
+  def toAnnotatedMapEntry : (MapKey[T], StateParticle[T]) =
+    MapKey(info, AnnotationSet(annotations.toSeq :_*)) -> svar
+
+  def asTyped : SVarContainer.TypedStateParticle[T] =
+    info -> svar
+
+  override def toString: String =
+    info.toString
+
+  final def annotations =
+    info.annotations
 }

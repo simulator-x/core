@@ -24,9 +24,20 @@ import simx.core.entity.Entity
 import simx.core.entity.description._
 import simx.core.svaractor.SVarActor
 import simx.core.entity.typeconversion._
-import simx.core.component.ComponentHandling
-import simx.core.ontology.{GroundedSymbol, types}
-import simx.core.entity.typeconversion.{Own, Provide}
+import simx.core.ontology._
+import simx.core.worldinterface.{WorldInterfaceActor, WorldInterfaceHandling}
+import simx.core.worldinterface.naming.NamingAspect
+import scala.reflect.ClassTag
+import simx.core.ontology.types
+import simx.core.entity.description.NoInitialValuesException
+import simx.core.entity.typeconversion.Own
+import simx.core.entity.description.Providing
+import simx.core.entity.description.ResolveRequirementsException
+import simx.core.entity.typeconversion.Provide
+import simx.core.entity.description.DoubleDefinitionException
+import simx.core.helper.NewExecScheme
+import simx.core.worldinterface.naming.NameIt
+import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 
 
 /**
@@ -35,53 +46,84 @@ import simx.core.entity.typeconversion.{Own, Provide}
  * Time: 08:44
  */
 
-trait EntityCreationHandling extends SVarActor with ComponentHandling {
-  protected final implicit val creationContext = this
+trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with EntityUpdateHandling{
+  //  override protected implicit val actorContext = this
   /**
    *  creates a new entity described by this description and executes the given handler afterwards
    * @param handler the handler executed after the creation process is finished
    */
-  final protected[core] def realize[Type <: Entity](entityDescription: GeneralEntityDescription[Type])(handler: (Type) => Any){
-    createEntity(entityDescription, handler)
+  final protected[core] def realize[Type <: Entity, B <: Type](desc: GeneralEntityDescription[Type, B])(handler: (Type) => Any){
+    createEntity(desc, handler)
   }
+
+  final protected[core] def realize[Type <: Entity](desc: SpecificEntityDescription[Type])(handler: (Type) => Any){
+    realize(desc.desc)(handler)
+  }
+
+  protected var printDoubleWarnings = true
 
   private var creationStatusMap = Map[java.util.UUID, CreationStatus[_ <: Entity]]()
 
-  private class CreationStatus[Type <: Entity]( val entityAspects : Seq[EntityAspect],
-                                                createType        : Entity  => Type,
-                                                theHandler        : Option[Type  => Any]){
+  private class CreationStatus[Type <: Entity]( val description   : GeneralEntityDescription[Type, _ <: Type],
+                                                val entityAspects : Seq[EntityAspect],
+                                                createType        : (Entity, SVarActor)  => Type,
+                                                theHandler        : Option[Type  => Any])
+  {
     private var result : Option[Type] = None
-    val theEntity           = new Entity
+    val theEntity           = new Entity(description)
     val values              = new SValSet
     val id                  = java.util.UUID.randomUUID()
     var openGetDepRequests  = List[SVarActor.Ref]()
     var ownerMap            = Map[Symbol, SVarActor.Ref]()
-    var componentsCache     = Map[GroundedSymbol,List[SVarActor.Ref]]()
+    var openGetInitRequests = Map[SVarActor.Ref, Set[ConvertibleTrait[_]]]()
+    var constSet            = Set[SVal[_]]()
+    var componentsCache     = Map[GroundedSymbol, List[SVarActor.Ref]](
+      Symbols.entityCreation -> List(self),
+      Symbols.component -> List(WorldInterfaceActor.self),
+      NamingAspect.componentType -> List(WorldInterfaceActor.self)
+    )
     var sortedDeps          = List[TripleSet]()
     var storedDeps          = Map[SVarActor.Ref, Map[EntityAspect, Set[Dependencies]]]()
+    var subElements         = Set[SVal[_]]()
     def handle() =
       theHandler.collect{ case h => h(result.getOrElse(throw new Exception(""))) }
 
-    def createFrom(e : Entity) : Entity = {
-      result = Some(createType(e))
+    def createFrom(e : Entity)(implicit creator : SVarActor) : Entity = {
+      result = Some(createType(e, creator))
       result.get
     }
   }
 
-  def createEntity[Type <: Entity]( e : GeneralEntityDescription[Type], handler : Type => Any ){
-    val entityAspects = e.aspects
-    val status = new CreationStatus(entityAspects, e.createType, Some(handler))
+  private def createEntity[Type <: Entity, B <: Type]( ed : GeneralEntityDescription[Type, B], handler : Type => Any ){
+    val e = if (ed.aspects.exists(_.aspectType == Symbols.name)) ed else ed.copy(ed.aspects :+ NameIt(ed.path.last.name))
+
+    val status = new CreationStatus(e, e.aspects, e.createType, Some(handler))
     creationStatusMap   = creationStatusMap + (status.id -> status)
-    val numberOfAspects = entityAspects.size
     var numberOfAnswers = 0
-    for( entityAspect <- entityAspects ) {
-      componentForType( entityAspect.componentType, (componentsList) => {
-        status.componentsCache = status.componentsCache + ( entityAspect.componentType -> componentsList.getOrElse(
-          throw new Exception("did not find component " + entityAspect.componentType.value.toString)))
+    val entityAspects = e.aspects.filterNot(aspect => status.componentsCache.contains(aspect.componentType))
+
+    if( entityAspects.isEmpty )
+      startCreation(status)
+    else
+      for( entityAspect <- entityAspects )
+        handleComponents( entityAspect.componentType )( handleComponentList(status, entityAspect) )
+
+    def handleComponentList(status : CreationStatus[_], aspect : EntityAspect, iteration : Int = 0)
+                           (list : List[(Symbol, SVarActor.Ref)]){
+      if (list.isEmpty || !aspect.targets.forall(t => list.exists(_._1 == t))) addJobIn(100){
+        if (iteration == 5)
+          println("waiting for components of type " + aspect.componentType.value)
+        else if (iteration > 50)
+          throw new Exception("Component of type " + aspect.componentType.value + " not found ")
+        else
+          handleComponents(aspect.componentType)(handleComponentList(status, aspect, iteration + 1))
+      } else {
+        val componentsList = if (aspect.targets.nonEmpty) list.filter(x => aspect.targets.contains(x._1)) else list
+        status.componentsCache = status.componentsCache + ( aspect.componentType -> componentsList.map(_._2))
         numberOfAnswers = numberOfAnswers + 1
-        if( numberOfAnswers == numberOfAspects )
+        if( numberOfAnswers == entityAspects.size )
           startCreation(status)
-      })
+      }
     }
   }
 
@@ -89,28 +131,14 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
   private type TripleSet = (SVarActor.Ref, EntityAspect, Set[ConvertibleTrait[_]])
   private type Triple = (SVarActor.Ref, EntityAspect, Dependencies)
 
-  //! the handler which notifies creation observers via the EntityDescription object
-  private val notifyObservers = (e : Entity , s : Seq[EntityAspect]) => {
-    GeneralEntityDescription.notifyObservers( EntityConfiguration(e, s.map( toTuple _).toMap) ); e
-  }
-
-  /**
-   *  creates a tuple of componentType and NamedSValList from a given EntityAspect
-   * @param a the EntityAspect
-   * @return the resulting tuple
-   */
-  private def toTuple(a : EntityAspect) : (Symbol, NamedSValSet) =
-    a.componentType.value.toSymbol -> a.getCreateParams
-
-
   /**
    *  Creates a map (T, Actor) by applying the given partial function to all provides and requires of each aspect.
    *        The Functions result (if it can be applied) is added as key to the map (value = the associated component).
    * @param func the partial function to be appplied
    * @return a map with func's results as keys and associated components as values
    */
-  private def extractPar[T]( status : CreationStatus[_], func : PartialFunction[ProvideAndRequire, Option[T]]) = {
-    val fallback = { case _ => None } : PartialFunction[ProvideAndRequire, Option[T]]
+  private def extractPar[T]( status : CreationStatus[_], func : PartialFunction[ProvideAndRequire[_, _], Option[T]]) = {
+    val fallback = { case _ => None } : PartialFunction[ProvideAndRequire[_, _], Option[T]]
     status.entityAspects.foldLeft(Map[T, SVarActor.Ref]()){
       (map, aspect) =>
         val theComponent = status.componentsCache(aspect.componentType).head
@@ -125,11 +153,12 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
     debug("creating " + status.entityAspects.map(_.getCreateParams.semantics.value).mkString(", "))
     status.ownerMap = extractPar(status, { case Own(c) => Some(c.sVarIdentifier) })
     status.entityAspects.foreach{ aspect =>
-      status.componentsCache( aspect.componentType ).headOption.foreach {
-        c => {
-          c ! GetDependenciesMsg( status.id, aspect )
-          status.openGetDepRequests = c :: status.openGetDepRequests
-        }
+      status.componentsCache( aspect.componentType ).headOption.foreach { component =>
+        if (aspect.componentType == Symbols.entityCreation)
+          self ! GetDependenciesAns( status.id, aspect.getDependencies, aspect )
+        else
+          component ! GetDependenciesMsg( status.id, aspect )
+        status.openGetDepRequests = component :: status.openGetDepRequests
       }
     }
   }
@@ -144,7 +173,7 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
     status.openGetDepRequests = status.openGetDepRequests.filterNot(_ == msg.sender) :::
       status.openGetDepRequests.filter(_ == msg.sender).drop(1)
     if (status.openGetDepRequests.isEmpty){
-      status.storedDeps = filterProvidings(status.storedDeps, extractPar(status, { case Provide(c) => Some(c.getSVarName) } ))
+      status.storedDeps = filterProvidings(status.storedDeps, extractPar(status, { case Provide(c) => Some(c.from) } ))
       status.sortedDeps = sortDependencies(status.storedDeps)
       checkForDoubles(status.sortedDeps, status.ownerMap)
       setOwners(status)
@@ -168,12 +197,12 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
    *  filters the dependencies provided by each component and adds/removes user defined providings (isProvided)
    * @param m the map to be filtered
    */
-  private def filterProvidings(m : Map[SVarActor.Ref, Map[EntityAspect, Set[Dependencies]]], providings : Map[Symbol, SVarActor.Ref]) =
+  private def filterProvidings(m : Map[SVarActor.Ref, Map[EntityAspect, Set[Dependencies]]], providings : Map[ConvertibleTrait[_], SVarActor.Ref]) =
     m.foldLeft(m.empty){ (map, tuple) =>
-      map.updated(tuple._1,  tuple._2.map{ iTuple => {
+      map.updated(tuple._1,  tuple._2.map{ iTuple =>
         val correctedDeps = handleDeps(tuple._1, iTuple._2, providings)
-        if (correctedDeps.isEmpty) iTuple else (iTuple._1 -> correctedDeps)
-      } } )
+        if (correctedDeps.isEmpty) iTuple else iTuple._1 -> correctedDeps
+      } )
     }
 
   /**
@@ -181,18 +210,21 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
    *        from which all providings that were overridden by the user are removed
    * @return the cleaned set
    */
-  private def handleDeps(actor : SVarActor.Ref, dep : Set[Dependencies], providings : Map[Symbol, SVarActor.Ref]) : Set[Dependencies] =
-    dep.foldLeft(dep.empty){
+  private def handleDeps(actor : SVarActor.Ref, dep : Set[Dependencies], providings : Map[ConvertibleTrait[_], SVarActor.Ref]) : Set[Dependencies] = {
+    val retVal = dep.foldLeft(dep.empty){
       (set, elem) => handleDep(actor, elem, providings).collect{ case f => set + f }.getOrElse(set)
     }
+    val missing = providings.filterNot( p => p._2 != actor || retVal.exists(_.providings.objects.exists(_.sVarIdentifier == p._1)) )
+    if (missing.isEmpty) retVal else retVal + Dependencies(Providing(missing.keys.toSeq :_*))
+  }
 
   /**
    *  checks for each providing in the given dependencies if it shall be provided by the given actor. If it shall
    *        be provided by another actor, it is removed from the dependency
    * @return an option containing the cleaned dependencies, if it still contains providings, None otherwise
    */
-  private def handleDep( actor : SVarActor.Ref, dep : Dependencies, providings : Map[Symbol, SVarActor.Ref] ) : Option[Dependencies] = {
-    val filtered = dep.providings.objects.filter( p => providings.getOrElse(p.sVarIdentifier, actor) == actor )
+  private def handleDep( actor : SVarActor.Ref, dep : Dependencies, providings : Map[ConvertibleTrait[_], SVarActor.Ref] ) : Option[Dependencies] = {
+    val filtered = dep.providings.objects.filter( p => providings.getOrElse(p, actor) == actor )
     if (filtered.isEmpty) None else Some(Dependencies(Providing(filtered : _*), dep.requirings))
   }
 
@@ -290,23 +322,59 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
     status.sortedDeps match {
       case Nil => createSVars(status)
       case (actor, aspect, providings) :: tail =>
-        val provideSet = providings.toSet.filter{
-          p => status.ownerMap.get(p.sVarIdentifier).collect{ case x => x equals actor }.getOrElse(true)
+        if (aspect.componentType == Symbols.entityCreation)
+          selfRequestInitialValues(aspect, status.theEntity){ svals =>
+            status.subElements = status.subElements ++ svals.toSValSeq.toSet
+            status.sortedDeps  = tail
+            requestInitialValues(status)
+          }
+        else {
+          status.openGetInitRequests = status.openGetInitRequests.updated(actor, providings)
+          actor ! GetInitialValuesMsg(status.id, providings.toSet, aspect, status.theEntity, new SValSet(status.values) )
         }
-        actor ! GetInitialValuesMsg(status.id, provideSet, aspect, status.theEntity, new SValSet(status.values) )
         status.sortedDeps = tail
     }
   }
 
+  private def selfRequestInitialValues(aspect: EntityAspect, e: Entity)(provideInitialValues : SValSet => Unit) {
+    if (aspect.componentType != Symbols.entityCreation)
+      throw new Exception("error: unknown aspect for sub-entity creation: " + aspect)
+    else
+      aspect.getCreateParams.getAllValuesFor(simx.core.ontology.types.EntityDescription) match {
+        case head :: tail => create(e, head, tail).exec{ set => provideInitialValues( SValSet(set.toSeq :_*) ) }
+        case Nil => provideInitialValues(SValSet())
+      }
+  }
+
+
+  private def create( parent : Entity, head : SpecificDescription[_ <: Entity],
+                      tail : List[SpecificDescription[_ <: Entity]] ) =
+    tail.foldLeft(NewExecScheme(sValFrom(parent, head))){ _ and sValFrom(parent, _) }
+
+  private def sValFrom[T <: Entity : ClassTag]( parent : Entity,  desc : GeneralEntityDescription[T, T] ) =
+    ( handler : SVal[_] => Any ) => realizeAsSVal(desc, parent, handler)
+
+  private def realizeAsSVal[T <: Entity : ClassTag]( desc : GeneralEntityDescription[T, T], parent : Entity, handler : SVal[T] => Any ){
+    val newAspects = desc.aspects
+    newAspects.foreach(_.setParent(parent))
+    val newDescription = desc.copy( newAspects )
+    val newHandler     =  { (a : T) => handler(SVal(desc.typeDef)(a)) }
+    newDescription.realize( newHandler)
+  }
+
   //process initial values
-  addHandler[GetInitialValuesAns]{
-    msg =>
-      val status = creationStatusMap(msg.id)
-      msg.initialValues.filterNot{
-        p => status.ownerMap.get(p._1).collect{case x => x equals msg.sender}.getOrElse(true)
-      }.foreach( doubleVal => println(doubleVal._1 + " was provided although it was not requested"))
-      status.values ++= msg.initialValues
-      requestInitialValues(status)
+  addHandler[GetInitialValuesAns]{ msg =>
+    def remap[T](desc : ConvertibleTrait[T]) : List[SVal[_]] =
+      msg.initialValues.getAllSValsFor(desc).map(x => desc(x.value))
+
+    val status = creationStatusMap(msg.id)
+    if (printDoubleWarnings) msg.initialValues.filterNot{
+      p => status.storedDeps.get(msg.sender).collect{
+        case x => x.values.exists(_.exists(_.providings.objects.exists(_.sVarIdentifier == p._1)))
+      }.getOrElse(true)
+    }.foreach( doubleVal => println(doubleVal._1 + " was provided although it was not requested") )
+    status.values ++= SValSet(status.openGetInitRequests(sender).flatMap(remap(_)).toSeq :_*)
+    requestInitialValues(status)
   }
 
   //actually create the svars
@@ -316,11 +384,12 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
    *        the last receiver of that message
    */
   private def createSVars( status : CreationStatus[_] ) {
-    val providings = status.storedDeps.values.flatMap(_.flatMap(_._2.flatMap(_.providings.objects)))
-    checkValidity(status, providings.toSeq, status.values.map(_._2.head.typedSemantics))
+    val providings = status.storedDeps.flatMap(_._2.flatMap(_._2.flatMap(_.providings.objects)))
+    val requirings = status.values.map(_._2.head.typedSemantics)
+    checkValidity(status, requirings, providings ++ status.subElements.map(_.typedSemantics))
     status.values.values.flatten.foldLeft(Map[SVarActor.Ref, List[ProvideConversionInfo[_,_]]]()){
       (map, value) =>
-        val typeInfo = value.typedSemantics.asConvertibleTrait
+        val typeInfo = value.typedSemantics
         val owner = status.ownerMap(typeInfo.sVarIdentifier)
         val list = map.getOrElse(owner, List[ProvideConversionInfo[_, _]]())
         map.updated(owner, value.asProvide.wrapped :: list)
@@ -336,30 +405,44 @@ trait EntityCreationHandling extends SVarActor with ComponentHandling {
    * @param requirings the given requirings
    * @param providings the given providings
    */
-  private def checkValidity( status : CreationStatus[_], requirings : Seq[ConvertibleTrait[_]], providings : Iterable[TypeInfo[_]] ) {
+  private def checkValidity( status : CreationStatus[_], requirings : Iterable[TypeInfo[_, _]],
+                             providings : Iterable[TypeInfo[_, _]] ) {
     val missing = requirings.filter( p => providings.find( _.sVarIdentifier == p.sVarIdentifier ).isEmpty )
-    if (missing.nonEmpty) throw NoInitialValuesException(missing, status.ownerMap, status.entityAspects)
+    if (missing.nonEmpty) throw NoInitialValuesException(missing.toSeq, status.ownerMap, status.entityAspects)
   }
 
   addHandler[SVarsCreatedMsg]{
     msg => finalizeCreation(msg.id, msg.entity)
   }
 
-  protected def finalizeCreation( id : java.util.UUID, e : Entity) {
-    val status = creationStatusMap( id )
-    val entity = status.createFrom( e )
-    val observers = status.entityAspects.flatMap{ a => status.componentsCache(a.componentType) }.toSet + self
+  private def finalizeCreation( id : java.util.UUID, e : Entity ) {
+    val status = creationStatusMap(id)
+    status.subElements.map(_.asProvide.wrapped).foldRight(handler(_)){ (toAdd, hnd) => toAdd.injectSVar(_)(hnd) }(e)
 
-    entity.setRemoveObservers(entity.getRemoveObservers ++ observers)
-    status.entityAspects.foreach{ asp =>
-      status.componentsCache( asp.componentType ).foreach{
-        _ ! EntityCompleteMsg(asp, entity)
-      }
+    def handler(result: Entity) {
+      val obs = status.entityAspects.flatMap { asp => status.componentsCache(asp.componentType) }.toSet
+      result.addRemoveObservers(obs + WorldInterfaceActor.self + self, { entityWithObservers =>
+        val result = status createFrom entityWithObservers
+        val finalPath = status.description.path :+ Symbol(result.id.toString)
+        onNextCreation(finalPath) { entity =>
+          status.entityAspects.filterNot(_.componentType == Symbols.entityCreation).foreach {
+            asp => status.componentsCache(asp.componentType).foreach {
+              _ ! EntityCompleteMsg(asp, entity)
+            }
+          }
+          info("completed " + status.entityAspects.map(_.getCreateParams.semantics.value).mkString(", "))
+          status.handle()
+        }
+
+        if (finalPath.head == Symbols.component.value.toSymbol)
+          result.get(types.Component).head {
+            component => ask(component, FinalizeComponentConfigMsg(result)) {
+              _ : Any => registerEntity(finalPath, result)
+            }
+          }
+        else
+          registerEntity(finalPath, result)
+      })
     }
-
-    notifyObservers(entity, status.entityAspects )
-    status.handle()
-
-    info("completed " + status.entityAspects.map(_.getCreateParams.semantics.value).mkString(", " ))
   }
 }

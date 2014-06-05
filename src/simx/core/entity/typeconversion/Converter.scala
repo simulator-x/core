@@ -20,8 +20,7 @@
 
 package simx.core.entity.typeconversion
 
-import scala.reflect.runtime.universe.TypeTag
-import scala.reflect.ClassTag
+import reflect.runtime.universe.TypeTag
 
 /**
  * @author dwiebusch
@@ -39,8 +38,8 @@ import scala.reflect.ClassTag
 trait ConverterBase{
   protected type localType
   protected type globalType
-  protected def tManifest : ClassTag[localType]
-  protected def oManifest : ClassTag[globalType]
+  protected def tManifest : TypeTag[localType]
+  protected def oManifest : TypeTag[globalType]
   val localRepresentations : List[ConvertibleTrait[localType]]
   val globalRepresentation : Option[ConvertibleTrait[globalType]]
 
@@ -58,8 +57,8 @@ trait ConverterBase{
  */
 abstract class Converter[T, O] private[typeconversion](override val localRepresentations : List[ConvertibleTrait[T]],
                                                        override val globalRepresentation : Option[ConvertibleTrait[O]])
-                                                      (implicit val tManifest : ClassTag[T],
-                                                       implicit val oManifest : ClassTag[O])
+                                                      (implicit val tManifest : TypeTag[T],
+                                                       implicit val oManifest : TypeTag[O])
   extends IConverter[T, O] with IReverter[T, O]
 {
   protected type localType = T
@@ -72,7 +71,7 @@ abstract class Converter[T, O] private[typeconversion](override val localReprese
    * @param c2 the ConvertibleTrait representing the type used within the Simulator core
    */
   def this(c1 : ConvertibleTrait[T], c1s : ConvertibleTrait[T]*)(c2 : ConvertibleTrait[O]) =
-    this(c1 :: List(c1s :_*), Some(c2))(c1.typeinfo, c2.typeinfo)
+    this(c1 :: List(c1s :_*), Some(c2))(c1.typeTag, c2.typeTag)
 
 //  def this(c1 : ConvertibleTrait[T], c1s : ConvertibleTrait[T]*)(implicit c2 : ClassManifest[O]) =
 //    this(c1 :: List(c1s :_*), None)(c1.typeinfo, c2)
@@ -92,8 +91,7 @@ object Converter{
   //! the map of registered converters
   private var registeredConverters = Map[IDType, Map[IDType, ConverterBase]]()
 
-  private def getId(c : ConvertibleTrait[_]) : IDType =
-    Symbol(c.getClass.getPackage.getName + "." + c)
+  private def getId(c : ConvertibleTrait[_]) : IDType = Symbol(c.getClass.getPackage.getName + "." + c)
 
   /**
    *  register the provided converter
@@ -195,7 +193,7 @@ protected[entity] trait IConverter[-T, +O] extends ConverterBase{
    * @return true if the converter can convert from from to to ;-) false if it can't
    */
   private[typeconversion] def _canConvert(from : ConvertibleTrait[_], to : ConvertibleTrait[_]) : Boolean =
-    if (from.typeinfo <:< tManifest && oManifest <:< to.typeinfo) canConvert(from, to) else false
+    if (from.typeTag.tpe <:< tManifest.tpe && oManifest.tpe <:< to.typeTag.tpe) canConvert(from, to) else false
 
   //! register this converter
   Converter.register(this)
@@ -232,7 +230,7 @@ protected[entity] trait IReverter[+T, -O] extends ConverterBase{
    * @return true if the reverter can revert from from to to ;-) false if it can't
    */
   private[typeconversion] def _canRevert(to : ConvertibleTrait[_], from : ConvertibleTrait[_]) : Boolean =
-    if (from.typeinfo <:< oManifest && tManifest <:< to.typeinfo ) canRevert(to, from) else false
+    if (from.typeTag.tpe <:< oManifest.tpe && tManifest.tpe <:< to.typeTag.tpe ) canRevert(to, from) else false
 
   //! register this reverter
   Reverter.register(this)
@@ -245,16 +243,16 @@ protected[entity] trait IReverter[+T, -O] extends ConverterBase{
 private object NC extends Converter[Any, Any](Nil, None){
   override private[typeconversion] def _canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) = canConvert(from, to)
   override private[typeconversion] def _canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = canRevert(from, to)
-  override def canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) : Boolean = from.typeinfo <:< to.typeinfo
-  override def canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = from.typeinfo <:< to.typeinfo
+  override def canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) : Boolean = from.typeTag.tpe <:< to.typeTag.tpe
+  override def canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = from.typeTag.tpe <:< to.typeTag.tpe
   def convert(i: Any) = i
   def revert(i: Any)  = i
 }
 
 // Some Exception definitions
-case class NoConverterFoundException(from : TypeInfo[_], to : TypeInfo[_]) extends Exception(
-  from + "(" + from.typeinfo +") => "  + to + "(" + to.typeinfo +")"
+case class NoConverterFoundException[T](from : TypeInfo[T, _ <: T], to : TypeInfo[T, _ <: T]) extends Exception(
+  from + "(" + from.typeTag +") => "  + to + "(" + to.typeTag +")"
 )
-case class NoReverterFoundException(from : TypeInfo[_], to : TypeInfo[_]) extends Exception(
-  from + "(" + from.typeinfo +") => "  + to + "(" + to.typeinfo +")"
+case class NoReverterFoundException[T](from : TypeInfo[T, _ <: T], to : TypeInfo[T, _ <: T]) extends Exception(
+  from + "(" + from.typeTag +") => "  + to + "(" + to.typeTag +")"
 )

@@ -46,6 +46,6 @@ trait SVarData{
    * Calling this methods leads into a notification of all observers about a
    * change of values.
    */
-  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor.Ref)
+  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor)
 }
 

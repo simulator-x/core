@@ -20,7 +20,7 @@
 
 package simx.core.worldinterface.eventhandling
 
-import simx.core.ontology.GroundedSymbol
+import simx.core.ontology.{Symbols, types, GroundedSymbol}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.{SValSet, SVal}
 import simx.core.entity.Entity
@@ -29,12 +29,13 @@ import simx.core.entity.Entity
  * date: 03.12.2010
  */
 
-//TODO Immutable
 class Event protected[eventhandling](
   val name : GroundedSymbol,
   val values : SValSet = new SValSet(),
   val affectedEntities : Set[Entity] = Set() )
 extends Serializable {
+  values.addIfNew(types.Time(System.currentTimeMillis()))
+
   def get[T]( c : ConvertibleTrait[T] ) : Option[T] =
     values.getFirstValueFor(c)
 
@@ -42,16 +43,16 @@ extends Serializable {
     values.getAllValuesFor(c)
 
   override def toString: String =
-    "Event (" + name.value + " with " + values + "\n)"
+    "Event (" + name.value + " affecting " + affectedEntities.mkString(""," and ", "") +" with values " + values + "\n)"
 }
 
-case class EventDescription(
-  name : GroundedSymbol,
-  hasToContain: List[ConvertibleTrait[_]] = Nil,
-  restriction : Option[PartialFunction[Event, Boolean]] = None )
+class EventDescription(
+  val name : GroundedSymbol,
+  val hasToContain: List[ConvertibleTrait[_]] = Nil,
+  val restriction : Option[PartialFunction[Event, Boolean]] = None)
 {
   def matches( e : Event ) : Boolean =
-    if (e.name equals name) restriction collect { case f => f(e) } getOrElse true else false
+    if (e.name equals name) restriction.collect{ case f => f(e) }.getOrElse(true) else false
 
   def createEvent(affectedEntities : Set[Entity], values : SVal[_]* ) : Event = {
     //TODO Check Values
@@ -77,6 +78,33 @@ case class EventDescription(
     case desc : EventDescription => desc.name.equals(name)
     case _ => false
   }
+
+  def emit(values : SValSet, affectedEntities : Set[Entity])(implicit provider : EventProvider){
+    provider.emitEvent(this, new Event(name, values, affectedEntities))
+  }
+
+  def emit( affectedEntities : Set[Entity] = Set())(implicit provider : EventProvider) {
+    emit(SValSet(), affectedEntities )
+  }
+
+  def emit(values : SVal[_]*)(implicit provider : EventProvider){
+    emit(SValSet(values :_*), Set[Entity]())
+  }
+  def emit(affectedEntitites : Set[Entity], values : SVal[_]*)(implicit provider : EventProvider){
+    emit(SValSet(values :_*), affectedEntitites)
+  }
+
+  def observe(handler : Event => Any)(implicit eventHandler : EventHandler){
+    eventHandler.observe(this, handler)
+  }
+
+}
+
+final case class AnyEventDescription(r : Option[PartialFunction[Event, Boolean]] = None)
+  extends EventDescription(Symbols.event, Nil, r)
+{
+  override def matches(e: Event): Boolean =
+    restriction collect { case f => f(e) } getOrElse true
 }
 
 object DefaultRestrictions{

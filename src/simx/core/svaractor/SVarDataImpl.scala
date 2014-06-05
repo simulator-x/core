@@ -19,8 +19,9 @@
  */
 
 package simx.core.svaractor
-
 import scala.ref.WeakReference
+import simx.core.entity.description.{SValBase, SVal}
+import simx.core.entity.typeconversion.ConvertibleTrait
 
 /**
  * @author Dennis Wiebusch
@@ -29,10 +30,14 @@ import scala.ref.WeakReference
  */
 
 
-protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[SVar[T]])  extends SVarData {
+protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[SVar[T]],
+                                typeInfo : ConvertibleTrait[T] )  extends SVarData {
   protected var observers = Map[SVarActor.Ref, Set[SVarActor.Ref]]()
 
-  def write[V]( writer: SVarActor.Ref, value : V )(implicit actor : SVarActor.Ref) {
+  def this(sval : SVal[T], svar : WeakReference[SVar[T]]) =
+    this(sval.value, svar, sval.typedSemantics.asConvertibleTrait)
+
+  def write[V]( writer: SVarActor.Ref, value : V )(implicit actor : SVarActor) {
     data = value.asInstanceOf[T]
     notifyWrite(writer)
   }
@@ -40,10 +45,14 @@ protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[S
   def read[V] : V =
     data.asInstanceOf[V]
 
-  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor.Ref) {
+  def readFull[V] : SVal[V] =
+    typeInfo.asInstanceOf[ConvertibleTrait[V]](read)
+
+  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor) {
     svar.get match {
       case Some(ref) => observers.foreach{ kvPair =>
-        if(!kvPair._2.contains(writer)) kvPair._1 ! NotifyWriteSVarMessage[T]( ref, data) }
+        if(!kvPair._2.contains(writer))
+          actor.notifyObserver(kvPair._1, NotifyWriteSVarMessage[T]( ref, data )(actor.self) ) }
       case None =>
     }
   }

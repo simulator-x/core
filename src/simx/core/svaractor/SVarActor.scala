@@ -20,17 +20,17 @@
 
 package simx.core.svaractor
 
-import benchmarking.ActorBenchmarking
-import handlersupport.HandlerBenchmarking
-import simx.core.helper.{JVMTools, Loggable}
-import akka.actor.{Address, Deploy, ActorSystem, Props}
-import simx.core.entity.typeconversion.ConvertedSVar
-import collection.mutable
-import ref.WeakReference
-import com.typesafe.config.ConfigFactory
-import simx.core.clustering.ClusterSubSystem
-import reflect.runtime.universe.TypeTag
+import akka.actor._
 import akka.remote.RemoteScope
+import akka.remote.DisassociatedEvent
+import scala.reflect.runtime.universe.TypeTag
+import com.typesafe.config.{Config, ConfigFactory}
+import simx.core.helper.{JVMTools, Loggable}
+import simx.core.entity.typeconversion.ConvertedSVar
+import simx.core.clustering.ClusterSubSystem
+import simx.core.entity.description.SVal
+import scala.collection.mutable
+import scala.ref.WeakReference
 import scala.reflect.ClassTag
 
 
@@ -40,16 +40,23 @@ import scala.reflect.ClassTag
  */
 object SVarActor {
   type Ref = akka.actor.ActorRef
+  protected[core] type Address = akka.actor.Address
+  protected[core] def addressOf(ref : Ref) : Address = ref.path.address
+  protected[core] def isLocal(ref : Ref)   : Boolean = SVarActor.addressOf(ref).hasLocalScope
 
-  private val tickDuration = if (JVMTools.isWindows) 10 else 1
+  private var systemName = "SVarActor"
+  private var hostname = System.getProperty("simx.remote.hostname", "")
+  private val port =  System.getProperty("simx.remote.port", "0")
+  private var system : Option[ActorSystem] = None
+  private var config : Option[Config] = None
+  private var profiling = false
 
-  private val missing = "missing"
-  private val configString =
-    if(System.getProperty("simx.remote.hostname", missing) != missing)
+  private def configString =
+    if(isRemotingEnabled)
       """
       akka {
         scheduler {
-          tick-duration = """ + tickDuration + """
+          tick-duration = """ + JVMTools.minTickDuration + """
         }
         actor {
           provider = "akka.remote.RemoteActorRefProvider"
@@ -57,27 +64,92 @@ object SVarActor {
         remote {
           enabled-transports = ["akka.remote.netty.tcp"]
           netty.tcp {
-            hostname = """" + System.getProperty("simx.remote.hostname") + """"
-            port = """ + System.getProperty("simx.remote.port", "9000") + """
+            hostname = """" + hostname + """"
+            port = """ + port  + """
           }
         }
       }
-      """
-    else
-      "akka.scheduler.tick-duration=" + tickDuration
+                                 """
+    else {
+      if( profiling ) {
+        "akka.scheduler.tick-duration=" + JVMTools.minTickDuration + "\n" + "akka.actor.provider = \"akka.actor.profiling.LocalProfilingActorRefProvider\""
+      } else
+        """
+        akka {
+          log-dead-letters = 1
+          scheduler.tick-duration=""" + JVMTools.minTickDuration + """
+        }
+                                                                   """
+    }
 
-  var config = ConfigFactory.parseString(configString).withFallback(ConfigFactory.load())
-  var system = ActorSystem("SVarActor", config)
+  private def getConfig : Config =
+    config.getOrElse( ConfigFactory.parseString(configString).withFallback(ConfigFactory.load()))
 
-  def createActor[ T <: SVarActor ](ctor : => T, name : Option[String] = None ) : Ref = {
-    if( name.isDefined )
-      system.actorOf(Props(ctor), name.get )
-    else
-      system.actorOf(Props(ctor) )
+  protected def getAddress = {
+    require(system.nonEmpty, "System has to be instantiated before calling getAddress function")
+    class Ext(s: ExtendedActorSystem) extends Extension{ def getAddress = s.provider.getDefaultAddress }
+    object ExtKey extends ExtensionKey[Ext]
+    ExtKey.apply(getSystem).getAddress
   }
 
+  protected def getAddressOf(ref : SVarActor.Ref) =
+    ref.path.toStringWithAddress(getAddress)
+
+  protected def getSystem = {
+    if (system.isEmpty)
+      system = Some(ActorSystem(systemName, getConfig))
+    system.get
+  }
+
+  protected def subscribeAkkaEvents[T](c : Class[T], actor :  SVarActor.Ref){
+    getSystem.eventStream.subscribe(actor, c)
+  }
+
+  def isRemotingEnabled : Boolean =
+    hostname.nonEmpty
+
+  def setSystemName(name : String){
+    require(system.isEmpty, "SystemName may be defined before starting the first actor")
+    systemName = name
+  }
+
+  def setProfiling( profiling : Boolean ) {
+    this.profiling = profiling
+  }
+
+  def setHostName(hostName : String){
+    require(system.isEmpty, "Hostname may be defined before starting the first actor")
+    hostname = hostName
+  }
+
+  def setSystemConfig(cfg : Config){
+    require(system.isEmpty, "Config may be defined before starting the first actor")
+    config = Some(cfg)
+  }
+
+  def getHostname : Option[String] =
+    if (hostname.nonEmpty) Some(hostname) else None
+
+  def getSystemName =
+    systemName
+
+  def createActor( props : Props, name : Option[String] ) : Ref = {
+    val sys = getSystem
+    if( name.isDefined )
+      sys.actorOf(props, name.get )
+    else
+      sys.actorOf(props, props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID())
+  }
+
+  def createActor[ T <: SVarActor : ClassTag ](ctor : => T, name : Option[String] = None ) : Ref =
+    createActor(Props.apply(ctor), name)
+
   def shutdownSystem(){
-    system.shutdown()
+    system.foreach(_.shutdown())
+  }
+
+  def shutdownActor(ref : Ref)(implicit sender : Ref){
+    ref ! Shutdown()
   }
 }
 
@@ -85,8 +157,8 @@ object SVarActor {
  * This trait is an actor that can handle State Variables and fullfills the
  * required notifications.
  */
-trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarking with ActorBenchmarking with Loggable{
-  protected final implicit val actorContext = this
+trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
+
   //
   //
   //
@@ -94,26 +166,35 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   //
   //
 
-
+  override def preStart() {
+    subscribeAkkaEvents(classOf[DisassociatedEvent])
+    super.preStart()
+  }
 
   private def defaultErrorHandler( e : Exception ) {
     e.printStackTrace()
     System.exit( -100 )
   }
 
-  final protected def createActor[T <: SVarActor]( constructorCall : => T, targetNode : Option[Symbol] = None )
-                                                 ( handler      : SVarActor.Ref => Unit )
-                                                 ( errorHandler :  Exception => Unit = defaultErrorHandler ) = {
+  final protected def spawnActor[T <: SVarActor : ClassTag]( constructorCall : => T, targetNode : Option[Symbol] = None ) =
+    createActor(constructorCall, targetNode)(_ => {})()
+
+  final private def _createActor(props : Props, targetNode : Option[Symbol] = None )
+                                ( handler      : SVarActor.Ref => Unit )
+                                ( errorHandler :  Exception => Unit = defaultErrorHandler ) = {
     val actor =
       if( targetNode.isEmpty || !ClusterSubSystem.getKnown.contains( targetNode.get ) ) {
-        context.actorOf(Props(constructorCall))
+        context.actorOf(props, props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID())
       } else {
         val (interface, port) = ClusterSubSystem.getKnown( targetNode.get )
-        context.actorOf( Props( constructorCall).withDeploy( Deploy( scope = RemoteScope( Address( "akka", "SimX", interface, port ) ) ) ) )
+        context.actorOf(
+          props.withDeploy( Deploy( scope = RemoteScope( Address( "akka", SVarActor.systemName, interface, port ) ) ) ),
+          props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID()
+        )
       }
     try {
-      ask(actor, ActorCreation()){
-        answer : ActorCreation => handler(actor)
+      ask[Any](actor, ActorCreation){
+        case ActorCreation => handler(actor)
       }
     } catch {
       case e : Exception =>
@@ -122,6 +203,24 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
     actor
   }
 
+  final protected def createActor( props : Props )( handler : SVarActor.Ref => Unit )
+                                 ( errorHandler :  Exception => Unit) =
+    _createActor(props)(handler)(errorHandler)
+
+  final protected def createActor[T <: SVarActor : ClassTag]( constructorCall : => T, targetNode : Option[Symbol] = None )
+                                                            ( handler      : SVarActor.Ref => Unit )
+                                                            ( errorHandler :  Exception => Unit = defaultErrorHandler ) =
+    _createActor(Props.apply(constructorCall), targetNode)(handler)(errorHandler)
+
+  protected def subscribeAkkaEvents[T](c : Class[T]){
+    SVarActor.subscribeAkkaEvents(c, self)
+  }
+
+  protected def getAddressOf(ref : SVarActor.Ref) : String =
+    SVarActor.getAddressOf(ref)
+
+  protected def getPort : Option[Int] =
+    SVarActor.getAddress.port
 
 
   /**
@@ -135,17 +234,38 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    *
    * @param value The new value for the State Variable
    */
-  final protected[svaractor] def set[T](sVar : SVar[T], value: T)  {
-    sVar match {
-      case convertedSVar : ConvertedSVar[_,T] =>
-        convertedSVar.set(value)
-      case _ =>
-        if (owner( sVar ) == self)
-          write(self, sVar, value )
-        else
-          owner( sVar ) ! WriteSVarMessage( self, sVar, value )
-    }
+  override protected[svaractor] def set[T](sVar: SVar[T], value: T): Boolean =
+    set(sVar, value, forceUpdate = false)
+
+  private[svaractor] def set[T](sVar : SVar[T], value: T, forceUpdate : Boolean) = sVar match {
+    case convertedSVar : ConvertedSVar[_,T] =>
+      convertedSVar.set(value)
+    case _ if sVar.isMutable =>
+      val currentOwner = owner(sVar)
+      if (currentOwner isSameAs self)
+        write(self, sVar, value, forceUpdate)
+      else
+        currentOwner ! WriteSVarMessage( self, sVar, value, forceUpdate )
+      true
+    case _ => false
   }
+
+  //  def observe(e : RelationalEntity){
+  //
+  //  }
+  //
+  //  def entityObserve[T](svars : List[StateParticle[T]])(handler : Map[RelationalEntity#AnnotationSet, T] => Any){
+  //
+  //  }
+  //
+
+
+
+  protected[svaractor] def notifyObserver[T](observer : SVarActor.Ref, msg : NotifyWriteSVarMessage[T]){
+    observer ! msg
+  }
+
+
 
   // Retrieve the current value. The supplied handler is used only once.
   /**
@@ -163,12 +283,13 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    *
    * @param consume A function that consumes the value of the State Variable.
    */
-  protected[svaractor] def get[T : ClassTag](sVar : SVar[T])( consume: T => Any )  {
-    sVar match {
+  protected[svaractor] def get[T : ClassTag : TypeTag](stateVariable : StateParticle[T])( consume: T => Unit )  {
+    stateVariable match {
       case convertedSVar : ConvertedSVar[_,_] =>
         convertedSVar.get(consume)
-      case _ =>
-        if( self == owner( sVar ) )
+      case sval : SVal[T] => sval.get(consume)
+      case sVar : SVar[T] =>
+        if( owner( sVar ) isSameAs self )
           consume ( read( sVar ) )
         else {
           owner( sVar ) ! ReadSVarMessage( sVar )
@@ -197,9 +318,8 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    *
    * @param handler The handler, that gets called when the value of the State Variable has changed.
    */
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Any)  {
+  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) =
     observe(sVar, Set[SVarActor.Ref]())(handler)
-  }
 
   // self observes future value changes. The supplied handle is reused.
   /**
@@ -220,29 +340,42 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    * @param handler The handler, that gets called when the value of the State Variable has changed.
    * @param ignoredWriters Value changes by SVarActors contained in this set are ignored.
    */
-  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Any)  {
+  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) =
     sVar match {
       case convertedSVar : ConvertedSVar[_, T] =>
         convertedSVar.observe(handler, ignoredWriters)
       case _ =>
-        if ( self == owner( sVar) )
+        if ( owner( sVar) isSameAs self )
           addObserver( sVar, self, ignoredWriters )
         else
           owner( sVar ) ! ObserveSVarMessage( sVar, self, ignoredWriters )
-        addSVarObserveHandler(sVar, handler.asInstanceOf[(Any => Unit)])
+        addSVarObserveHandler(sVar)(handler)
     }
-  }
 
   /**
    *  This method returns the last known owner of the state variable.
    *
    */
-  final protected[svaractor] def owner[T](sVar : SVar[T] ) : SVarActor.Ref = {
+  final protected[svaractor] def owner[T](sVar : SVar[T] ) : Owner =
     sVar match {
       case convertedSVar : ConvertedSVar[_,_] =>
         owner( convertedSVar.wrappedSVar )
-      case _ => getOrUpdateSVarOwner(sVar, sVar.initialOwner)
+      case mutableSVar : SVar[T] =>
+        getOrUpdateSVarOwner(sVar, mutableSVar.initialOwner)
+      case _ => NoOwner
     }
+
+  private case class KnownOwner(owner : SVarActor.Ref) extends Owner(owner.tell){
+    def isSameAs(that: SVarActor.Ref): Boolean = owner equals that
+  }
+
+  private case object NoOwner extends Owner( (_, _) => {} ){
+    def isSameAs(x : SVarActor.Ref) = false
+  }
+
+  protected abstract class Owner( val tell : (Any, SVarActor.Ref) => Unit ){
+    def !(msg: Any)(implicit sender : SVarActor.Ref){ tell(msg, sender) }
+    def isSameAs(that : SVarActor.Ref) : Boolean
   }
 
   // Assign a new owner.
@@ -256,7 +389,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   final protected[svaractor] def owner[T](sVar : SVar[T], newOwner: SVarActor.Ref) {
     val currentOwner = owner( sVar )
 
-    if(self == currentOwner)
+    if(currentOwner isSameAs self)
       changeOwner(self, sVar, newOwner)
     else
       currentOwner ! ChangeOwnerOfSVarMessage( sVar, newOwner )
@@ -279,32 +412,19 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
 
   }
 
-  abstract class Request[U]{
-    private var r : Option[U => Unit] = None
-    def send( receiver : SVarActor.Ref, answer : U => Unit ) {
-      r = Some(answer)
-      receiver ! this
-    }
-
-    def reply( answer : U ){
-      r.getOrElse(throw new Exception("reply function was never set")).apply(answer)
-    }
-  }
-
   var messageSendData : Map[Class[_],List[(SVarActor,java.util.UUID,Long,Long,Long)]] = Map() // (target,message id, beginEnque, endEnque)
 
   protected class ChangeOwnerStatus(val svar : SVar[_], val newOwner : SVarActor.Ref) {
     private def clearQueueFor( actor : SVarActor.Ref )(implicit context : SVarActor) {
       heldMessages.get( actor ) match {
         case None =>
-        case Some(queue) => {
+        case Some(queue) =>
           heldMessages -= actor
           // forward messages if the current actor was the sender, return to sender otherwise
           if (actor == context)
             queue.foreach( newOwner ! _ )
           else
             actor ! HeldMessagesMessage( svar, newOwner, queue.toList)(self)
-        }
       }
     }
 
@@ -347,6 +467,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
 
   //! the locally known owners
   private val sVarOwners = mutable.Map[SVar[_], SVarActor.Ref]()
+  protected val deadOwners = mutable.Set[SVarActor.Address]()
 
   //!
   protected var isRunning : Boolean = true
@@ -363,11 +484,20 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   private[svaractor] def getLocallyKnownSVarOwner(svar: SVar[_]): Option[SVarActor.Ref] =
     sVarOwners.get(svar)
 
-  private[svaractor] def getOrUpdateSVarOwner(svar: SVar[_], newOwner : SVarActor.Ref) : SVarActor.Ref =
-    sVarOwners.getOrElseUpdate(svar, newOwner)
+  private def getOrUpdateSVarOwner(svar: SVar[_], newOwner : SVarActor.Ref) : Owner = sVarOwners.get(svar) match{
+    case Some(owner) => KnownOwner(owner)
+    case None =>
+      if (deadOwners.contains(SVarActor.addressOf(newOwner))){
+        NoOwner
+      } else {
+        sVarOwners.update(svar, newOwner)
+        KnownOwner(newOwner)
+      }
+  }
 
-  private[svaractor] def addSVarObserveHandler(svar : SVar[_], handler : Any => Unit ) {
-    sVarObserveHandlers.update(svar, handler)
+  private[svaractor] def addSVarObserveHandler[T](svar : SVar[T])( handler : T => Unit ) : java.util.UUID = {
+    sVarObserveHandlers.update(svar, handler.asInstanceOf[Any => Unit])
+    java.util.UUID.randomUUID()
   }
 
   private[svaractor] def removeSVarObserveHandlers(svar : SVar[_]) =
@@ -380,7 +510,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   private[svaractor] def changeOwner[T](sender    : SVarActor.Ref,
                                         svar      : SVar[T],
                                         newOwner  : SVarActor.Ref,
-                                        value     : Option[T] = None) : Boolean = {
+                                        value     : Option[SVal[T]] = None) : Boolean = {
     if (self == newOwner){
       if (!this.isOwnerOf(svar)) value match {
         case Some(_data) => insertSVar(svar, _data)
@@ -389,12 +519,12 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
       sender ! AcceptSVarMessage(svar)
     }
     else if (isOwnerOf(svar)) heldMessages.get(svar) match {
-      case Some(changeOwnerStatus) if changeOwnerStatus.isAccepted => owner(svar, newOwner ) //!!! is this correct? mustn't we tell "ownerHasChanged"?
+      case Some(changeOwnerStatus) if changeOwnerStatus.isAccepted => owner(svar, newOwner ) //!!! is this correct? don't we have to tell "ownerHasChanged"?
       case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage(ChangeOwnerOfSVarMessage( svar, newOwner))
       case None =>
         heldMessages(svar) = new ChangeOwnerStatus(svar, newOwner)
-        newOwner ! BunchOfSimXMessagesMessage(
-          OfferSVarMessage( getOriginal(svar), read(svar)) ::  moveObservers(svar, newOwner)
+        newOwner ! BunchOfSimXMessagesMessages(
+          OfferSVarMessage( getOriginal(svar), data(svar).readFull ) ::  moveObservers(svar, newOwner)
         )
     }
     //if nothing matched, the svar was unknown, so we return false
@@ -412,8 +542,13 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
       case None => Nil
     }
 
-  protected def getSVarsObservedBy( observer : SVarActor.Ref) =
+  protected def getSVarsObservedBy( observer : SVarActor.Ref ) =
     data.filter( pair => pair._2.isObservedBy( observer) )
+
+  private def getObservedBy( addressEquals : SVarActor.Ref => Boolean ) =
+    data.filter( d => d._1.isMutable && d._2.getObservers.keys.exists( addressEquals ) ).map{
+      tuple => tuple._1.asInstanceOf[SVar[_]] -> tuple._2.getObservers.find( x => addressEquals(x._1) ).get._1
+    }
 
   protected def getObserversOf( svar : SVar[_] ) = data.get(svar) match {
     case Some(svardata) => svardata.getObservers
@@ -426,13 +561,18 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    * The weak reference that is stored with the data is used detrmine, if
    * the data is not needed any more.
    */
-  private[svaractor] def createSVar[T]( value: T )( implicit manifest : ClassTag[T]) : SVar[T] =
-    insertSVar(new SVarImpl(self, manifest), value)
+  protected[svaractor] def createSVar[T]( value: SVal[T] ) = {
+    implicit val typeTag = value.typedSemantics.typeTag
+    val retVal = new SVarImpl(self, value.typedSemantics.classTag, value.typedSemantics.typeTag)
+    insertSVar(retVal, value)
+    retVal
+  }
 
-  private def insertSVar[T]( sVar: SVar[T], value: T ) : SVar[T] = {
-    data       += sVar -> new SVarDataImpl( value, new WeakReference( sVar ) )
-    sVarOwners += sVar -> self
-    sVar
+  private def insertSVar[T]( sVar: SVar[T], value: SVal[T] ) {
+    if (sVar.isMutable){
+      data += sVar -> new SVarDataImpl( value, new WeakReference( sVar ) )
+      addSVarOwner(sVar, self)
+    }
   }
 
   //  private def removeSVar( svar : SVar[_] ) = {
@@ -443,20 +583,13 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   private def removeSVarData( sVar: SVar[_] ) =
     data -= sVar
 
-  private[svaractor] final def write[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T ) {
+  private[svaractor] final def write[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T, forceUpdate : Boolean) {
     heldMessages.get(sVar) match {
-      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( WriteSVarMessage( writer, sVar, value) )
-      case None => if( !read( sVar ).equals( value ) )
-        internalWrite( writer, sVar, value )
+      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( WriteSVarMessage( writer, sVar, value, forceUpdate) )
+      case None =>
+        if( forceUpdate  || !read( sVar ).equals( value )  )
+          data( sVar ).write( writer, value )
     }
-  }
-
-  protected def internalWrite[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T ) {
-    data( sVar ).write( writer, value )
-  }
-
-  private[svaractor] def update[T]( writer : SVarActor.Ref, sVar : SVar[T], updateMethod : T => T ) {
-    write(writer, sVar, updateMethod(read(sVar)))
   }
 
   private[svaractor] def read[T]( sVar: SVar[T] ) : T =
@@ -482,7 +615,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   protected final def removeObserver( sVar: SVar[_], a: SVarActor.Ref ) {
     heldMessages.get(sVar) match {
       case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( IgnoreSVarMessage( sVar, self) )
-      case None => internalRemoveObserver(sVar, a)
+      case None => if (data contains sVar) internalRemoveObserver(sVar, a)
     }
   }
 
@@ -499,10 +632,10 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   }
 
   private def isOwnerChangeInProgress( svar : SVar[_] ) : Boolean =
-    heldMessages.get(svar).isDefined
+    heldMessages.contains(svar)
 
   private def isOwnerOf(svar : SVar[_]) : Boolean =
-    data.get(svar).isDefined
+    data.contains(svar)
 
   private def updateSVarOwner(svar : SVar[_], newOwner : SVarActor.Ref) {
     sVarOwners.update(svar, newOwner)
@@ -513,17 +646,14 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
       changeOwnerInProgessHandler( msg )
     else if ( isOwnerOf(msg.sVar) )
       handler( msg )
-    else
-      msg.sender ! SVarOwnerChangedMessage( msg.sVar, owner( msg.sVar ), msg )
+    else owner(msg.sVar) match {
+      case KnownOwner(owner) => msg.sender ! SVarOwnerChangedMessage( msg.sVar, owner, msg )
+      case _ =>
+    }
   }
 
   private def createValueOfSVarMsg[T](sVar : SVar[T]) : ValueOfSVarMessage[T] =
     ValueOfSVarMessage( sVar, read(sVar))
-
-
-  //  private def removeSVarOwner(svar : SVar[_]) {
-  //    sVarOwners -= svar
-  //  }
 
   //
   //
@@ -536,16 +666,12 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
    *
    */
   def shutdown() {
-    SVarActor.system.stop(self)
-    if (self != actorContext.self){
-      self ! Shutdown()(self)
-    } else {
-      //isRunning = false
-      //TODO: implement this
-    }
+    //isRunning = false
+    //TODO: implement this
+    context.stop(self)
   }
 
-  final def handleMessage : PartialFunction[Any, Any] =
+  final protected def handleMessage : PartialFunction[Any, Any] =
     handlersAsPF orElse {case _ => () }
   //------------------------------------//
   //                                    //
@@ -623,8 +749,8 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
     }
   }
 
-  addHandler[CreateSVarMessage[_]] { msg =>
-    msg.sender ! SVarCreatedMessage( SVarImpl.apply[Any]( msg.value ), msg.asInstanceOf[CreateSVarMessage[Any]], getManifest( msg.value ) )
+  addHandler[CreateSVarMessage[Any]] { msg =>
+    msg.sender ! SVarCreatedMessage( SVarImpl( msg.value ), msg )
   }
 
   addHandler[ReadSVarMessage[_]]{
@@ -632,7 +758,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
   }
 
   addHandler[WriteSVarMessage[Any]]{
-    handleOwnerDependentMsg( msg => write( msg.writer, msg.sVar, msg.value ) )
+    handleOwnerDependentMsg( msg => write( msg.writer, msg.sVar, msg.value, msg.forceUpdate ) )
   }
 
   addHandler[ObserveSVarMessage[_]]{
@@ -643,17 +769,50 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
     handleOwnerDependentMsg( msg => removeObserver(msg.sVar, msg.observer) )
   }
 
-  addHandler[NotifyWriteSVarMessage[_]] { msg =>
+  addHandler[NotifyWriteSVarMessage[_]] {
+    handleNotifyWrite
+  }
+
+  private[svaractor] def handleNotifyWrite(msg : NotifyWriteSVarMessage[_]){
     sVarObserveHandlers get msg.sVar collect { case handler => handler( msg.value ) }
   }
 
   addHandler[SVarOwnerChangedMessage[_]] { msg =>
-    sVarOwners += msg.sVar -> msg.newOwner
+    addSVarOwner(msg.sVar, msg.newOwner)
     msg.newOwner ! msg.originalMessage
   }
 
-  addHandler[BunchOfSimXMessagesMessage]{
-    msg => msg.msgs.foreach( applyHandlers(_) )
+  //multimessage related functions
+  addHandler[BunchOfSimXMessagesMessages]{
+    handleBunchOfMessages
+  }
+
+  addHandler[AtomicUpdate]{
+    handleAtomicUpdate
+  }
+
+  addHandler[AtomicSet]{
+    handleAtomicSet
+  }
+
+  private[svaractor] def handleAtomicUpdate(msg : AtomicUpdate){
+    handleBunchOfMessages(BunchOfSimXMessagesMessages(msg.msgs))
+  }
+
+  private[svaractor] def handleAtomicSet(msg : AtomicSet){
+    handleBunchOfMessages(BunchOfSimXMessagesMessages(msg.msgs))
+  }
+
+  private def handleBunchOfMessages(msg : BunchOfSimXMessagesMessages){
+    msg.msgs.foreach( applyHandlers )
+  }
+
+  addHandler[DisassociatedEvent]{ msg =>
+    def sameAsDisassociated(ref : SVarActor.Ref) = SVarActor.addressOf(ref) == msg.remoteAddress
+    getObservedBy(sameAsDisassociated).foreach( tuple => removeObserver(tuple._1, tuple._2) )
+    val toRemove = sVarOwners.filter{ tuple => sameAsDisassociated(tuple._2) }.keys
+    deadOwners += msg.remoteAddress
+    sVarOwners --= toRemove
   }
 
   protected def addJobIn( in : Long )( job : => Unit ) {
@@ -662,11 +821,11 @@ trait SVarActor extends SVarActorBase with SVarFunctions with HandlerBenchmarkin
 }
 
 trait SVarFunctions{
-  protected[svaractor] def set[T](sVar : SVar[T], value: T)
-  protected[svaractor] def get[T : ClassTag](sVar : SVar[T])( consume: T => Any)
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Any)
-  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Any)
+  protected[svaractor] def set[T](sVar : SVar[T], value: T) : Boolean
+  protected[svaractor] def get[T : ClassTag : TypeTag](sVar : StateParticle[T])(consume: T => Unit)
+  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) : java.util.UUID
+  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) : java.util.UUID
   protected[svaractor] def ignore[T](sVar : SVar[T] )
   protected[svaractor] def owner[T](sVar : SVar[T], newOwner: SVarActor.Ref)
-  protected[svaractor] def owner[T](sVar : SVar[T] ) : SVarActor.Ref
+  //  protected[svaractor] def owner[T](sVar : SVar[T] ) : SVarActor.Ref
 }

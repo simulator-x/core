@@ -34,6 +34,9 @@ import simx.core.Configuration.Win64
  */
 object JVMTools {
 
+  def minTickDuration =
+    if (isWindows) 10 else 1
+
   def addNatives(osPaths: Map[Os, List[File]]) {
     osPaths.get(os).collect{case paths => paths.foreach(addToLibraryPath)}
   }

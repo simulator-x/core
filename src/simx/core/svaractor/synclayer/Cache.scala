@@ -20,7 +20,7 @@
 
 package simx.core.svaractor.synclayer
 
-import simx.core.svaractor.{SVarActor, SVar}
+import simx.core.svaractor.{StateParticle, SVarActor}
 import simx.core.entity.Entity
 
 /**
@@ -51,22 +51,22 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
   /**
    * The first level cache.
    */
-  private var firstLevel = Map[SVar[_],Option[_]]()
+  private var firstLevel = Map[StateParticle[_],Option[_]]()
 
   /**
    * The second level cache.
    */
-  private var secondLevel = Map[SVar[_],Option[_]]()
+  private var secondLevel = Map[StateParticle[_],Option[_]]()
 
   /**
    * The third level cache.
    */
-  private var thirdLevel = Map[SVar[_],Option[_]]()
+  private var thirdLevel = Map[StateParticle[_],Option[_]]()
 
   /**
    * The observe functions of the state variables.
    */
-  private var updateFunctions = Map[SVar[_],(Any => Unit)]()
+  private var updateFunctions = Map[StateParticle[_],(Any => Unit)]()
 
   /**
    * A flag, if the second level cache contains a complete world step.
@@ -83,15 +83,15 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
     require( e != null, "The parameter 'e' must not be 'null'!" )
 
     for( sVarDescription <- syncGroup.sVarDescriptions ) {
-      val sVar = e.get(sVarDescription).head
-      firstLevel = firstLevel + ( sVar -> None )
-      secondLevel = secondLevel + (sVar -> None )
-      thirdLevel = thirdLevel + (sVar -> None )
-
-      sVar.get( (x) => {
-        firstLevel = firstLevel + ( sVar -> Some(x) )
-        secondLevel = secondLevel + (sVar -> Some(x) )
-      })
+//      val sVar = e.get(sVarDescription).head
+//      firstLevel = firstLevel + ( sVar -> None )
+//      secondLevel = secondLevel + (sVar -> None )
+//      thirdLevel = thirdLevel + (sVar -> None )
+//
+//      sVar.get( (x) => {
+//        firstLevel = firstLevel + ( sVar -> Some(x) )
+//        secondLevel = secondLevel + (sVar -> Some(x) )
+//      })
     }
   }
 
@@ -121,11 +121,11 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    */
   def update() {
     if( secondLevelCacheIsSealed ) {
-      var handlerToExecute = Map[SVar[_],(Any=>Unit)]()
+      var handlerToExecute = Map[StateParticle[_],(Any=>Unit)]()
       for( (sVar,data) <- secondLevel ) {
         if( data.isDefined ) {
           firstLevel = firstLevel + (sVar -> data)
-          if( updateFunctions contains( sVar ) ) handlerToExecute = handlerToExecute + (sVar ->updateFunctions(sVar) )
+          if( updateFunctions contains sVar ) handlerToExecute = handlerToExecute + (sVar ->updateFunctions(sVar) )
         }
         if( thirdLevel( sVar ).isDefined ) {
           secondLevel = secondLevel + (sVar -> thirdLevel( sVar ) )
@@ -143,7 +143,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @param sVar The state variable.
    * @return Returns 'true', if the cache caches data for this state variable.
    */
-  def doesCacheSVar( sVar : SVar[_] ) = firstLevel.contains( sVar )
+  def doesCacheSVar( sVar : StateParticle[_] ) = firstLevel.contains( sVar )
 
   /**
    * Return if the cache has any data for this sVar.
@@ -151,7 +151,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @param sVar The state variable.
    * @return Returns 'true', if the cache holds any data for the state variable.
    */
-  def hasDataFor( sVar : SVar[_] ) = doesCacheSVar( sVar ) && firstLevel( sVar ).isDefined
+  def hasDataFor( sVar : StateParticle[_] ) = doesCacheSVar( sVar ) && firstLevel( sVar ).isDefined
 
   /**
    * This method returns the value of the state variable that is saved in the first level cache.
@@ -160,7 +160,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @tparam T The state type of the encapsulated data.
    * @return The value of the state variable read from the cache.
    */
-  def getDataFor[T]( sVar : SVar[T] ) : T = firstLevel( sVar ).get.asInstanceOf[T]
+  def getDataFor[T]( sVar : StateParticle[T] ) : T = firstLevel( sVar ).get.asInstanceOf[T]
 
   /**
    * This method sets the observe function of a state variable. This function is called on an update of the cache.
@@ -168,7 +168,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @param sVar The state variable.
    * @param f The update function.
    */
-  def addUpdateFunction( sVar : SVar[_], f : (Any => Unit) ) {
+  def addUpdateFunction[T]( sVar : StateParticle[T], f : (Any => Unit) ) {
     require( sVar != null, "The parameter 'sVar' must not be 'null'!" )
     require( f != null, "The parameter 'f' must not be 'null'!" )
     updateFunctions = updateFunctions + (sVar -> f)
@@ -179,7 +179,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    *
    * @param sVar The state variable.
    */
-  def removeUpdateFunction( sVar : SVar[_] ) {
+  def removeUpdateFunction( sVar : StateParticle[_] ) {
     require( sVar != null, "The parameter 'sVar' must not be 'null'!" )
     updateFunctions = updateFunctions - sVar
   }
@@ -191,7 +191,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @param v The variable
    * @return Nothing
    */
-  def updateData( sVar : SVar[_] )( v : Any ) {
+  def updateData[T]( sVar : StateParticle[T] )( v : Any ) {
     if( !secondLevelCacheIsSealed ) {
       secondLevel = secondLevel + (sVar -> Some( v ) )
     } else {

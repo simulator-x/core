@@ -24,16 +24,11 @@ import scala.reflect.runtime.universe.TypeTag
 import java.util.UUID
 import scala.reflect.ClassTag
 import scala.util.continuations
+import simx.core.entity.description.{SValBase, SVal}
+import simx.core.entity.typeconversion.{ConvertedSVar, ConversionInfo}
+import unifiedaccess.{Observability, Mutability, Immutability, Accessibility}
+import simx.core.svaractor.SVarActor.Ref
 
-
-trait SValTrait{
-  type dataType
-  def containedValueManifest : ClassTag[dataType]
-  def get(handler : dataType => Any)(implicit actorContext : SVarActor)
-  def get(implicit actorContext : SVarActor) : dataType @continuations.cpsParam[Any, Unit] = continuations.shift {
-    k : (dataType => Any) => get(k)
-  }
-}
 
 // Static methods for SVars.
 /**
@@ -70,8 +65,20 @@ trait SVarObjectInterface {
    * @tparam T The data type of the state variable
    * @return The created state variable. Never returns null.
    */
-  def apply[T](value: T)(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T]
+  def apply[T](value: SVal[T])(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T]
 }
+
+trait SVBase[+T, B <: T] extends Observability[T] with Accessibility[T] with Mutability[B]{
+  def observe(handler: (T) => Unit, ignoredWriters: Set[Ref] = Set())(implicit actorContext: SVarActor) : java.util.UUID
+  def containedValueManifest : ClassTag[_ <: T]
+  def ignore()(implicit actorContext : SVarActor)
+  def as[T2](cInfo : ConversionInfo[T2, B]) : StateParticle[T2]
+  def isMutable : Boolean
+  def read(implicit actorContext : SVarActor) : T @continuations.cpsParam[Unit, Unit] =
+    continuations.shift { k : (T => Unit) => get(k) }
+}
+
+trait StateParticle[T] extends SVBase[T, T]
 
 /**
  * This trait represents a state variable. State Variables
@@ -79,14 +86,7 @@ trait SVarObjectInterface {
  *
  * @tparam T The datatype of the represented value.
  */
-trait SVar[T] extends SValTrait{
-  type dataType =  T
-
-  def set(value : T)(implicit actorContext : SVarActor)
-  def observe(handler : T => Any)(implicit actorContext : SVarActor)
-  def observe(handler : T => Any, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor)
-  def ignore()(implicit actorContext : SVarActor)
-
+trait SVar[T] extends StateParticle[T]  with Serializable{
   /**
    * The unique id trough which a SVar is identified
    */
@@ -107,6 +107,15 @@ trait SVar[T] extends SValTrait{
    */
   final override def hashCode =
     id.hashCode
+
+  def as[T2](cInfo: ConversionInfo[T2, T]) : SVar[T2] =
+    new ConvertedSVar(this, cInfo)
+}
+
+trait ImmutableSVar[+T, B <: T] extends SVBase[T, B] with Immutability[B] with Serializable{
+  def ignore()(implicit actorContext: SVarActor){}
+  def observe(handler: (T) => Unit, ignoredWriters: Set[SVarActor.Ref] = Set())(implicit actorContext: SVarActor) =
+    java.util.UUID.randomUUID()
 }
 
 

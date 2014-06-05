@@ -20,13 +20,13 @@
 
 package simx.core.ontology
 
-import simx.core.entity.description.Semantics
+import simx.core.entity.description.{GeneralEntityDescription, EntityAspect}
 import simx.core.entity.typeconversion._
 import simx.core.entity.Entity
 
-import scala.collection.mutable
-import scala.reflect.runtime.universe.{typeTag, TypeTag}
+import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
+import simx.core.svaractor.SVarActor
 
 /* author: dwiebusch
  * date: 14.09.2010
@@ -35,73 +35,79 @@ import scala.reflect.ClassTag
 object SVarDescription {
   //! the registered components
   private val registry =
-    new mutable.HashMap[Symbol, Set[ConvertibleTrait[_]]] with mutable.SynchronizedMap[Symbol, Set[ConvertibleTrait[_]]]
+    new java.util.concurrent.ConcurrentHashMap[Symbol, Set[ConvertibleTrait[_]]]
 
   /**
    *  retrieve an registered SVarDescription
    * @param typeinfo the typeinfo of the SVarDescription to be retrieved
    * @return the set of matching OntologyMembers
    */
-  def apply( typeinfo : Symbol ) : Set[ConvertibleTrait[_]] =
-    registry.getOrElse(typeinfo, Set())
+  def apply( typeinfo : Symbol ) : Set[ConvertibleTrait[_]] = registry.get(typeinfo) match {
+    case null => Set()
+    case set => set
+  }
 
-  def apply( typeinfo : Symbol, semantics : Symbol ) : Option[ConvertibleTrait[_]] =
-    apply(typeinfo).find( _.semantics.toSymbol == semantics )
-
-  private[ontology] def apply[T]( o : ConvertibleTrait[T] )(implicit ct : ClassTag[T]) : SVarDescription[T, T] =
-    new SVarDescription[T, T](o.semantics, o.defaultValue(), o.typeinfo, o, o.annotations, o.ontoLink){
+  private[ontology] def apply[T : ClassTag : TypeTag]( o : ConvertibleTrait[T] ) : SVarDescription[T, T] =
+    new SVarDescription[T, T](o.semantics, o, o.isSValDescription, o.annotations, o.ontoLink){
       override def definedAt(iri: String) =
-        new SVarDescription(semantics, defaultValue(), typeinfo, getBase, annotations, Some(iri))(classTag, baseTag){
+        new SVarDescription(semantics, getBase, isSValDescription, annotations, Some(iri)){
           override def getBase = this
         }
     }
 
   private def register( c : ConvertibleTrait[_] ) {
-    registry.update(Symbol(c.typeinfo.toString()),
-      registry.getOrElse(Symbol(c.typeinfo.toString()), Set[ConvertibleTrait[_]]()) + c)
+    var preVal = registry.get(Symbol(c.typeTag.toString()))
+    if (preVal == null)
+      preVal =  Set[ConvertibleTrait[_]]()
+    registry.put(Symbol(c.typeTag.toString()), preVal + c)
   }
 }
 
-class SVarDescription[T, B] private[ontology]( val semantics : Semantics, newInstance : => T,
-                                               val typeinfo : ClassTag[T],
-                                               protected val base : ConvertibleTrait[B],
-                                               val annotations : Set[GroundedSymbol] = Set(),
-                                               val ontoLink : Option[String] = None)
-                                             ( implicit val classTag : ClassTag[T], protected val baseTag : ClassTag[B] )
+class SVarDescription[T : ClassTag : TypeTag, B] private[ontology]( val semantics : GroundedSymbol,
+                                                                    protected val base : ConvertibleTrait[B],
+                                                                    val isSValDescription : Boolean,
+                                                                    val annotations : Set[Annotation] = Set(),
+                                                                    val ontoLink : Option[String] = None)
   extends ConvertibleTrait[T] with Serializable
 {
   type baseType = B
 
-  def this( that : SVarDescription[T, B] )(implicit c : ClassTag[T], t : ClassTag[B]) =
-    this(that.semantics, that.defaultValue(), that.typeinfo, that.getBase, that.annotations, that.ontoLink)
+  override val classTag: ClassTag[T] =
+    implicitly[ClassTag[T]]
 
-  def addAnnotations(additionalAnnotations: GroundedSymbol*) =
-    new SVarDescription(semantics, newInstance, typeinfo, getBase, annotations ++ additionalAnnotations.toSet, ontoLink)
+  override val typeTag: TypeTag[T] =
+    implicitly[TypeTag[T]]
+
+  def this( that : SVarDescription[T, B] ) =
+    this(that.semantics, that.getBase, that.isSValDescription, that.annotations, that.ontoLink)
+
+   def setAnnotations(newAnnotations: Annotation*) =
+     new SVarDescription(semantics, getBase, isSValDescription, newAnnotations.toSet, ontoLink)
 
   //Convenience method
-  def withAnnotations(additionalAnnotations: GroundedSymbol*) =
+  def withAnnotations(additionalAnnotations: Annotation*) =
     addAnnotations(additionalAnnotations:_*)
 
-  def createdBy[U : ClassTag, V <: U ](ctor : => V) : SVarDescription[U, B] =
-    new SVarDescription(semantics, ctor, scala.reflect.classTag[U], getBase, annotations, ontoLink)
+  def withType[U : ClassTag : TypeTag](c : Class[U]) : SVarDescription[U, B] =
+    new SVarDescription(semantics, getBase, isSValDescription, annotations, ontoLink)
 
   def definedAt(iri : String)  : SVarDescription[T, B] =
-    new SVarDescription(semantics, newInstance, typeinfo, getBase, annotations, Some(iri))
+    new SVarDescription(semantics, getBase, isSValDescription, annotations, Some(iri))
 
   def as( newSemantics : GroundedSymbol ) : SVarDescription[T, B] =
-    as(newSemantics.value)
+    new SVarDescription(newSemantics, getBase, isSValDescription, annotations, ontoLink)
 
-  def as( newSemantics : Semantics ) : SVarDescription[T, B] =
-    new SVarDescription(newSemantics, newInstance, typeinfo, getBase, annotations, ontoLink)
+  def asConst =
+    new SVarDescription[T, B](semantics, getBase, true, annotations, ontoLink)
 
-  override def isProvided : Provide[T, B] =
+  override def isProvided : Provide[T, B] = {
+    implicit val ct = getBase.classTag
+    implicit val tt = getBase.typeTag
     providedAs[B](getBase)
+  }
 
   override def isRequired : Require[B, T] =
     getBase.requiredAs[T](this)
-
-  def defaultValue() =
-    newInstance
 
   def getBase =
     base
@@ -109,11 +115,13 @@ class SVarDescription[T, B] private[ontology]( val semantics : Semantics, newIns
   SVarDescription.register(this)
 }
 
-class EntitySVarDescription[T <: Entity] private( that : SVarDescription[T, Entity],
-                                                  val ctor : Entity  => T,
-                                                  classTag : ClassTag[T])
-  extends SVarDescription(that)(classTag, scala.reflect.classTag[Entity]) with Serializable
+class EntitySVarDescription[T <: Entity]( that : SVarDescription[T, Entity], val ctor : (Entity, SVarActor) => T)
+  extends SVarDescription(that)(that.classTag, that.typeTag) with Serializable
 {
-  protected[core] def this(symbol : GroundedSymbol, ctor : (Entity ) => T )(implicit classTag : ClassTag[T]) =
-    this(types.Entity.as(symbol).createdBy[T, T ](ctor(new Entity )), ctor, classTag)
+  protected[ontology] def this(symbol : GroundedSymbol, ctor : (Entity, SVarActor) => T, iri : String)
+                              (implicit classTag : ClassTag[T], typeTag : TypeTag[T]) =
+    this(types.Entity.as(symbol).withType(classTag.runtimeClass.asInstanceOf[Class[T]]).definedAt(iri), ctor)
+
+  def apply(aspects : EntityAspect*) : GeneralEntityDescription[T, T] =
+    new SpecificDescription[T](this, aspects.toList, Symbol(classTag.runtimeClass.getSimpleName))
 }

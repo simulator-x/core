@@ -21,13 +21,14 @@
 package simx.core.clustering
 
 import com.typesafe.config.ConfigFactory
-import akka.actor.{ActorRef, Props, Actor, ActorSystem}
+import akka.actor.{ActorRef, Props, Actor}
 import akka.pattern.ask
 import akka.util.Timeout
 import concurrent.duration._
 import simx.core.svaractor.SVarActor
 import simx.core.component.{ComponentManagementActorInCluster, ComponentManagementActor}
 import scala.concurrent.Await
+import simx.core.helper.JVMTools
 
 /**
  * This message is sent to an instance of [[simx.core.clustering.ClusterSubSystem]] to start to connection process.
@@ -117,7 +118,7 @@ class ClusterSubSystem extends Actor {
       known = known + (msg.nodeName -> (msg.interface,msg.port) )
       myName = Some( msg.nodeName )
       if( msg.seedNode.isDefined ) {
-        val seedNodeClusterSubSystem = context.actorFor( "akka://SimX@" + msg.seedNode.get + "/user/clusterSubSystem" )
+        val seedNodeClusterSubSystem = context.actorSelection( "akka://"+SVarActor.getSystemName+"@" + msg.seedNode.get + "/user/clusterSubSystem" )
         seedNodeClusterSubSystem ! Hi( msg.nodeName, msg.interface, msg.port, known )
       }
       allClusterNodes = Some( msg.allClusterNodes )
@@ -125,13 +126,13 @@ class ClusterSubSystem extends Actor {
     case msg : Hi =>
       if( !known.contains( msg.nodeName ) ) {
         sender ! Hi( myName.get, known( myName.get )._1, known( myName.get )._2, known )
-        val a = context.actorFor( "akka://SimX@" + msg.interface + ":" + msg.port + "/user/componentManagementActor")
+        val a = context.actorSelection( "akka://"+SVarActor.getSystemName+"@" + msg.interface + ":" + msg.port + "/user/componentManagementActor")
         ComponentManagementActor ! ComponentManagementActorInCluster( a )
         known = known + (msg.nodeName -> (msg.interface,msg.port) )
       }
       for( (nodeName,connectionData) <- msg.known ) {
         if( !known.contains( nodeName ) ) {
-          val targetClusterSubSystem = context.actorFor( "akka://SimX@" + connectionData._1 + ":" + connectionData._2 + "/user/clusterSubSystem")
+          val targetClusterSubSystem = context.actorSelection( "akka://"+SVarActor.getSystemName+"@" + connectionData._1 + ":" + connectionData._2 + "/user/clusterSubSystem")
           targetClusterSubSystem ! Hi( myName.get, known( myName.get )._1, known( myName.get )._2, known )
           known = known + (nodeName -> (connectionData._1, connectionData._2) )
         }
@@ -177,7 +178,7 @@ object ClusterSubSystem {
     val config = ConfigFactory.parseString("""
       akka {
         scheduler {
-          tick-duration=1
+          tick-duration=""" + JVMTools.minTickDuration + """
         }
         actor {
           provider = "akka.remote.RemoteActorRefProvider"
@@ -191,10 +192,9 @@ object ClusterSubSystem {
         }
       }
     """).withFallback(ConfigFactory.load())
-    val system = ActorSystem("SimX", config)
-    val subSystemActor = system.actorOf( Props[ClusterSubSystem], "clusterSubSystem" )
 
-    SVarActor.system = system
+    SVarActor.setSystemConfig(config)
+    val subSystemActor = SVarActor.createActor( Props[ClusterSubSystem], Some("clusterSubSystem") )
     ComponentManagementActor.self
 
     implicit val timeout = Timeout( 500 seconds )

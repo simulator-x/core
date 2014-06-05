@@ -36,7 +36,7 @@ abstract class SimXClusterApplication( bootstrapApp : Boolean ) extends SimXAppl
   override def startUp() {
     if( bootstrapApp ) {
       println( "Running bootstrap code for the application" )
-      createComponents()
+      create(applicationConfiguration)
     } else {
       println( "Waiting for other node to run the bootstrap code" )
     }

@@ -20,7 +20,7 @@
 
 package simx.core.components.renderer.createparameter
 
-import simplex3d.math.floatx.{ConstMat4f, Mat3x4f}
+import simplex3d.math.floatx.{Mat4f, ConstMat4f, Mat3x4f}
 import simx.core.ontology.{Symbols, GroundedSymbol}
 import simx.core.ontology.types._
 import java.awt.Color
@@ -29,6 +29,7 @@ import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.{EntityAspect, SValSeq}
 import scala.Left
 import scala.Right
+import simplex3d.math.float.ConstMat4
 
 /**
  * A flag that indicates that this value (like a transform) is provided by another create parameter.
@@ -51,6 +52,7 @@ object ReadFromElseWhere extends ReadFromElseWhere
  * @author Stephan Rehfeld
  */
 package object convert {
+  import scala.language.implicitConversions
   implicit def constMat4ToRightEither( transformation : ConstMat4f ) : Right[ReadFromElseWhere,ConstMat4f] = Right( transformation )
   implicit def color4ToRightEither( color : Color ) : Right[ReadFromElseWhere,Color] = Right( color )
   implicit def float4ToRightEither( float : Float ) : Right[ReadFromElseWhere,Float] = Right( float )
@@ -487,40 +489,42 @@ case class Water( name: String,
  *
  * ------------------------------------
  */
-/*case class AnimatedObject( name: String,
+case class AnimatedObject( //name: String,
                            subElement : Option[String] = None,
                            parentElement : Option[Entity] = None,
-                           transformation : Either[ReadFromElseWhere,ConstMat4]  = Right( ConstMat4( Mat3x4.Identity ) )
-                           //scale : ConstMat4 = ConstMat4( Mat3x4.Identity )
-                        ) extends RendererAspect( Symbols.shapeFromFile ) {
+                           transformation : ConstMat4f  =  ConstMat4f( Mat3x4f.Identity ) ,
+                           scale : ConstMat4 = Mat4f.Identity//,
+//                            texture : TextureData = TextureData.apply(Color.RED)
+                        ) extends RendererAspect( Symbols.meshComponent ) {
 
-  require( name != null, "The parameter 'name' must not be 'null'!" )
+//  require( name != null, "The parameter 'name' must not be 'null'!" )
   require( subElement != null, "The parameter ' subElement' must not be 'null'!")
   require( parentElement != null, "The parameter ' subElement' must not be 'null'!")
   require( transformation != null, "The parameter ' subElement' must not be 'null'!")
 
   override def getCreateParams = {
     var cVars = new SValSeq
-    cVars = cVars and Name( name )
+//    cVars = cVars and Name( name )
     if( subElement.isDefined ) cVars = cVars and SubElement( subElement.get )
     if( parentElement.isDefined ) cVars = cVars and ParentElement( parentElement.get )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
-    //cVars = cVars and Scale( scale )
+    cVars = cVars and Transformation( transformation )
+    cVars = cVars and Scale( scale )
+//    cVars = cVars and Texture(texture)
     addCVars( cVars )
   }
 
   override def getFeatures : Set[ConvertibleTrait[_]] = {
     var features = Set[ConvertibleTrait[_]]()
     features = features + Transformation
-    // TODO: This needs to be commented in
-//    features = features + Keyframe
+    features = features + simx.core.ontology.types.Mesh
+    features = features + simx.core.ontology.types.Texture
     features
   }
 
   override def getProvidings : Set[ConvertibleTrait[_]] = {
     var providings = Set[ConvertibleTrait[_]]()
-    if( transformation.isRight ) providings = providings +  Transformation
+    providings = providings +  Transformation
     providings
   }
 
-} */
+}

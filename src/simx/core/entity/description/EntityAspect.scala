@@ -23,6 +23,7 @@ package simx.core.entity.description
 import simx.core.ontology.GroundedSymbol
 import simx.core.entity.typeconversion._
 import simx.core.entity.Entity
+import scala.annotation.meta.field
 
 /**
  * Base class for Aspects
@@ -37,6 +38,9 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
                                      val targets       : List[Symbol],
                                      val aspectId      : java.util.UUID)
   extends Serializable {
+  def testCopy : EntityAspect =
+    getClone(targets, overrides, true)
+
   /**
    * Base class for Aspects
    * @param componentType The type of the component which this aspect shall be sent to
@@ -63,7 +67,7 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
   /**
    *
    * The list of create parameters
-   * @return a list of [[simx.core.entity.description.SVal]]'s containing the information needed to instanciate an
+   * @return a list of [[simx.core.entity.description.SVal]]'s containing the information needed to instantiate an
    *         entity with this aspect
    */
   def getCreateParams : NamedSValSet
@@ -80,11 +84,11 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
    * are enforced for this aspect
    * @return a sequence of [[simx.core.entity.typeconversion.ProvideAndRequire]]s
    */
-  def overrides : Seq[ProvideAndRequire] =
+  def overrides : Seq[ProvideAndRequire[_, _]] =
     Seq()
 
   /** the parent element for this aspect */
-  @transient private var parentElement : Option[Entity] = None
+  @(transient @field) private var parentElement : Option[Entity] = None
 
   /**
    * Sets the parent element for this aspect
@@ -121,7 +125,7 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
    * @param newOverrides the new enforced providings and requirings
    * @return a clone of this EntityAspect
    */
-  def where( newOverrides : ProvideAndRequire* ) : EntityAspect =
+  def where( newOverrides : ProvideAndRequire[_, _]* ) : EntityAspect =
     getClone(targets, newOverrides)
 
   /**
@@ -132,11 +136,11 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
   def forTargets( trgts : List[Symbol] ) : EntityAspect =
     getClone(trgts, overrides)
 
-  private def getClone(newTargets : List[Symbol], newOverrides : Seq[ProvideAndRequire] ) = {
+  private def getClone(newTargets : List[Symbol], newOverrides : Seq[ProvideAndRequire[_, _]], newId : Boolean = false ) = {
     val features     = getFeatures
     val providings   = getProvidings
     val createParams = getCreateParams
-    new EntityAspect(componentType, aspectType, newTargets, aspectId) {
+    new EntityAspect(componentType, aspectType, newTargets, if (newId) java.util.UUID.randomUUID() else aspectId) {
       override def overrides = newOverrides
       def getCreateParams    = createParams
       def getProvidings      = providings

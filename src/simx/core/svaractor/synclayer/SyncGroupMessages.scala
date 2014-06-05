@@ -23,6 +23,7 @@ package simx.core.svaractor.synclayer
 import simx.core.svaractor.{SVarActor, SimXMessage}
 import java.util.UUID
 import simx.core.entity.Entity
+import scala.annotation.meta.param
 
 /**
  * This method is sent while introducing a sync group. The actor that wants to introduce a sync group sends this message
@@ -33,7 +34,7 @@ import simx.core.entity.Entity
  *
  * @param syncGroup The sync group that should be introduced.
  */
-case class OfferSyncGroup( syncGroup : SyncGroup )(implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+case class OfferSyncGroup( syncGroup : SyncGroup )(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
 
@@ -45,7 +46,7 @@ case class OfferSyncGroup( syncGroup : SyncGroup )(implicit @transient actor : S
  *
  * @param syncGroup The sync group that was not introduced.
  */
-case class SyncGroupDeclined( syncGroup : SyncGroup )(implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+case class SyncGroupDeclined( syncGroup : SyncGroup )(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
 
@@ -57,7 +58,7 @@ case class SyncGroupDeclined( syncGroup : SyncGroup )(implicit @transient actor 
  *
  * @param syncGroup The sync group that was not introduced.
  */
-case class SyncGroupAccepted( syncGroup : SyncGroup )(implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+case class SyncGroupAccepted( syncGroup : SyncGroup )(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
 
@@ -74,7 +75,7 @@ case class SyncGroupAccepted( syncGroup : SyncGroup )(implicit @transient actor 
  * @param syncGroup The sync group.
  */
 case class AddEntityToSyncGroup( uuid : UUID, entity : Entity, syncGroup : SyncGroup )
-                               (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                               (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( uuid != null, "The parameter 'uuid' must not be 'null'!" )
   require( entity != null, "The parameter 'entity' must not be 'null'!" )
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
@@ -91,7 +92,7 @@ case class AddEntityToSyncGroup( uuid : UUID, entity : Entity, syncGroup : SyncG
  * @param syncGroup The sync group.
  */
 case class AddedEntityToSyncGroup( uuid : UUID, entity : Entity, syncGroup : SyncGroup )
-                                 (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                                 (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( uuid != null, "The parameter 'uuid' must not be 'null'!" )
   require( entity != null, "The parameter 'entity' must not be 'null'!" )
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
@@ -108,7 +109,7 @@ case class AddedEntityToSyncGroup( uuid : UUID, entity : Entity, syncGroup : Syn
  * @param syncGroup The entity that was added.
  */
 case class EntityAlreadyInSyncGroup( uuid : UUID, entity : Entity, syncGroup : SyncGroup )
-                                   (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                                   (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( uuid != null, "The parameter 'uuid' must not be 'null'!" )
   require( entity != null, "The parameter 'entity' must not be 'null'!" )
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
@@ -127,7 +128,7 @@ case class EntityAlreadyInSyncGroup( uuid : UUID, entity : Entity, syncGroup : S
  * @param syncGroup The entity that was added.
  */
 case class NotTheLeaderOfTheSyncGroup( uuid : UUID, syncGroup : SyncGroup )
-                                     (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                                     (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( uuid != null, "The parameter 'uuid' must not be 'null'!" )
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
@@ -148,7 +149,7 @@ case class NotTheLeaderOfTheSyncGroup( uuid : UUID, syncGroup : SyncGroup )
  * @param syncGroup The sync group.
  */
 case class SynchronizeOnSyncGroup( syncGroup : SyncGroup )
-                                 (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                                 (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
 
@@ -161,7 +162,7 @@ case class SynchronizeOnSyncGroup( syncGroup : SyncGroup )
  * @param syncGroup The sync group.
  */
 case class YouAlreadySynchronizedOn( syncGroup : SyncGroup )
-                                   (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                                   (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
 
@@ -174,7 +175,7 @@ case class YouAlreadySynchronizedOn( syncGroup : SyncGroup )
  * @param syncGroup  The sync group.
  */
 case class EntitiesOfSyncGroup( entities : Set[Entity], syncGroup : SyncGroup )
-                              (implicit @transient actor : SVarActor.Ref) extends SimXMessage  {
+                              (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage  {
   require( entities != null, "The parameter 'entities' must not be 'null'!" )
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }
@@ -187,6 +188,6 @@ case class EntitiesOfSyncGroup( entities : Set[Entity], syncGroup : SyncGroup )
  * @param syncGroup The sync group.
  */
 case class WorldStepComplete( syncGroup : SyncGroup )
-                            (implicit @transient actor : SVarActor.Ref) extends SimXMessage {
+                            (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage {
   require( syncGroup != null, "The parameter 'syncGroup' must not be 'null'!" )
 }

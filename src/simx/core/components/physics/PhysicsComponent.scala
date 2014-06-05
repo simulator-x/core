@@ -25,6 +25,8 @@ import simx.core.worldinterface.eventhandling.{EventHandler, EventProvider}
 import simx.core.ontology.Symbols
 import simx.core.entity.Entity
 import simx.core.entity.description.SVal
+import scala.reflect.ClassTag
+import simx.core.entity.component.ComponentAspect
 
 //Global Types
 import simx.core.ontology.{types => gt}
@@ -36,12 +38,17 @@ import simx.core.ontology.{types => gt}
 * Time: 10:30 AM
 */
 
+abstract class PhysicsComponentAspect[T <: Component : ClassTag](name : Symbol, args : Seq[Any])
+  extends ComponentAspect[T](PhysicsComponent.componentType, name, args)
+
+object PhysicsComponent{
+  final def componentType = Symbols.physics
+}
+
 /**
  *  Base trait for all physics components
  */
-trait PhysicsComponent extends Component with EventProvider with EventHandler {
-  final def componentType = Symbols.physics
-
+abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsComponent.componentType) with EventProvider with EventHandler {
   /**
    *  Sets the transformation of an entity.
    *

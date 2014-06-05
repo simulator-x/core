@@ -21,9 +21,10 @@
 package simx.core.worldinterface.eventhandling
 
 import scala.collection.mutable
-import simx.core.ontology.GroundedSymbol
 import simx.core.entity.description.Semantics
-import simx.core.worldinterface.WorldInterfaceHandling
+import simx.core.worldinterface.{ProvideEventMessage, WorldInterfaceActor, WorldInterfaceHandling}
+import simx.core.svaractor.SVarActor
+import simx.core.ontology
 
 
 /* author: dwiebusch
@@ -32,14 +33,41 @@ import simx.core.worldinterface.WorldInterfaceHandling
 
 
 trait EventHandler extends WorldInterfaceHandling {
-  protected def handleEvent(e : Event)
+  private var _handlers =
+    Map[ontology.GroundedSymbol, Set[(Set[SVarActor.Ref], PartialFunction[Event, Boolean], Event => Any)]]()
+
+  private var _knownProviders =
+    Map[ontology.GroundedSymbol, Set[SVarActor.Ref]]()
 
   protected def requestEvent[T]( event : EventDescription ) {
-    requireEvent(this, event)
+    observe(event, e => {})
   }
 
-  addHandler[EventProviderMessage]{
-    (msg : EventProviderMessage) => msg.provider.foreach{ _.self ! RegisterEventHandlerMessage(this, msg.event) }
+  protected def handleEvent(e : Event){
+    _handlers.getOrElse(e.name, Set()).foreach( tuple => if (tuple._2(e)) tuple._3(e))
+  }
+
+  protected[eventhandling] def observe(desc : EventDescription, handler : Event => Any){
+    var requestedFrom = Set[SVarActor.Ref]()
+    _knownProviders.get(desc.name) match {
+      case None => requireEvent(self, desc)
+      case Some(set) =>
+        requestedFrom = set
+        requestedFrom.foreach( _ ! RegisterEventHandlerMessage(self, desc.name, desc.restriction))
+    }
+    _handlers = _handlers.updated(desc.name,
+      _handlers.getOrElse(desc.name, Set()) +
+        ((requestedFrom, desc.restriction.getOrElse({case _ => true} : PartialFunction[Event, Boolean]), handler))
+    )
+  }
+
+  addHandler[EventProviderMessage]{ msg =>
+    _knownProviders = _knownProviders.updated(msg.eventName, _knownProviders.getOrElse(msg.eventName, Set()) ++ msg.provider)
+    _handlers = _handlers.updated(msg.eventName, _handlers.getOrElse(msg.eventName, Set()).map { tuple =>
+      (msg.provider -- tuple._1).foreach { _ ! RegisterEventHandlerMessage(self, msg.eventName, Some(tuple._2)) }
+      (tuple._1 ++ msg.provider, tuple._2, tuple._3)
+    })
+    msg.event.collect{ case event => handleEvent(event) }
   }
 
   addHandler[Event]{
@@ -47,61 +75,81 @@ trait EventHandler extends WorldInterfaceHandling {
   }
 }
 
-trait EventProvider extends WorldInterfaceHandling {
-  private type HRPair = (EventHandler, Option[PartialFunction[Event, Boolean]])
-  protected val eventHandlers =  mutable.Map[GroundedSymbol, Set[HRPair]]()
+trait EventProvider extends SVarActor with WorldInterfaceHandling {
+  private type HRPair = (SVarActor.Ref, Option[PartialFunction[Event, Boolean]])
+  protected val eventHandlers =  mutable.Map[ontology.GroundedSymbol, Set[HRPair]]()
 
-  protected def internalRequireEvent( handler : EventHandler, event : EventDescription ) {
-    //TODO: Test the updated partial functions!
-    eventHandlers.update(event.name, eventHandlers.get(event.name) match {
-      case None => Set(handler -> event.restriction)
-      case Some(set) =>
-        if (event.restriction.isEmpty && set.exists{ h => h._1 == handler && h._2.isEmpty})
-          set
-        else
-          set + ( set.find( _._1 == handler ) match {
-            case Some((_, Some(func))) =>
-              handler -> Some( event.restriction.collect{ case f => f.orElse(func)}.getOrElse{ func.orElse{ case _ => true} } )
-            case _ =>
-              handler -> event.restriction
-          })
-    })
+  /**
+   * registers an EventProvider and stores the event it will provide. Furthermore tells all
+   * EventHandlers that have requiered the event (more precisely: an event with the same name)
+   * of the existence of the Provider
+   *
+   * @param provider the EventProvider to be registered
+   * @param event the event that the provider provides
+   */
+  final protected def provideEvent(provider : SVarActor.Ref,  eventDesc : EventDescription,  event : Option[Event]) {
+    WorldInterfaceActor ! ProvideEventMessage(provider, eventDesc.name, event)
   }
 
-  protected def provideEvent( e : EventDescription ) {
-    provideEvent(this, e)
+  protected def internalRequireEvent( handler : SVarActor.Ref, name : ontology.GroundedSymbol,
+                                      restriction : Option[PartialFunction[Event, Boolean]]) {
+    eventHandlers.update(name, eventHandlers.getOrElse(name, Set()) + (handler -> restriction))
   }
 
-  protected def internalRemoveEventHandler(handler: EventHandler, event : Option[EventDescription] = None) { event match {
-    case Some(e) =>
-      eventHandlers.update(e.name, eventHandlers.getOrElse(e.name, Set[HRPair]()).filterNot(filterFunc(_, handler)))
-    case None => for ( (event, handlers) <- eventHandlers)
-      eventHandlers.update(event, handlers.filterNot(filterFunc(_, handler )))
-  } }
+  protected def provideEvent( e : EventDescription, event : Option[Event] = None ) {
+    if (!registeredEvents.contains(e)){
+      registeredEvents = registeredEvents + e
+      provideEvent(self, e, event)
+    }
+  }
 
-  private def filterFunc( pair : HRPair, handler : EventHandler ) : Boolean =
+  protected def internalRemoveEventHandler(handler: SVarActor.Ref, event : Option[EventDescription] = None) {
+    event match {
+      case Some(e) =>
+        eventHandlers.update(e.name, eventHandlers.getOrElse(e.name, Set[HRPair]()).filterNot(filterFunc(_, handler)))
+      case None => for ( (event, handlers) <- eventHandlers){
+        eventHandlers.update(event, handlers.filterNot(filterFunc(_, handler )))
+      }
+    }
+  }
+
+  private def filterFunc( pair : HRPair, handler : SVarActor.Ref ) : Boolean =
     pair._1 == handler
 
-  protected def emitEvent( e : Event ) = eventHandlers get e.name collect {
-    case s => s.foreach{ pair =>
+  protected var toRemove = Set[SVarActor.Ref]()
+
+  private var registeredEvents = Set[EventDescription]()
+
+  protected[eventhandling] def emitEvent( desc : EventDescription, e : Event ){
+    if (!registeredEvents.contains(desc))
+      provideEvent(desc, Some(e))
+    emitEvent(e)
+  }
+
+  protected def emitEvent( e : Event ) {
+    toRemove.foreach{ internalRemoveEventHandler(_) }
+    toRemove = Set()
+    eventHandlers.getOrElse( e.name, Set() ).foreach { pair =>
       if (e.name.equals(simx.core.ontology.types.OntologySymbol(new Semantics{ def toSymbol : Symbol= 'publishDevice })))
         println("publish device event shall be sent")
       if ( pair._2.collect{ case f => f(e) }.getOrElse(true) && filter(pair._1, e) ) {
         if (e.name.equals(simx.core.ontology.types.OntologySymbol(new Semantics{ def toSymbol : Symbol= 'publishDevice })))
           println("sending publish device event to " + pair._1)
-        pair._1.self ! e
+        if (deadOwners.contains(SVarActor.addressOf(pair._1)))
+          toRemove += pair._1
+        else
+          pair._1 ! e
       }
     }
   }
 
-  protected def filter(handler : EventHandler, e : Event) : Boolean =
+  protected def filter(handler : SVarActor.Ref, e : Event) : Boolean =
     true
 
   addHandler[RegisterEventHandlerMessage]{
-    (msg : RegisterEventHandlerMessage) => internalRequireEvent( msg.handler, msg.event )
+    (msg : RegisterEventHandlerMessage) => internalRequireEvent( msg.handler, msg.name, msg.restriction )
   }
 }
 
-private[core] case class EventProviderMessage( provider : Set[EventProvider], event : EventDescription )
-private[core] case class RegisterEventHandlerMessage( handler : EventHandler, event : EventDescription )
-private[core] case class RegistrationOK( provider : EventProvider, event : EventDescription )
+private[core] case class EventProviderMessage( provider : Set[SVarActor.Ref], eventName : ontology.GroundedSymbol, event : Option[Event] = None )
+private[core] case class RegisterEventHandlerMessage( handler : SVarActor.Ref, name : ontology.GroundedSymbol, restriction : Option[PartialFunction[Event, Boolean]] )

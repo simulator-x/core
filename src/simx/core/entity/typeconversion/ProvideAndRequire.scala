@@ -20,6 +20,8 @@
 
 package simx.core.entity.typeconversion
 
+import scala.reflect.ClassTag
+
 /* author: dwiebusch
  * date: 27.08.2010
  */
@@ -27,35 +29,38 @@ package simx.core.entity.typeconversion
 /**
  *  base class for unified handling of Provides and Requires
  */
-trait ProvideAndRequire
+abstract class ProvideAndRequire[T, O]
 //O : OntologyType
 //T : ComponentType
 
 /**
  *  a class that wraps a ProvideConversionInfo. O should always be the type used in the Simulator Core
  */
-case class Provide[T, O]( wrapped : ProvideConversionInfo[T, O] ) extends ProvideAndRequire{
+case class Provide[T, O]( wrapped : ProvideConversionInfo[T, O] ) extends ProvideAndRequire[T, O]{
   //! loop the using method through
-  def using( conv : IConverter[T, O] ) = Provide[T, O](wrapped.using(conv))
+  def using( conv : IConverter[T, O] ) =
+    Provide[T, O](wrapped.using(conv))
 
   /**
    *  sets the initial value of the svar to be created
    * @param value the initial value
    * @return the same Provide having the initial value variable set 
    */
-  //TODO: one might want to return a copy instead of the same object (for reusability reasons)
-  def withInitialValue( value : T ) : Provide[T,O] = {
-    wrapped.setInitialValue( value )
-    this
-  }
+  def withInitialValue( value : T ) : Provide[T,O] =
+    Provide(wrapped.setInitialValue( value ))
+
+  def asConst =
+    Provide(wrapped.asConst)
 }
 
 /**
  *  a class that wraps a RequireConversionInfo. O should always be the type used in the Simulator Core
  */
-case class Require[O, T]( wrapped : RequireConversionInfo[O, T] ) extends ProvideAndRequire{
+case class Require[O, T]( wrapped : RequireConversionInfo[O, T] ) extends ProvideAndRequire[T, O]{
   //! loop the using method through
-  def using( conv : IReverter[T, O] ) = Require[O, T](wrapped.using(conv))
+  def using( conv : IReverter[T, O] ) =
+    Require[O, T](wrapped.using(conv))
 }
 
-case class Own[O]( wrapped : ConvertibleTrait[O]) extends ProvideAndRequire
+case class Own[O : ClassTag]( wrapped : ConvertibleTrait[O] )
+  extends ProvideAndRequire[O, O]

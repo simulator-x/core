@@ -57,7 +57,8 @@ object Configuration {
       Console.err.println("[SimXConfig] used but no '" + configFile.getName + "' found in working directory (" +
         new File("./").getAbsoluteFile + ")")
       new Group(Seq[Node]())
-    case _ : Throwable =>
+    case t : Throwable =>
+      t.printStackTrace()
       Console.err.println("[SimXConfig] unknown error while parsing " + configFile)
       new Group(Seq[Node]())
   }

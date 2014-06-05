@@ -20,66 +20,73 @@
 
 package simx.core.svaractor
 
-import benchmarking.MessageBenchmarking
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
+import simx.core.entity.description.SVal
+import simx.core.entity.Entity
+import scala.annotation.meta.param
+import scala.language.existentials
 
 /*
 * @todo DOCUMENT THIS FILE
 */
 
-abstract class SimXMessage(implicit val sender : SVarActor.Ref) extends Serializable with MessageBenchmarking
+abstract class SimXMessage(implicit val sender : SVarActor.Ref) extends Serializable
 
-abstract class SVarMessage(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
+abstract class SVarMessage(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
 
-abstract class SVarHoldingMessage[T](implicit @transient actorContext : SVarActor.Ref) extends SVarMessage{
+abstract class SVarHoldingMessage[T](implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarMessage{
   def sVar : SVar[T]
 }
 
-case class AcknowledgeMessage( refMessage: SVarMessage )(implicit @transient actorContext : SVarActor.Ref) extends SVarMessage
+case class AcknowledgeMessage( refMessage: SVarMessage )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarMessage
 
-case class CreateSVarMessage[T]( value: T )(implicit @transient actorContext : SVarActor.Ref) extends SVarMessage
-case class SVarCreatedMessage[T]( sVar: SVar[T], createMessage: CreateSVarMessage[T], manifest : ClassTag[_])(implicit @transient actorContext : SVarActor.Ref)
+case class CreateSVarMessage[T]( value: SVal[T] )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarMessage
+case class SVarCreatedMessage[T]( sVar: SVar[T], createMessage: CreateSVarMessage[T])(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
-case class ReadSVarMessage[T]( sVar: SVar[T] )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
-case class ValueOfSVarMessage[T]( sVar: SVar[T], value: T )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class ReadSVarMessage[T]( sVar: SVar[T] )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class ValueOfSVarMessage[T]( sVar: SVar[T], value: T )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
 
-case class WriteSVarMessage[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T )(implicit @transient actorContext : SVarActor.Ref)
+case class WriteSVarMessage[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T, forceUpdate : Boolean )(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
 case class ObserveSVarMessage[T]( sVar: SVar[T], observer : SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref] )
-                                (implicit @transient actorContext : SVarActor.Ref)
+                                (implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
-case class IgnoreSVarMessage[T]( sVar: SVar[T], observer : SVarActor.Ref )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class IgnoreSVarMessage[T]( sVar: SVar[T], observer : SVarActor.Ref )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
 
-case class NotifyWriteSVarMessage[T]( sVar: SVar[T], value: T )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class NotifyWriteSVarMessage[T]( sVar: SVar[T], value: T )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
 
-case class ChangeOwnerOfSVarMessage[T]( sVar: SVar[T], newOwner: SVarActor.Ref )(implicit @transient actorContext : SVarActor.Ref)
+case class ChangeOwnerOfSVarMessage[T]( sVar: SVar[T], newOwner: SVarActor.Ref )(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
-case class OfferSVarMessage[T]( sVar: SVar[T], value: T )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
-case class AcceptSVarMessage[T]( sVar: SVar[T] )(implicit @transient actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
-case class SVarOwnerChangeInProgressMessage[T]( sVar: SVar[T], newOwner : SVarActor.Ref )(implicit @transient actorContext : SVarActor.Ref)
+case class OfferSVarMessage[T]( sVar: SVar[T], value: SVal[T] )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class AcceptSVarMessage[T]( sVar: SVar[T] )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SVarHoldingMessage[T]
+case class SVarOwnerChangeInProgressMessage[T]( sVar: SVar[T], newOwner : SVarActor.Ref )(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
-case class HeldMessagesMessage[T]( sVar : SVar[T], newOwner : SVarActor.Ref, msgs : List[SVarMessage])(implicit @transient actorContext : SVarActor.Ref)
-  extends SVarHoldingMessage[T]
-
-case class SVarOwnerChangedMessage[T]( sVar: SVar[T], newOwner: SVarActor.Ref, originalMessage: SVarMessage )(implicit @transient actorContext : SVarActor.Ref)
+case class HeldMessagesMessage[T]( sVar : SVar[T], newOwner : SVarActor.Ref, msgs : List[SVarMessage])(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
-case class UnknownSVarMessage[T]( sVar: SVar[T], originalMessage: SVarMessage )(implicit @transient actorContext : SVarActor.Ref)
+case class SVarOwnerChangedMessage[T]( sVar: SVar[T], newOwner: SVarActor.Ref, originalMessage: SVarMessage )(implicit @(transient @param) actorContext : SVarActor.Ref)
+  extends SVarHoldingMessage[T]
+
+case class UnknownSVarMessage[T]( sVar: SVar[T], originalMessage: SVarMessage )(implicit @(transient @param) actorContext : SVarActor.Ref)
   extends SVarHoldingMessage[T]
 
 
-case class Shutdown( )(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
+case class Shutdown( )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
 
-case class ObserveMessage( )(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
-case class IgnoreMessage(  )(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
-case class SyncMessage(  )(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
-case class BunchOfSimXMessagesMessage( msgs : List[SimXMessage])(implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
+case class ObserveMessage( )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+case class IgnoreMessage(  )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+case class SyncMessage(  )(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+case class BunchOfSimXMessagesMessages( msgs : List[SimXMessage])(implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+private[svaractor] case class AtomicUpdate(updateId : java.util.UUID, msgs : List[NotifyWriteSVarMessage[_]], svarsInUpdate : Set[SVar[_]])
+                                          (implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+private[svaractor] case class AtomicSet(id : java.util.UUID, msgs : List[WriteSVarMessage[_]], svarsInUpdate : Set[SVar[_]])
+                                       (implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
 
-
+protected[core] case class RemoveEntityMessage( e : Entity )(implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage
 
 class SVarMessages

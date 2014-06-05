@@ -21,6 +21,7 @@
 package simx.core.svaractor
 
 import handlersupport.HandlerSupport
+import scala.annotation.meta.param
 
 /**
  * A ping message that can be used track the reaction time of an actor.
@@ -35,7 +36,7 @@ import handlersupport.HandlerSupport
  *                  by default.
  */
 case class Ping( identifier : Any, timestamp : Long = System.nanoTime())
-               (implicit @transient actor : SVarActor.Ref) extends SimXMessage
+               (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage
 
 /**
  * This message is sent as a reply to a [[simx.core.svaractor.Ping]].
@@ -48,7 +49,7 @@ case class Ping( identifier : Any, timestamp : Long = System.nanoTime())
  *                        [[java.lang.System.nanoTime()]] by default.
  */
 case class Reply( identifier : Any, originalTimestamp : Long, replyTimestamp : Long = System.nanoTime() )
-                (implicit @transient actor : SVarActor.Ref) extends SimXMessage
+                (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage
 
 /**
  * Mixing in this trait gives an actor to answer on [[simx.core.svaractor.Ping]] with a [[simx.core.svaractor.Reply]].

@@ -26,13 +26,12 @@
  */
 package simx.core.ontology.types
 
-import simx.core.ontology.{SpecificDescription, Symbols, SVarDescription}
+import simx.core.ontology.{types, SpecificDescription, Symbols, SVarDescription}
+import scala.reflect.ClassTag
+import scala.pickling.FastTypeTag
 
 object TypeDefinitions {
-
   type Enum = Enumeration#Value
-
-
 }
 
 object Mappings{
@@ -42,6 +41,16 @@ object Mappings{
     150 -> Key_Up,
     151 -> Key_Right,
     152 -> Key_Down,
+    48 -> Key_0,
+    49 -> Key_1,
+    50 -> Key_2,
+    51 -> Key_3,
+    52 -> Key_4,
+    53 -> Key_5,
+    54 -> Key_6,
+    55 -> Key_7,
+    56 -> Key_8,
+    57 -> Key_9,
     65 -> Key_a,
     66 -> Key_b,
     67 -> Key_c,
@@ -74,5 +83,5 @@ case class SoundProperties(gain : Float = 0.5f, loop: Boolean = false, pitch: Fl
 
 object DefaultEnum extends Enumeration {val Foo = Value("Foo") : TypeDefinitions.Enum}
 object EntityDescription extends SVarDescription[SpecificDescription[_ <: simx.core.entity.Entity], SpecificDescription[_ <: simx.core.entity.Entity]](
-  NullType as Symbols.entityDescription createdBy new simx.core.ontology.EntityDescription
+  NullType as Symbols.entityDescription withType classOf[simx.core.ontology.SpecificDescription[_ <: simx.core.entity.Entity]]
 )

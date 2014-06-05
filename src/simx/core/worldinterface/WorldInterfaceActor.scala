@@ -20,14 +20,19 @@
 
 package simx.core.worldinterface
 
-import scala.collection.mutable
-import simx.core.entity.Entity
-import simx.core.component.SingletonActor
 import simx.core.svaractor._
-import handlersupport.Types
-import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.entity.Entity
 import simx.core.worldinterface.eventhandling._
-import simx.core.ontology.GroundedSymbol
+import simx.core.component.remote.RemoteServiceSupport
+import simx.core.worldinterface.eventhandling.EventDescription
+import scala.collection.mutable
+import simx.core.ontology.{GroundedSymbol, types, Symbols}
+import simx.core.component.ComponentCreation
+import simx.core.svaractor.unifiedaccess._
+import simx.core.svaractor.BunchOfSimXMessagesMessages
+import simx.core.worldinterface.eventhandling.EventProviderMessage
+import simx.core.entity.description.SValSet
+import scala.annotation.meta.param
 
 
 /* author: dwiebusch
@@ -37,14 +42,11 @@ import simx.core.ontology.GroundedSymbol
 /**
  * @author Stephan Rehfeld
  */
-case class WorldInterfaceActorInCluster( worldInterfaceActor : SVarActor.Ref )
-                                       (implicit @transient actorContext : SVarActor.Ref) extends SimXMessage
 
-object WorldInterfaceActor extends SingletonActor(new WorldInterfaceActor, "worldInterface" ){
-  def set[T](svar : SVar[T], value : T) {
-    self ! SVarWriteRequest(svar, value)
-  }
-}
+case class WorldInterfaceActorInCluster( worldInterfaceActor : SVarActor.Ref )
+                                       (implicit @(transient @param) actorContext : SVarActor.Ref) extends SimXMessage
+
+object WorldInterfaceActor extends SingletonActor(new WorldInterfaceActor, "worldInterface" )
 
 /**
  * The World Interface Actor, which is doing all the Interfacing work
@@ -52,22 +54,19 @@ object WorldInterfaceActor extends SingletonActor(new WorldInterfaceActor, "worl
  * @author dwiebusch
  *
  */
-protected class WorldInterfaceActor extends SVarActor with EventProvider {
+protected class WorldInterfaceActor extends SVarActor with EventProvider with RemoteServiceSupport with ComponentCreation{
+
+  //  override protected implicit val actorContext  = this
   /** the world root, this is some kind of hack for now*/
   private val worldRoot = new RecursiveHolder
-  /** an internal list to store handlers for every registered event (and the internal handling stuff) */
-  //private var handlers   = List[Types.handler_t]()
-  /** an internal map, containing all triggered world interface events (or at least their names) */
-  //private var triggers   = Map[SVar[_], (Symbol, Symbol)]()
   /** the map containing all registered actors */
   private var actors     = Map[Symbol, SVarActor.Ref]()
-  /** the map containing all registered components */
-  private var components = Map[Symbol, SVarActor.Ref]()
   /** map of creation observers */
   private val creationObservers = mutable.Map[List[Symbol], Set[SVarActor.Ref]]()
+  /** */
   private var nextRegHandlers = Map[List[Symbol], Set[Entity => Any]]()
 
-  private val eventProviders = mutable.Map[GroundedSymbol, Set[EventProvider]]()
+  private val eventProviders = mutable.Map[GroundedSymbol, Set[SVarActor.Ref]]()
 
   private var foreignWorldInterfaceActors = List[SVarActor.Ref]()
 
@@ -79,6 +78,41 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
     }
   }
 
+  provideInitialValuesFor{
+    case (toProvide, aspect, e, given) if aspect.semanticsEqual(Symbols.name) =>
+      provideInitialValues(e, aspect.getCreateParams.combineWithValues(toProvide)._1)
+  }
+
+  override protected def startUp(){
+    if (SVarActor.isRemotingEnabled){
+      publishActor( WorldInterfaceActor.name , self )
+      observeRegistrations( WorldInterfaceActor.name ){
+        ref => if (ref != self) addForeignWorldInterfaceActor(ref)
+      }
+    }
+  }
+
+  private def addForeignWorldInterfaceActor(ref : SVarActor.Ref){
+    def createMsg(receiver : SVarActor.Ref)(msg : SVarActor.Ref => ForwardableMessage, l : List[SimXMessage]) = {
+      if (SVarActor isLocal receiver) msg(receiver).forward() :: l else l
+    }
+
+    val es = worldRoot.flatten.map( entityEntry => EntityRegisterRequest(entityEntry._2, entityEntry._1) ).toList
+    val ps = eventProviders.foldLeft(es : List[SimXMessage]){
+      (list, kv) => kv._2.foldLeft(list){ (l, p) => createMsg(p)(ProvideEventMessage(_, kv._1), l) }
+    }
+    val hs = eventHandlers.foldLeft(ps){
+      (list, kv) => kv._2.foldLeft(list){ (l, p) => createMsg(p._1)(RegisterHandlerMessage(_, kv._1, p._2), l) }
+    }
+    ref ! BunchOfSimXMessagesMessages(hs)
+    foreignWorldInterfaceActors = ref :: foreignWorldInterfaceActors
+  }
+
+  private def forwardToForeignActors(msg : ForwardableMessage){
+    if (!msg.isForwarded && foreignWorldInterfaceActors.nonEmpty)
+      foreignWorldInterfaceActors.foreach( _.tell(msg.forward(), sender()) )
+  }
+
   override def toString: String =
     getClass.getCanonicalName
 
@@ -86,25 +120,24 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
    * adds an entity to the world root
    *
    * @param desc the entitys name
-   * @param e an entity (if None, a new one will be created)
+   * @param e the entity
    * @param holder you don't want to change the default value
    */
-  private def setEntity( desc : List[Symbol], e : Option[Entity] = None,
-                         holder : RecursiveHolder = worldRoot, path : List[Symbol] = Nil) {
-    desc match{
-      case name :: Nil  =>
-        val (newEntity, currentPath) = (e.getOrElse(new Entity), (name::path).reverse)
-        holder.items.update( name, newEntity )
-        creationObservers.filter( x => currentPath.startsWith(x._1) ).values.foreach {
-          _.foreach( _ ! CreationMessage(currentPath, holder.items.get(name).get) )
-        }
-        nextRegHandlers.filter( x => currentPath.startsWith(x._1)).values.foreach{
-          _.foreach( _.apply( newEntity ) )
-        }
-        nextRegHandlers = nextRegHandlers.filterNot( x => currentPath.startsWith(x._1) )
-      case head :: tail => setEntity( tail, e, holder.children.getOrElseUpdate(head, new RecursiveHolder), head :: path)
-      case Nil => throw new Exception("provided empty list, cannot insert entity")
-    }
+  private def setEntity( desc : List[Symbol], e : Entity,
+                         holder : RecursiveHolder = worldRoot, path : List[Symbol] = Nil) : Entity = desc match {
+    case name :: Nil if holder.items.get(name) == Some(e) => e
+    case name :: Nil  =>
+      val currentPath = (name::path).reverse
+      holder.items.update( name, e )
+      creationObservers.filter( x => currentPath.startsWith(x._1) ).values.foreach {
+        _.foreach( _ ! CreationMessage(currentPath, e) )
+      }
+      val (matching, nonMatching) = nextRegHandlers.partition( x => currentPath.startsWith(x._1) )
+      matching.values.foreach{ _.foreach( _.apply( e ) ) }
+      nextRegHandlers = nonMatching
+      e
+    case head :: tail => setEntity( tail, e, holder.children.getOrElseUpdate(head, new RecursiveHolder), head :: path)
+    case Nil => throw new Exception("provided empty list, cannot insert entity")
   }
 
   /**
@@ -122,30 +155,13 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
   }
 
 
-  private def getEntitiesBelow( desc : List[Symbol], holder : RecursiveHolder = worldRoot ) : Option[Set[Entity]] = desc match {
-    case Nil => Some(holder.getItemsRecursively)
+  private def getEntitiesBelow( desc : List[Symbol], holder : RecursiveHolder = worldRoot ) : Option[Set[(Entity, List[Symbol])]] = desc match {
+    case Nil => Some(holder.flatten)
     case head :: tail => holder.children.get(head) match {
-      case None if tail == Nil => Some(holder.items.get(head).toSet)
+      case None if tail == Nil => Some(holder.items.get(head).toSet.map((_ : Entity,  Nil)))
       case Some(x) => getEntitiesBelow(tail, x )
       case None => None
     }
-  }
-
-  override protected def internalRequireEvent(handler: EventHandler, event: EventDescription ) {
-    super.internalRequireEvent(handler, event)
-    eventProviders.get(event.name) collect {
-      case set => handler.self ! EventProviderMessage(set, event)
-    }
-  }
-
-  /**
-   * updates an entity by injecting the given state value
-   *
-   * @param stateValue the state value to be injected
-   * (a new one is created if no one is known under the given name)
-   */
-  private def addStateValue[T](stateValue : SVar[T], desc : ConvertibleTrait[T], containerName : List[Symbol]) {
-    setEntity(containerName, Some(getEntity(containerName).getOrElse(new Entity).injectSVar(stateValue, desc)) )
   }
 
   /**
@@ -155,67 +171,53 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
    * @param trigger the name of the WorldInterfaceEvent to be triggered on value changes of stateValue
    */
   private def addValueChangeTrigger[T](stateValue : SVar[T], trigger : Symbol, container : List[Symbol]) {
-    observe( stateValue){ (value : T) => emitEvent(WorldInterfaceEvent(trigger, (stateValue, container, value ) ) ) }
+    observe( stateValue ){ value => emitEvent(WorldInterfaceEvent(trigger, (stateValue, container, value ) ) ) }
   }
-
-
-
-  /**
-   * handles a message. if this is called from the WorldInterfaceActor's thread, the handling is executed instantaneously
-   * otherwise the message is forwarded to the WorldInterfaceActor
-   */
-  private[worldinterface] def handleMessage(msg : Any)(implicit context : SVarActor.Ref) {
-    if (context == self) applyHandlers(msg) else self.!(msg)(sender)
-  }
-
-  /**
-   * checks the known handlers if they can handle the event and handles a given event if a matching handler was found
-   * otherwise calls the catchAll handler
-   *
-   * @param handlers a list of handlers to be checked
-   * @param catchAll the handler to be returned if no handler contained in the list matches
-   * @return a handler that can handle the given event or catchAll if no such handler was found in the given list
-   */
-  private def handleEvent(handlers : List[Types.handler_t], catchAll : Types.handler_t): Types.handler_t =
-    handlers match {
-      case head :: tail => head orElse handleEvent(tail, catchAll)
-      case Nil => catchAll
-    }
 
   addHandler[ListenForRegistrationsMessage]{ msg =>
     creationObservers.update(msg.path, creationObservers.getOrElse(msg.path, Set[SVarActor.Ref]()) + msg.actor)
-    getEntitiesBelow(msg.path).collect{ case set => set.foreach( msg.actor ! CreationMessage(msg.path, _) ) }
+    getEntitiesBelow(msg.path).collect{ case set => set.foreach( t => msg.actor ! CreationMessage(t._2, t._1) ) }
   }
 
   addHandler[OnNextRegistration]{
     msg => getEntitiesBelow(msg.path) match {
       case Some(set) if set.nonEmpty =>
-        set.head
+        set.head._1
       case _ =>
         nextRegHandlers = nextRegHandlers.updated(msg.path, nextRegHandlers.getOrElse(msg.path, Set()) + provideAnswer[Entity])
         DelayedAnswer
     }
   }
 
-  addHandler[RegisterHandlerMessage]{
-    msg => internalRequireEvent( msg.handler, msg.event )
+  addHandler[RegisterHandlerMessage]{ msg =>
+    internalRequireEvent( msg.handler, msg.name, msg.restriction )
+    //Send notification about providers to handler
+    eventProviders.get(msg.name).collect{ case providers => msg.handler ! EventProviderMessage(providers, msg.name)}
+    forwardToForeignActors(msg)
   }
 
-  addHandler[UnRegisterHandlerMessage]{
-    msg => internalRemoveEventHandler( msg.handler, msg.e )
+  addHandler[UnRegisterHandlerMessage]{ msg =>
+    internalRemoveEventHandler( msg.handler, msg.e )
+    forwardToForeignActors(msg)
   }
 
   addHandler[ProvideEventMessage]{ msg =>
-    eventProviders.update( msg.event.name, eventProviders.getOrElse(msg.event.name, Set[EventProvider]()) + msg.provider )
-    eventHandlers.get(msg.event.name) collect {
-      case set => set.foreach{ p => p._1.self ! EventProviderMessage(Set(msg.provider), msg.event)}
+    forwardToForeignActors(msg)
+    eventProviders.update( msg.name, eventProviders.getOrElse(msg.name, Set[SVarActor.Ref]()) + msg.provider )
+    val e = new Entity()
+    e.set(types.EventDescription(new EventDescription(msg.name)))
+    e.set(types.Actor(msg.provider))
+    registerEntity('eventProvider :: msg.name.value.toSymbol :: Nil, e)
+    eventHandlers.get(msg.name) collect {
+      case set => set.foreach{ _._1 ! EventProviderMessage(Set(msg.provider), msg.name, msg.event) }
     }
   }
 
   addHandler[UnRegisterProviderMessage]{ msg =>
+    forwardToForeignActors(msg)
     msg.e match {
       case Some(event) =>
-        eventProviders.update(event.name, eventProviders.getOrElse(event.name, Set[EventProvider]()).filterNot( _ == msg.provider ))
+        eventProviders.update(event.name, eventProviders.getOrElse(event.name, Set[SVarActor.Ref]()).filterNot( _ == msg.provider ))
       case None => for ( (event, providers) <- eventProviders)
         eventProviders.update(event, providers.filterNot( _ == msg.provider))
     }
@@ -229,35 +231,29 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
   }
 
 
-  private def writeHelper[T](msg : SVarWriteRequest[T]) {
-    msg.svar.set(msg.value)
-  }
-
-  addHandler[SVarWriteRequest[_]]( msg => writeHelper(msg) )
-
-  addHandler[ActorRegisterRequest]{
-    msg =>  actors += msg.name -> msg.actor
+  addHandler[ActorRegisterRequest]{ msg =>
+    forwardToForeignActors(msg)
+    actors += msg.name -> msg.actor
   }
 
   addHandler[ActorListingRequest]{
     msg => msg.replyTo ! ActorListingReply(actors.keys.toList)
   }
 
-  addHandler[ComponentRegisterRequest]{
-    msg => components += msg.name -> msg.component
+  addHandler[EntityCreateRequest]{ msg =>
+    forwardToForeignActors(EntityRegisterRequest(msg.name, setEntity(msg.name, new Entity)))
   }
 
-  addHandler[EntityCreateRequest]{
-    msg => setEntity(msg.name)
+  addHandler[EntityRegisterRequest]{ msg =>
+    forwardToForeignActors(msg)
+    setEntity(msg.name, msg.e )
   }
 
-  addHandler[EntityRegisterRequest]{
-    msg => setEntity(msg.name, Some(msg.e) )
-  }
-
-  addHandler[StateValueCreateRequest[_]]{
-    case msg: StateValueCreateRequest[_] => addStateValue(SVarImpl(msg.value), msg.desc, msg.container)
-  }
+  //  addHandler[StateValueCreateRequest[_]]{
+  //    case msg : StateValueCreateRequest[_] => forwardToForeignActors(
+  //      EntityRegisterRequest(msg.container, addStateValue(SVarImpl(msg.value), msg.desc, msg.container) )
+  //    )
+  //  }
 
   addHandler[ExternalStateValueObserveRequest[_]]{
     msg => addValueChangeTrigger(msg.ovalue, msg.trigger, msg.container)
@@ -268,11 +264,35 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
   }
 
   addHandler[ComponentLookupRequest]{
-    msg => components.get(msg.name)
+    msg => delayedReplyWith(handleComponentMap)(_.flatMap(_._2).get(msg.name))
+  }
+
+  addHandler[ComponentLookUpByType]{
+    msg => delayedReplyWith(handleComponentMap)(_.get(msg.componentType.value.toSymbol).map(_.toList).getOrElse(Nil))
   }
 
   addHandler[AllComponentsLookupRequest]{
-    msg => components
+    msg => delayedReplyWith(handleComponentMap)(_.flatMap(_._2))
+  }
+
+  private def handleComponentMap( handler : Map[Symbol, Map[Symbol, SVarActor.Ref]] => Any) = {
+    getEntitiesBelow(List(Symbols.component.value.toSymbol)) match {
+      case Some(set) if set.size > 0 =>
+        var counter = 0
+        var resultMap : Map[Symbol, Map[Symbol, SVarActor.Ref]] = Map()
+        set.map{ tuple =>
+          (h : (List[Symbol], SVarActor.Ref) => Any) => tuple._1.get(types.Component).foreach{ a => h(tuple._2, a) }
+        }.foreach{
+          _.apply{ (path, actor) =>
+            resultMap = resultMap.updated(path.head, resultMap.getOrElse(path.head, Map()).updated(path.tail.head, actor))
+            counter += 1
+            if (counter == set.size)
+              handler(resultMap)
+          }
+        }
+      case _ =>
+        handler(Map())
+    }
   }
 
   addHandler[EntityLookupRequest]{
@@ -283,65 +303,63 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider {
     msg => actors.get(msg.name)
   }
 
-  addHandler[EntityUnregisterRequest]{
-    msg => worldRoot.remove(msg.e)
+  addHandler[EntityUnregisterRequest]{ msg =>
+    forwardToForeignActors(msg)
+    worldRoot.remove(msg.e)
   }
 
   addHandler[InternalStateValueObserveRequest[_]]{
     msg => getEntity(msg.nameE).collect{
-      case entity => entity.get(msg.c).collect{ case svar =>addValueChangeTrigger(svar, msg.trigger, msg.nameE) }
-    }
-  }
-
-  addHandler[StateValueSetRequest[_]]{
-    case msg: StateValueSetRequest[_] => getEntity(msg.container).collect{
-      case entity => set( entity.get(msg.c).head, msg.newValue )
+      case entity => entity.get(msg.c).forall{ _.values.foreach{ case svar : SVar[_] => addValueChangeTrigger(svar, msg.trigger, msg.nameE) } }
     }
   }
 
   addHandler[EntityGroupLookupRequest]{
-    msg => getEntitiesBelow(msg.name).getOrElse(Set())
-  }
-
-  addHandler[StateValueLookupRequest[_]]{
-    case StateValueLookupRequest(c, container) => getEntity(container) match {
-      case Some(entity) => entity.get(c).headOption
-      case None => None
-    }
+    msg => getEntitiesBelow(msg.name).collect{ case set => set.map(_._1) }.getOrElse(Set())
   }
 
 
-  addHandler[ReadRequest[_]]( msg => readTypeHelper(msg) )
+  private val knownRelations = SValSet()
 
-  private def readTypeHelper[T]( in : ReadRequest[T] ){
-    delayedReplyWith[T](in.svar.get(_)(actorContext))( x => x )
+//  private val otherKnownRelations = Map[Relation, Entity]()
+
+  addHandler[AddRelation]{ msg =>
+    val relation = msg.r
+    knownRelations.update(relation)
   }
 
-  private def handlerBind[T]( sVar : SVar[T]) {
-    delayedReplyWith[Option[T]]( x => sVar.get(y => x.apply(Some(y)))(actorContext))( x => x )
+  addHandler[RemoveRelation]{ msg =>
+    knownRelations.remove(msg.r)
   }
 
-  addHandler[SVarReadRequest[_]]{
-    case SVarReadRequest(c, entity) => getEntity(entity) match {
-      case Some(e) => e.get(c).headOption match {
-        case Some(svar) => handlerBind( svar )
-        case None => None
-      }
-      case None => None
+  addHandler[HandleRelationRequest[_, _]]{ msg =>
+    if (msg.r.isLeft) {
+      knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
+        filter(_.obj equals msg.r.getKnownValue).
+        map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.subj)).toMap
+    } else {
+        knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
+          filter(_.subj equals msg.r.getKnownValue).
+          map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.obj)).toMap
     }
   }
 }
 
 
-class RecursiveHolder{
+protected class RecursiveHolder{
   val items = mutable.Map[Symbol, Entity]()
   val children = mutable.Map[Symbol, RecursiveHolder]()
 
   def getItemsRecursively : Set[Entity] =
-    children.foldLeft(items.values.toSet)( (a, b) => a ++ b._2.getItemsRecursively )
+    children.foldLeft(items.values.toSet)( _ ++ _._2.getItemsRecursively )
+
+  def flatten : Set[(Entity, List[Symbol])] = {
+    val flatChilds = children.flatMap{ tuple => tuple._2.flatten.map( t => t._1 -> (tuple._1 :: t._2 ) ) }
+    flatChilds.toSet ++ items.map(tuple => tuple._2 -> List(tuple._1))
+  }
 
   def remove(e : Entity) {
-    items.retain( (a,b) => b != e )
+    items.retain( (_, b) => b != e )
     children.values.foreach( _.remove(e) )
   }
 }

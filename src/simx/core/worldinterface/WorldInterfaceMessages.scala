@@ -21,14 +21,14 @@
 package simx.core.worldinterface
 
 import simx.core.entity.Entity
-import simx.core.component.Component
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.worldinterface.eventhandling.{EventDescription, EventProvider, EventHandler, Event}
-import simx.core.entity.description.SValSet
-import simx.core.ontology.Symbols
-import simx.core.svaractor.{SVarActor, SVar}
-import java.lang.Exception
-import java.util.UUID
+import simx.core.worldinterface.eventhandling.{EventDescription, Event}
+import simx.core.entity.description.{SVal, SValSet}
+import simx.core.svaractor.{SimXMessage, SVarActor, SVar}
+import simx.core.ontology._
+import simx.core.ontology
+import simx.core.svaractor.unifiedaccess.{EntityBase, Relation, Request}
+import simx.core.svaractor.unifiedaccess.Relation
 
 /* author: dwiebusch
 * date: 10.09.2010
@@ -43,28 +43,21 @@ import java.util.UUID
 case class WorldInterfaceEvent( specificName : Symbol, value : Any)
   extends Event( Symbols.event, new SValSet())
 
+case class CreationMessage( path : List[Symbol], e : Entity )
+
 /**
  * Message sent to the WorldInterface Actor, to register a new handler for the given event
  *
  * @author dwiebusch
  * @param handler the handler to be registered
  */
-case class RegisterHandlerMessage( handler : EventHandler, event : EventDescription )
+private case class RegisterHandlerMessage( handler : SVarActor.Ref, name : GroundedSymbol, restriction : Option[PartialFunction[Event, Boolean]] )(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = RegisterHandlerMessage(handler, name, restriction)(sentBy) }
 
 
-case class ProvideEventMessage(provider : EventProvider, event : EventDescription )
+private case class ProvideEventMessage(provider : SVarActor.Ref, name : GroundedSymbol, event : Option[Event] = None )(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = ProvideEventMessage(provider, name, event)(sentBy) }
 
-protected class HandlerMSG[T]( handler : T => Any ) {
-  private case class Reply[U](id : UUID, value : U)
-  private val sender : Option[SVarActor.Ref] = None
-  private val id = UUID.randomUUID()
-
-  def reply( value : T ) {
-    sender.getOrElse( throw new Exception( "No Handler was registered" ) ) ! Reply(id, value)
-  }
-}
-
-case class TestHandlerMSG(handler : Int => Unit) extends HandlerMSG(handler)
 
 /**
  * Message sent to the WorldInterface Actor, to unregister a handler
@@ -72,9 +65,11 @@ case class TestHandlerMSG(handler : Int => Unit) extends HandlerMSG(handler)
  * @author dwiebusch
  * @param handler the handler to be unregistered
  */
-case class UnRegisterHandlerMessage( handler : EventHandler, e : Option[EventDescription] = None )
+private case class UnRegisterHandlerMessage( handler : SVarActor.Ref, e : Option[EventDescription] = None )(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy: UnRegisterHandlerMessage = UnRegisterHandlerMessage(handler, e)(sentBy) }
 
-case class UnRegisterProviderMessage( provider : EventProvider, e : Option[EventDescription] = None )
+private case class UnRegisterProviderMessage( provider : SVarActor.Ref, e : Option[EventDescription] = None )(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage { protected def copy = UnRegisterProviderMessage(provider, e)(sentBy) }
 
 /**
  * Message sent to the WorldInterface Actor, to create a new state value
@@ -83,17 +78,8 @@ case class UnRegisterProviderMessage( provider : EventProvider, e : Option[Event
  * @param value the initial value of the created state value
  * @param container the id of the entity, the state value is injected into
  */
-case class StateValueCreateRequest[T](desc: ConvertibleTrait[T], value: T, container: List[Symbol])
+private case class StateValueCreateRequest[T](desc: ConvertibleTrait[T], value: T, container: List[Symbol])
 
-
-/**
- * Message sent to the WorldInterface Actor, to write to a registered state value
- *
- * @author dwiebusch
- * @param container the id of the entity which contains the state value
- * @param newValue the value to be set
- */
-case class StateValueSetRequest[T](c : ConvertibleTrait[T], container : List[Symbol], newValue : T)
 
 /**
  * Message sent to the WorldInterface Actor, to register a handler for a value change of the gieven state value
@@ -102,7 +88,7 @@ case class StateValueSetRequest[T](c : ConvertibleTrait[T], container : List[Sym
  * @param ovalue the state value to be observed
  * @param trigger the name of the WorldInterfaceEvent which is triggered on value change of ovalue
  */
-case class ExternalStateValueObserveRequest[T](ovalue: SVar[T], container : List[Symbol], trigger: Symbol)
+private case class ExternalStateValueObserveRequest[T](ovalue: SVar[T], container : List[Symbol], trigger: Symbol)
 
 /**
  * Message sent to the WorldInterface Actor, to observe an state value, already registered with the WorldInterfaceActor
@@ -111,7 +97,7 @@ case class ExternalStateValueObserveRequest[T](ovalue: SVar[T], container : List
  * @param nameE the name of the entity containing the state value
  * @param trigger the name of the WorldInterfaceEvent which is triggered on value change of the state value
  */
-case class InternalStateValueObserveRequest[T](c: ConvertibleTrait[T], nameE : List[Symbol], trigger: Symbol)
+private case class InternalStateValueObserveRequest[T](c: ConvertibleTrait[T], nameE : List[Symbol], trigger: Symbol)
 
 /**
  * Message sent to the WorldInterface Actor, to create a new entity
@@ -119,7 +105,7 @@ case class InternalStateValueObserveRequest[T](c: ConvertibleTrait[T], nameE : L
  * @author dwiebusch
  * @param name the name of the entity to be created
  */
-case class EntityCreateRequest(name: List[Symbol])
+private case class EntityCreateRequest(name: List[Symbol])
 
 /**
  * Message sent to the WorldInterface Actor, to register an existing entity
@@ -128,8 +114,11 @@ case class EntityCreateRequest(name: List[Symbol])
  * @param name the name under which the entity will be accessible after being registered
  * @param e the entity to be registered
  */
-case class EntityRegisterRequest(name : List[Symbol], e : Entity)
-case class EntityUnregisterRequest(e : Entity)
+private case class EntityRegisterRequest(name : List[Symbol], e : Entity)(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = EntityRegisterRequest(name, e)(sentBy) }
+
+private case class EntityUnregisterRequest(e : Entity)(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = EntityUnregisterRequest(e)(sentBy) }
 
 /**
  * Message sent to the WorldInterface Actor, to register an existing actor
@@ -138,7 +127,8 @@ case class EntityUnregisterRequest(e : Entity)
  * @param name the name under which the actor will be accessible after being registered
  * @param actor the actor to be registered
  */
-case class ActorRegisterRequest(name : Symbol, actor : SVarActor.Ref)
+private case class ActorRegisterRequest(name : Symbol, actor : SVarActor.Ref)(implicit val sentBy : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = ActorRegisterRequest(name, actor)(sentBy) }
 
 /**
  * Message sent to the WorldInterface Actor, to receive a listing of all known actors
@@ -146,7 +136,7 @@ case class ActorRegisterRequest(name : Symbol, actor : SVarActor.Ref)
  * @author dwiebusch
  * @param replyTo the actor to whom the list will be sent
  */
-case class ActorListingRequest(replyTo : SVarActor.Ref)
+private case class ActorListingRequest(replyTo : SVarActor.Ref)
 
 /**
  * Message sent by the WorldInterface Actor, in reply to an ActorListingRequest
@@ -154,7 +144,7 @@ case class ActorListingRequest(replyTo : SVarActor.Ref)
  * @author dwiebusch
  * @param list the list containing the names of all actors known to the WorldInterfaceActor
  */
-case class ActorListingReply(list : List[Symbol])
+private case class ActorListingReply(list : List[Symbol])
 
 /**
  * Message sent to the WorldInterface Actor, to forward a message to another actor
@@ -163,16 +153,19 @@ case class ActorListingReply(list : List[Symbol])
  * @param destination the symbol under which the other actor was registered
  * @param msg the message to be forwarded
  */
-case class ForwardMessageRequest(destination : Symbol, msg : Any)
+private case class ForwardMessageRequest(destination : Symbol, msg : Any)
 
 /**
  * Message sent to the WorldInterface Actor, to register an existing component
  *
  * @author dwiebusch
  * @param name the name under which the component will be accessible after being registered
- * @param component the component to be registered
+ * @param cType the type of component to be registered
+ * @param ref the actor reference of the component
+ *
  */
-case class ComponentRegisterRequest( name : Symbol, component : SVarActor.Ref )
+private case class ComponentRegisterRequest(name : Symbol, cType : ontology.GroundedSymbol, ref : SVarActor.Ref) (implicit val actorContext : SVarActor.Ref)
+  extends SimXMessage with ForwardableMessage{ protected def copy = ComponentRegisterRequest(name, cType, ref)(actorContext)}
 
 
 /**
@@ -217,28 +210,25 @@ private case class EntityGroupLookupRequest(name : List[Symbol])
 private case class ComponentLookupRequest(name : Symbol)
 //private case class AllComponentsLookupRequest(future : SyncVar[Map[Symbol, Component]])
 private case class AllComponentsLookupRequest()
+//
+private case class ComponentLookUpByType(componentType : ontology.GroundedSymbol)
 
-/**
- * Message sent to the WorldInterface Actor, to look up a specific state value
- * FOR INTERNAL USAGE ONLY
- *
- * @author dwiebusch
- * @param container the id of the entity containing the state value to be looked up
- */
-//private case class StateValueLookupRequest[T]( c : ConvertibleTrait[T], container : List[Symbol], future : SyncVar[Option[SVar[T]]])
-private case class StateValueLookupRequest[T]( c : ConvertibleTrait[T], container : List[Symbol])
+private case class AddRelation(r :  SVal[Relation])
+private case class RemoveRelation(r : SVal[Relation])
+private case class HandleRelationRequest[S <: Entity, O <: Entity](r : Request[S, O])
 
-//private case class SVarReadRequest[T]( c : ConvertibleTrait[T], entity : List[Symbol], future : SyncVar[Option[T]] )
-private case class SVarReadRequest[T]( c : ConvertibleTrait[T], entity : List[Symbol] )
-
-//private case class ReadRequest[T]( svar : SVar[T], future : SyncVar[T] )
-private case class ReadRequest[T]( svar : SVar[T])
-
-private case class SVarWriteRequest[T](svar : SVar[T], value : T)
 
 private case class ListenForRegistrationsMessage( actor : SVarActor.Ref, path : List[Symbol] )
 
 private case class OnNextRegistration( path : List[Symbol])
 
-case class CreationMessage( path : List[Symbol], e : Entity )
-
+private trait ForwardableMessage extends SimXMessage{
+  protected var forwarded = false
+  protected def copy : ForwardableMessage
+  def isForwarded : Boolean = forwarded
+  def forward() : ForwardableMessage = {
+    val retVal = copy
+    retVal.forwarded = true
+    retVal
+  }
+}

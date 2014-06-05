@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 The SIRIS Project
+ * Copyright 2014 The SIRIS Project
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,19 +18,19 @@
  * Federal Ministry of Education and Research (grant no. 17N4409).
  */
 
-package simx.core.svaractor.benchmarking
+package simx.core.svaractor.unifiedaccess
 
-import simx.core.benchmarking.CoreBenchmarkingConfiguration
-import java.util.UUID
+import simx.core.svaractor.{SVarActor, SVar}
 
 /**
- * User: dwiebusch
- * Date: 23.02.13
- * Time: 15:15
+ * Created by dwiebusch on 14.03.14
  */
-trait MessageBenchmarking {
-  val messageUUID = if( CoreBenchmarkingConfiguration.enableBenchmarking &&
-    CoreBenchmarkingConfiguration.enableSIRISMessageUUID ) UUID.randomUUID() else null
-  val creationTimestamp = if( CoreBenchmarkingConfiguration.enableBenchmarking &&
-    CoreBenchmarkingConfiguration.enableSIRISMessageCreationTimeLogging ) System.nanoTime() else 0
+trait EntityBase extends EntityRelationAccess{
+  protected val selfSVar : SVar[SelfType]
+
+  protected def setSelf(value : SelfType)(implicit actorContext : SVarActor) =
+    if (selfSVar.set(value, forceUpdate = true))
+      value
+    else
+      throw new Exception("Failed to set self SVar")
 }

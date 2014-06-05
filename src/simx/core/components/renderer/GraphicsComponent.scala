@@ -20,8 +20,10 @@
 
 package simx.core.components.renderer
 
+import simx.core.entity.component.ComponentAspect
 import simx.core.component.Component
 import simx.core.ontology.Symbols
+import scala.reflect.ClassTag
 
 /**
  * A common base trait for all rendering components. It already sets the correct component type id for entity creation
@@ -29,6 +31,11 @@ import simx.core.ontology.Symbols
  *
  * @author Dennis Wiebusch
  */
-trait GraphicsComponent extends Component{
+object GraphicsComponent{
   def componentType = Symbols.graphics
 }
+
+abstract class GraphicsComponent(name : Symbol) extends Component(name, GraphicsComponent.componentType)
+
+abstract class GraphicsComponentAspect[T <: Component : ClassTag](name : Symbol, args : Any*)
+  extends ComponentAspect[T](GraphicsComponent.componentType, name, args)

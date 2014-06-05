@@ -33,6 +33,8 @@ import javax.imageio.ImageIO
  */
 object Splash {
   def apply(scale: Float = 1f) = new Splash(scale)
+  def logoUrl: URL = getClass.getResource("/simx/core/assets/simx-logo.png")
+  def loadLogo = ImageIO.read(logoUrl)
 }
 
 class Splash private (scale: Float = 1f) {
@@ -46,9 +48,9 @@ class Splash private (scale: Float = 1f) {
     val _y = (screen.height - _height) / 2
     setBounds(_x,_y,_width,_height)
 
-    val url: URL = getClass.getResource("/simx/core/assets/simx-logo.png")
+
     val label = new JLabel(
-      new ImageIcon(ImageIO.read(url).getScaledInstance(_width, _height,java.awt.Image.SCALE_SMOOTH)))
+      new ImageIcon(Splash.loadLogo.getScaledInstance(_width, _height,java.awt.Image.SCALE_SMOOTH)))
     val copyright = new JLabel("Copyright 2013 The SIRIS Project", SwingConstants.CENTER)
     copyright.setFont(new Font("Sans-Serif", Font.PLAIN, 14))
     getContentPane.add(label, BorderLayout.CENTER)

@@ -34,7 +34,7 @@ import reflect.runtime.universe.TypeTag
  * Date: 23.02.13
  * Time: 15:41
  */
-case class ActorCreation()
+case object ActorCreation
 
 
 protected case class ReplyRequest[T, U](id : java.util.UUID, sender : SVarActor.Ref, msg : T, manifest : ClassTag[U])
@@ -72,16 +72,18 @@ protected[svaractor] object SVarActorDeadWatch{
   }
 }
 
-trait SVarActorContext{
+trait SVarActorContext[ActorType <: SVarActor]{
   /**
    * reference to this
    */
-  protected implicit val actorContext : SVarActor
+  //protected implicit val actorContext : ActorType
 }
 
 
-trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
+trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerSupportImpl{
   val printWarnings = true
+
+  protected implicit val actorContext : this.type = this
 
   context.setReceiveTimeout(Duration.create(16, TimeUnit.MILLISECONDS))
   //SVarActorDeadWatch.register(self)
@@ -112,10 +114,18 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
     updateTimeout()
   }
 
-  def ask[T : TypeTag : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Unit) {
+  protected def ask[T : TypeTag : ClassTag](send : ReplyRequest[Any, T] => Unit, msg : Any)(replyHandler : T => Any) {
     val id = java.util.UUID.randomUUID
     actorContext.addSingleUseHandlerPF[(java.util.UUID, T)]({ case (`id`, value) => replyHandler(value) } )
-    receiver ! ReplyRequest(id, self, msg, classTag[T])
+    send(ReplyRequest(id, self, msg, classTag[T]))
+  }
+
+  def ask[T : TypeTag : ClassTag](receiver : ActorSelection, msg : Any)(replyHandler : T => Any){
+    ask[T](receiver ! _, msg)(replyHandler)
+  }
+
+  def ask[T : TypeTag : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Any) {
+    ask[T](receiver ! _, msg)(replyHandler)
   }
 
   private var replyContext : ReplyContext =
@@ -124,7 +134,7 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
   protected case object DelayedAnswer extends AnswerType
   private case class UnknownReceiver(msg : String) extends AnswerType
 
-  protected def delayedReplyWith[T]( createResult : (T => Unit) => Unit )
+  protected def delayedReplyWith[T]( createResult : (T => Any) => Any )
                                    ( handleResult : T => Any = (v : T) => v ) : AnswerType =
   {
     val rContext = replyContext
@@ -138,7 +148,10 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
   }
 
   private case object UnknownReplyContext extends ReplyContext{
-    def apply(value : Any) = UnknownReceiver("ERROR: " + this + " replying '"+ value + "' to unknown sender")
+    def apply(value : Any) = {
+      println(UnknownReceiver("ERROR: " + this + " replying '"+ value + "' to unknown sender"))
+      UnknownReceiver("ERROR: " + this + " replying '"+ value + "' to unknown sender")
+    }
   }
 
   private case class DefinedReplyContext(origin : SVarActor.Ref, id : java.util.UUID) extends ReplyContext {
@@ -149,8 +162,8 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
   }
 
   protected def getAnswerTo : PartialFunction[Any, Any] = {
-    case ActorCreation() =>
-      ActorCreation()
+    case ActorCreation =>
+      ActorCreation
     case msg =>
       handleMessage(msg)
   }
@@ -169,16 +182,19 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
     case ReplyRequest(id, sender, msg, manifest) =>
       replyContext = DefinedReplyContext(sender, id)
       val answer = getAnswerTo(msg)
-      if (manifest.runtimeClass.isInstance(answer))
-        sender ! (id, answer)
-      // TODO: Remove this later
-      else if (printWarnings && answer != DelayedAnswer){
-        if (answer == ())
-          println(this + " provided () as an answer to " + msg +
-            " , this behaviour is deprecated. please change your code to return DelayedAnswer")
-        else
-          println(this + " provided bad answer of type " + answer.getClass.getCanonicalName + " to " + msg + "! " +
-            "Make sure that " + manifest.runtimeClass.getCanonicalName + " or DelayedAnswer is returned" )
+      if (answer != DelayedAnswer){
+        if (manifest.runtimeClass.isInstance(answer))
+          sender ! (id, answer)
+        // TODO: Remove this later
+        else if (printWarnings){
+          if (answer == ((): Unit))
+            println(this + " provided () as an answer to " + msg +
+              ", this behaviour is deprecated. please change your code to return DelayedAnswer" +
+              " (either using provideAnswer or delayedReplyWith)")
+          else
+            println(this + " provided bad answer of type " + answer.getClass.getCanonicalName + " to " + msg + "! " +
+              "Make sure that " + manifest.runtimeClass.getCanonicalName + " or DelayedAnswer is returned" )
+        }
       }
       replyContext = UnknownReplyContext
       updateTimeout()
@@ -207,7 +223,3 @@ trait SVarActorBase extends Actor with SVarActorContext with HandlerSupportImpl{
     startUp()
   }
 }
-
-
-
-

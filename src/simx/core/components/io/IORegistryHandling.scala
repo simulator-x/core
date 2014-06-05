@@ -32,7 +32,7 @@ import simx.core.worldinterface.WorldInterfaceHandling
 
 trait IORegistryHandling extends WorldInterfaceHandling {
   def handleDevice[T <: Entity]( device : ConvertibleTrait[T], path : List[Symbol] = Nil)( handler : Entity => Any ){
-    onNextCreation( device.semantics.toSymbol :: path )(handler)
+    onNextCreation( device.sVarIdentifier :: path )(handler)
   }
 }
 

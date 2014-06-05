@@ -29,4 +29,5 @@ import entity.description.{Semantics, SVal}
  */
 package object ontology {
   type GroundedSymbol = SVal[Semantics]
+  type Annotation = SVal[_]
 }

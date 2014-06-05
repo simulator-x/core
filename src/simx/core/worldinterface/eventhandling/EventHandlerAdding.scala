@@ -30,7 +30,7 @@ package simx.core.worldinterface.eventhandling
 trait EventHandlerAdding extends EventHandler{
   protected var handlers = Map[EventDescription, Event => Unit]()
 
-  def handleEvent(e: Event) {
+  override def handleEvent(e: Event) {
     handlers.foreach( h => if (h._1.matches(e)) h._2.apply(e) )
   }
 

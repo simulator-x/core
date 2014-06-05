@@ -21,6 +21,7 @@
 package simx.core.entity.description
 
 import simx.core.entity.typeconversion.ConvertibleTrait
+import scala.language.implicitConversions
 import collection.mutable
 
 /**

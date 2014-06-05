@@ -20,9 +20,8 @@
 
 package simx.core.svaractor.synclayer
 
-import simx.core.svaractor.{SVar, SVarActor}
+import simx.core.svaractor.{StateParticle, SVar, SVarActor}
 import scala.reflect.runtime.universe.TypeTag
-import scala.{Some, None}
 import scala.reflect.ClassTag
 
 /**
@@ -72,14 +71,14 @@ trait SyncGroupHandling extends SVarActor {
   addHandler[YouAlreadySynchronizedOn] {
     msg =>
       val handler = observeErrorHandler( msg.syncGroup )
-      observeErrorHandler = observeErrorHandler - (msg.syncGroup )
+      observeErrorHandler = observeErrorHandler - msg.syncGroup
       handler( msg )
   }
 
   addHandler[NotTheLeaderOfTheSyncGroup] {
     msg =>
       val handler = observeErrorHandler( msg.syncGroup )
-      observeErrorHandler = observeErrorHandler - (msg.syncGroup )
+      observeErrorHandler = observeErrorHandler - msg.syncGroup
       handler( msg )
   }
 
@@ -88,16 +87,17 @@ trait SyncGroupHandling extends SVarActor {
       var observeHandler = Map[SVar[_],(Any)=>Unit]()
       for( entity <- msg.entities ) {
         for( sVarDescription <- msg.syncGroup.sVarDescriptions ) {
-          val sVar = entity.get( sVarDescription ).head
-          caches( msg.syncGroup ).add( entity )
-          if( sVarObserveHandlers.contains( sVar ) ) {
-            observeHandler = observeHandler + (sVar -> sVarObserveHandlers( sVar ) )
-            sVarObserveHandlers.update( sVar, caches( msg.syncGroup ).updateData( sVar ) )
-          } else {
-            super.observe( sVar )( caches( msg.syncGroup ).updateData( sVar ) )
-          }
+//          entity.get( sVarDescription ).headOption.collect{
+//            case sVar : SVar[_] =>
+//              caches( msg.syncGroup ).add( entity )
+//              if( sVarObserveHandlers.contains( sVar ) ) {
+//                observeHandler = observeHandler + (sVar -> sVarObserveHandlers( sVar ) )
+//                sVarObserveHandlers.update( sVar, caches( msg.syncGroup ).updateData( sVar ) )
+//              } else {
+//                super.observe( sVar )( caches( msg.syncGroup ).updateData( sVar ) )
+//              }
+//          }
         }
-
       }
       for( (sVar,handler) <- observeHandler ) caches(msg.syncGroup).addUpdateFunction( sVar, handler )
   }
@@ -106,7 +106,7 @@ trait SyncGroupHandling extends SVarActor {
   /**
    * A overwritten get function that is reading the values from the cache.
    */
-  override protected[svaractor] def get[T : ClassTag](sVar : SVar[T])( consume: T => Any ) {
+  override protected[svaractor] def get[T : ClassTag : TypeTag](sVar : StateParticle[T])( consume: T => Unit ) {
     val cache = caches.foldLeft[Option[Cache]]( None )( (last : Option[Cache], d : (SyncGroup,Cache) ) => if( last.isDefined ) last else { if( d._2.hasDataFor( sVar ) ) Some( d._2 ) else None} )
     cache match {
       case Some( c ) =>
@@ -120,13 +120,14 @@ trait SyncGroupHandling extends SVarActor {
   /**
    * A overwritten observe function that is handling the observe function correctly.
    */
-  override protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] )(handler: T => Any) {
+  override protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] )(handler: T => Unit) = {
     val cache = caches.foldLeft[Option[Cache]]( None )( (last : Option[Cache], d : (SyncGroup,Cache) ) => if( last.isDefined ) last else { if( d._2.doesCacheSVar( sVar ) ) Some( d._2 ) else None} )
     cache match {
       case Some( c ) =>
-        super.observe( sVar, ignoredWriters )( handler )
+        val retVal = super.observe( sVar, ignoredWriters )( handler )
         sVarObserveHandlers.update( sVar, c.updateData( sVar ) )
         c.addUpdateFunction( sVar, handler.asInstanceOf[(Any => Unit)] )
+        retVal
       case None =>
         super.observe( sVar, ignoredWriters )( handler )
     }

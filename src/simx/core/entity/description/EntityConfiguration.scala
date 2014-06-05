@@ -35,7 +35,7 @@ case class EntityConfiguration(e: Entity, csets: Map[Symbol, NamedSValSet]) {
       csets.toList.map(tupled(
         (s: Symbol, cps: NamedSValSet) =>
           if(cps != null) {          "\tComponent:\t" + s.toString + "\n\tAspect:\t\t\t" + cps.semantics + "\n" +
-            cps.values.flatten.toList.map {
+            cps.toSValSeq.map {
               cp: SVal[_] =>
                 "\t\t" + cp.typedSemantics.sVarIdentifier.toString + " = " + cp.toString + "\n"
             }.foldLeft("")(_ + _)}

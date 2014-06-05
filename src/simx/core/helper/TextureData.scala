@@ -23,8 +23,7 @@ package simx.core.helper
 import simplex3d.math.ConstVec2i
 import java.util.UUID
 import java.awt.image.{DataBufferByte, BufferedImage}
-import javax.imageio.ImageIO
-import java.io.ByteArrayOutputStream
+import java.awt.Color
 
 /**
  * Created by IntelliJ IDEA.
@@ -39,9 +38,14 @@ object TextureData{
 
   def apply(img : BufferedImage) =
     new TextureData(ConstVec2i(img.getWidth, img.getHeight), img.getData.getDataBuffer.asInstanceOf[DataBufferByte].getData)
+
+  def apply(c : Color) : TextureData = {
+    val data = Array[Byte](c.getRed.toByte, c.getGreen.toByte, c.getBlue.toByte, c.getAlpha.toByte)
+    TextureData(ConstVec2i(1,1), data)
+  }
 }
 
-class TextureData(val size: ConstVec2i, val data: Array[Byte]) {
+class TextureData(val size: ConstVec2i, val data: Array[Byte]) extends Serializable{
   val id = UUID.randomUUID()
 
   override def toString: String =

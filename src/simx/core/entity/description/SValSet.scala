@@ -47,6 +47,11 @@ object SValSet {
 }
 
 
+
+class SValSet(params: SVal[_]*) extends TypedSValSet[Any](params :_*){
+  def this(that: SValSet) = this(that.toSValSeq:_*)
+
+}
 /**
  *
  * Groups several SVals.
@@ -54,14 +59,14 @@ object SValSet {
  * @see EntityAspect
  */
 //TODO: make constructors package private to force companion object usage
-class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
+class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, List[SValBase[U, _]]] {
   params.foreach(p => add(p))
 
   /**
    *
    * Creates a new SValSet that is a duplicate of that
    */
-  def this(that: SValSet) = this(that.toSValSeq:_*)
+  def this(that: TypedSValSet[_ <: U]) = this(that.values.flatten.toSeq :_*)
 
   /**
    *
@@ -72,16 +77,16 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
     this
   }
 
-  def add[T](SVal : SVal[T]) {
+  def add(SVal : SValBase[U, _]) {
     update(SVal.typedSemantics.sVarIdentifier, SVal :: getOrElse(SVal.typedSemantics.sVarIdentifier, Nil))
   }
 
-  def +=[T](SVal : SVal[T]) : this.type = {
+  def +=[T <: U](SVal : SValBase[U, _]) : this.type = {
     add(SVal)
     this
   }
 
-  def ++=(that : SValSet) : this.type = {
+  def ++=(that : TypedSValSet[U]) : this.type = {
     that.foreach(_._2.foreach(p => add(p)))
     this
   }
@@ -90,11 +95,11 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    *
    * Returns a List of all included SVals that are of a sepcific OntologyMember type.
    */
-  def getAllSValsFor[T](typedSemantics: ConvertibleTrait[T]): List[SVal[T]] =
+  def getAllSValsFor[T <: U](typedSemantics: TypeInfo[T, T]): List[SVal[T]] =
     //TODO: Implement annotations check more efficient
     getOrElse(typedSemantics.sVarIdentifier, Nil).filter(sVal => {
       typedSemantics.annotations.diff(sVal.typedSemantics.annotations).isEmpty
-    }).map{value => typedSemantics(value as typedSemantics)}
+    }).map{value => typedSemantics.asConvertibleTrait(value as typedSemantics.asConvertibleTrait)}
 
 
   /**
@@ -102,7 +107,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * Returns an Option on the SVal of a specific OntologyMember type.
    * Returns the first SVal in the order of this SValSet if more than one is present.
    */
-  def getFirstSValFor[T](typedSemantics: ConvertibleTrait[T]): Option[SVal[T]] =
+  def getFirstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): Option[SVal[T]] =
     getAllSValsFor(typedSemantics).headOption
 
   /**
@@ -111,37 +116,52 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * If the requested SVal is not found a SValNotFound is thrown.
    * If more than one valid SVal is present, the first SVal in the order of this SValSet is returned.
    */
-  def firstSValFor[T](typedSemantics: ConvertibleTrait[T]): SVal[T] =
+  def firstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): SVal[T] =
     getFirstSValFor(typedSemantics).getOrElse( throw SValNotFound(typedSemantics.sVarIdentifier) )
 
   /**
    *
    * Tests if this SValSet contains at least one SVal of the given OntologyMember type.
    */
-  def contains[T](typedSemantics: TypeInfo[T]): Boolean =
+  def contains(typedSemantics: TypeInfo[_, _]) : Boolean =
     contains(typedSemantics.sVarIdentifier)
 
   /**
    *  Adds the given SVal if no other SVal of its OntologyMember type
    *        was contained before.
    */
-  def addIfNew(sVal: SVal[_]) {
+  def addIfNew(sVal: SValBase[U, _]) {
     if (!contains(sVal.typedSemantics)) add(sVal)
   }
 
-  def replaceAllWith(sVal: SVal[_]) {
+  def replaceAllWith(sVal: SVal[_ <: U]) {
     remove(sVal.typedSemantics.sVarIdentifier)
     add(sVal)
   }
 
+  def update(sVal : SVal[_ <: U]){
+    val newEntry = sVal :: get(sVal.typedSemantics.sVarIdentifier).collect{
+      case list => list.filter(_.typedSemantics.annotations.diff(sVal.typedSemantics.annotations).nonEmpty)
+    }.getOrElse(Nil)
+    update(sVal.typedSemantics.sVarIdentifier, newEntry)
+  }
+
+  def remove(sVal : SVal[_ <: U]){
+    update(sVal.typedSemantics.sVarIdentifier, get(sVal.typedSemantics.sVarIdentifier).collect{
+      case list => list.filter(_.typedSemantics.annotations.diff(sVal.typedSemantics.annotations).nonEmpty)
+    }.getOrElse(Nil))
+    if (get(sVal.typedSemantics.sVarIdentifier).collect{case x => x.isEmpty} == Some(true))
+      remove(sVal.typedSemantics.sVarIdentifier)
+  }
+
   def toSValSeq : Seq[SVal[_]] =
-    values.flatten.toSeq
+    values.flatMap(_.map(_.asSVal)).toSeq
 
   /**
    *
    * Returns a List of all included values that are of a specific OntologyMember type.
    */
-  def getAllValuesFor[T](typedSemantics: ConvertibleTrait[T]): List[T] =
+  def getAllValuesFor[T <: U](typedSemantics: TypeInfo[T, T]): List[T] =
     getAllSValsFor(typedSemantics).map(_.value)
 
   /**
@@ -149,7 +169,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * Returns an Option on the value of a specific OntologyMember type.
    * Returns the first value in the order of this SValSet if more than one is present.
    */
-  def getFirstValueFor[T](typedSemantics: ConvertibleTrait[T]): Option[T] =
+  def getFirstValueFor[T <: U](typedSemantics: ConvertibleTrait[T]): Option[T] =
     getAllValuesFor(typedSemantics).headOption
 
   /**
@@ -158,7 +178,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * If the requested OntologyMember type is not found defaultValue is returned.
    * If more than one valid value is present, the first value in the order of this SValSet is returned.
    */
-  def getFirstValueForOrElse[T](typedSemantics: ConvertibleTrait[T])(defaultValue: => T): T =
+  def getFirstValueForOrElse[T <: U](typedSemantics: ConvertibleTrait[T])(defaultValue: => T): T =
     getFirstValueFor(typedSemantics).getOrElse(defaultValue)
 
   /**
@@ -167,7 +187,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * If the requested SVal is not found a SValNotFound is thrown.
    * If more than one valid value is present, the first value in the order of this SValSet is returned.
    */
-  def firstValueFor[T](typedSemantics: ConvertibleTrait[T]): T =
+  def firstValueFor[T <: U](typedSemantics: ConvertibleTrait[T]): T =
     getFirstValueFor(typedSemantics).getOrElse( throw SValNotFound(typedSemantics.sVarIdentifier) )
 
   /**
@@ -181,13 +201,13 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    *
    * Inserts all CreateParms of that into this SValSet
    */
-  def mergeWith(that: SValSet): this.type = {that.foreach(this.+=); this}
+  def mergeWith(that: TypedSValSet[_ <: U]): this.type = {that.foreach(this.+=); this}
 
   /**
    *
    * Inserts all new SVals of that into this SValSet
    */
-  def xMergeWith(that: SValSet): this.type = {
+  def xMergeWith[T <: U](that: TypedSValSet[T]): this.type = {
     that.values.flatten.foreach(addIfNew)
     this
   }
@@ -197,7 +217,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * @param c the ConvertibleTrait to be combined with a value
    * @return an option containing the created cvar, or None if no matching value was found
    */
-  def combineWithValue[T](c : ConvertibleTrait[T]) : List[SVal[T]] =
+  def combineWithValue[T <: U](c : ConvertibleTrait[T]) : List[SVal[T]] =
     getAllValuesFor(c) map { value => c(value) }
 
   /**
@@ -206,7 +226,7 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
    * @return a tuple consisting of an SValSet containing the created CVars and a set of convertible traits
    *         for which no value was found
    */
-  def combineWithValues(cs: Set[ConvertibleTrait[_]]): (SValSet, Set[ConvertibleTrait[_]]) =
+  def combineWithValues(cs: Set[ConvertibleTrait[_ <: U]]): (SValSet, Set[ConvertibleTrait[_ <: U]]) =
     cs.foldLeft((new SValSet, cs.empty)) {
       (tuple, toCombine) =>
         combineWithValue(toCombine) match {
@@ -218,10 +238,6 @@ class SValSet(params: SVal[_]*) extends mutable.HashMap[Symbol, List[SVal[_]]] {
   override def toString(): String =
     "SValSet\n\t" + mkString("\n\t")
 
-  def addDefaultValueForIfNew[T](c: ConvertibleTrait[T]): SValSet = {
-    addIfNew(c(c.defaultValue()))
-    this
-  }
 }
 
 /**

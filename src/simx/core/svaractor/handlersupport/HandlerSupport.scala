@@ -28,7 +28,7 @@ object Types{
   type handler_t           = hBase[Unit]
   type handlerC_t          = hBase[Any]
 //  type cpsHandler_t        = hBase[Any @HandlerContinuation]
-  type HandlerOption       = Option[(handlerC_t, ClassTag[_])]
+  type HandlerOption       = Option[(handlerC_t, Class[_])]
   type HandlerContinuation = cps[HandlerOption]
 
 }
@@ -74,12 +74,12 @@ trait HandlerSupport{
    * @param handler A PartialFunction that processes messages of the given datatype
    * @return A handler to the registred handler.
    */
-  protected def addHandler[T](handler: handlerType[T])(implicit manifest: ClassTag[T])
-  protected def addHandlerPF[T]( pf: PartialFunction[T, Any] )( implicit manifest : ClassTag[T] )
+  protected def addHandler[T : ClassTag](handler: handlerType[T])
+  protected def addHandlerPF[T  : ClassTag]( pf: PartialFunction[T, Any] )
   //@deprecated( "Needs to become protected in future" )
-  protected def addSingleUseHandler[T]( f: Function[T, Any] )( implicit manifest : ClassTag[T] )
+  protected def addSingleUseHandler[T : ClassTag]( f: Function[T, Any] )
   //@deprecated( "Needs to become protected in future" )
-  protected def addSingleUseHandlerPF[T]( pf: PartialFunction[T, Any] )( implicit manifest : ClassTag[T] )
+  protected def addSingleUseHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any] )
 
   // removes a handler using the reference given by addHandler
   /**
@@ -92,7 +92,7 @@ trait HandlerSupport{
    *
    * @param id The id of the handler that should be removed.
    */
-  protected def removeHandler(id : Long, manifest : ClassTag[_])
+  protected def removeHandler(id : Long, manifest : Class[_])
 
   protected def applyHandlers( msg : Any ) : Any
 }

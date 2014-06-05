@@ -23,10 +23,15 @@ package simx.core.worldinterface
 import simx.core.svaractor.{SVarActor, SVar}
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.ConvertibleTrait
-import eventhandling.{EventHandler, EventDescription, EventProvider, Event}
-import simx.core.component.Component
+import eventhandling.{EventDescription, Event}
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
+import simx.core.ontology
+import simx.core.ontology.{Symbols, GroundedSymbol}
+import simx.core.svaractor.unifiedaccess._
+import simx.core.entity.description.{EntityAspect, SVal}
+import simx.core.svaractor.unifiedaccess.Relation
+import simx.core.component.{DisableAspect, EnableAspect}
 
 
 /**
@@ -50,7 +55,34 @@ import scala.reflect.ClassTag
  * @author Stephan Rehfeld
  * date: 02.07.2010
  */
-trait WorldInterfaceHandling extends SVarActor {
+trait WorldInterfaceHandling extends SVarActor with RelationAccess {
+  final def setRelation(r : SVal[Relation])(implicit context : EntityUpdateHandling){
+    r.value.subj.set(r)
+    r.value.obj.set(r)
+    WorldInterfaceActor ! AddRelation(r)
+  }
+
+  final def removeRelation(r : SVal[Relation])(implicit context : EntityUpdateHandling){
+    r.value.subj.remove(r.typedSemantics.asConvertibleTrait)
+    r.value.obj.remove(r.typedSemantics.asConvertibleTrait)
+    WorldInterfaceActor ! RemoveRelation(r)
+  }
+
+  def enableAspect[T <: Entity](e : T, asp : EntityAspect, handler : Boolean => Unit = e => {}){
+    handleComponents(asp.componentType){
+      list => (if (asp.targets.nonEmpty) list.filter( tuple => asp.targets.contains(tuple._1)  ) else list).foreach{
+        tuple => ask[Boolean](tuple._2, EnableAspect(e, asp))( handler )
+      }
+    }
+  }
+
+  def disableAspect[T <: Entity](e : T, asp : EntityAspect, handler : Boolean => Unit = e => {}){
+    handleComponents(asp.componentType){
+      list => (if (asp.targets.nonEmpty) list.filter( tuple => asp.targets.contains(tuple._1)  ) else list).foreach{
+        tuple => ask[Boolean](tuple._2, DisableAspect(e, asp))( handler )
+      }
+    }
+  }
 
   /**
    * registers an actor
@@ -62,10 +94,10 @@ trait WorldInterfaceHandling extends SVarActor {
     WorldInterfaceActor ! ActorRegisterRequest(name, actor)
   }
 
-
-  final protected def registerComponent( c : Component) {
-    WorldInterfaceActor ! ComponentRegisterRequest(c.componentName, c.self)
+  final protected def registerComponentEntity( entity : Entity, cName : Symbol, cType : GroundedSymbol ) {
+    registerEntity(Symbols.component.value.toSymbol :: cType.value.toSymbol :: cName :: Nil, entity)
   }
+
   /**
    * registers an entity
    *
@@ -91,20 +123,8 @@ trait WorldInterfaceHandling extends SVarActor {
    * @param handler the handler to be registered
    * @param event an event the handler is registered for
    */
-  final protected def requireEvent( handler : EventHandler, event : EventDescription ) {
-    WorldInterfaceActor ! RegisterHandlerMessage(handler, event)
-  }
-
-  /**
-   * registers an EventProvider and stores the event it will provide. Furthermore tells all
-   * EventHandlers that have requiered the event (more precisely: an event with the same name)
-   * of the existence of the Provider
-   *
-   * @param provider the EventProvider to be registered
-   * @param event the event that the provider provides
-   */
-  final protected def provideEvent(provider : EventProvider,  event : EventDescription ) {
-    WorldInterfaceActor ! ProvideEventMessage(provider, event)
+  final protected def requireEvent( handler : SVarActor.Ref, event : EventDescription ) {
+    WorldInterfaceActor ! RegisterHandlerMessage(handler, event.name, event.restriction)
   }
 
   /**
@@ -114,7 +134,7 @@ trait WorldInterfaceHandling extends SVarActor {
    * @param handler the EventHandler to be unregistered
    * @param event the event the handler will be unregistered from (optional)
    */
-  final protected def removeEventHandler( handler : EventHandler, event : Option[EventDescription] = None ) {
+  final protected def removeEventHandler( handler : SVarActor.Ref, event : Option[EventDescription] = None ) {
     WorldInterfaceActor ! UnRegisterHandlerMessage( handler, event )
   }
 
@@ -125,7 +145,7 @@ trait WorldInterfaceHandling extends SVarActor {
    * @param provider the provider to be unregistered
    * @param event the event which will no more be provided (optional)
    */
-  final protected def removeEventProvider( provider : EventProvider, event : Option[Event] = None ) {
+  final protected def removeEventProvider( provider : SVarActor.Ref, event : Option[Event] = None ) {
     WorldInterfaceActor ! UnRegisterProviderMessage( provider )
   }
 
@@ -174,56 +194,39 @@ trait WorldInterfaceHandling extends SVarActor {
   }
 
   final protected def handleActorList(handler : List[Symbol] => Unit) {
-    nonBlockingHandlerNew[List[Symbol]]( ActorEnumerateRequest(), handler )
+    nonBlockingHandler[List[Symbol]]( ActorEnumerateRequest(), handler )
   }
 
   final protected def handleActor( name : Symbol )( handler : Option[SVarActor.Ref] => Unit ) {
-    nonBlockingHandlerNew[Option[SVarActor.Ref]](ActorLookupRequest(name), handler)
-  }
-
-  final protected def handleStateValue[T : TypeTag]( c : ConvertibleTrait[T], container : Symbol )( handler : Option[SVar[T]] => Unit ) {
-    nonBlockingHandlerNew(StateValueLookupRequest(c, List(container)), handler)
-  }
-
-  final protected def handleStateValue[T : TypeTag]( c : ConvertibleTrait[T], container : List[Symbol] )( handler : Option[SVar[T]] => Unit ) {
-    nonBlockingHandlerNew(StateValueLookupRequest(c, container), handler)
+    nonBlockingHandler[Option[SVarActor.Ref]](ActorLookupRequest(name), handler)
   }
 
   final protected def handleEntity( name : Symbol )( handler : Option[Entity] => Any ) {
-    nonBlockingHandlerNew[Option[Entity]]( EntityLookupRequest( name :: Nil ), handler )
+    nonBlockingHandler[Option[Entity]]( EntityLookupRequest( name :: Nil ), handler )
   }
 
   final protected def handleComponent(name : Symbol)( handler : Option[SVarActor.Ref] => Any ) {
-    nonBlockingHandlerNew( ComponentLookupRequest(name ), handler )
+    nonBlockingHandler( ComponentLookupRequest(name ), handler )
   }
 
-  // Evil functions
-  final protected def handleSVarValue[T : TypeTag]( c : ConvertibleTrait[T], entity : Symbol )( handler : Option[T] => Unit ) {
-    nonBlockingHandlerNew( SVarReadRequest(c, entity :: Nil), handler)
-  }
-
-  final protected def handleSVarValue[T : TypeTag](c : ConvertibleTrait[T], entity : List[Symbol])( handler : Option[T] => Unit ){
-    nonBlockingHandlerNew( SVarReadRequest(c, entity), handler)
-  }
-
-  final protected def readSVar[T : ClassTag : TypeTag]( svar : SVar[T])( handler : T => Unit ) {
-    nonBlockingHandlerNew(ReadRequest(svar), handler)
+  final protected def handleComponents(componentType : ontology.GroundedSymbol)( handler : List[(Symbol, SVarActor.Ref)] => Any ){
+    nonBlockingHandler[List[(Symbol, SVarActor.Ref)]]( ComponentLookUpByType( componentType ), handler )
   }
 
   final protected def handleRegisteredEntities( path : List[Symbol] )( handler : Set[Entity] => Any ) {
-    nonBlockingHandlerNew[Set[Entity]](EntityGroupLookupRequest(path), handler)
+    nonBlockingHandler[Set[Entity]](EntityGroupLookupRequest(path), handler)
   }
 
   final protected def handleRegisteredComponents(handler : Map[Symbol, SVarActor.Ref] => Unit) {
-    nonBlockingHandlerNew[Map[Symbol, SVarActor.Ref]](AllComponentsLookupRequest(), handler)
+    nonBlockingHandler[Map[Symbol, SVarActor.Ref]](AllComponentsLookupRequest(), handler)
   }
 
-  final protected def registerForCreationOf( path : List[Symbol] )(implicit actorContext : SVarActor.Ref) {
-    WorldInterfaceActor ! ListenForRegistrationsMessage( actorContext, path )
+  final protected def registerForCreationOf( path : List[Symbol] ) {
+    WorldInterfaceActor ! ListenForRegistrationsMessage( self, path )
   }
 
   final protected def onNextCreation( path : List[Symbol] )( f : Entity => Any ) {
-    nonBlockingHandlerNew[Entity](OnNextRegistration(path), f)
+    nonBlockingHandler[Entity](OnNextRegistration(path), f)
   }
 
   /**
@@ -238,11 +241,8 @@ trait WorldInterfaceHandling extends SVarActor {
    * worldInterfaceActor), that sends the id, value tuple back, causing the invocation of the installed handler
    *
    */
-  protected def nonBlockingHandlerNew[T](msg : Any, handler : T => Any)
-                                        (implicit actorContext : SVarActor, m : ClassTag[T], t : TypeTag[T]) {
-    actorContext.ask(WorldInterfaceActor.self, msg){
-      answer : T => handler(answer)
-      //case _ => println("Error: wrong answer type")
-    }
+  protected def nonBlockingHandler[T](msg : Any, handler : T => Any)
+                                     (implicit actorContext : SVarActor, m : ClassTag[T], t : TypeTag[T]) {
+    actorContext.ask[T](WorldInterfaceActor.self, msg)(handler)
   }
 }

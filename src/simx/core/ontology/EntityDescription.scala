@@ -23,6 +23,8 @@ package simx.core.ontology
 import simx.core.entity.description.{EntityAspect, GeneralEntityDescription}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.Entity
+import simx.core.ontology.entities.Subelement
+import simx.core.svaractor.SVarActor
 
 /**
  * @author dwiebusch
@@ -30,23 +32,41 @@ import simx.core.entity.Entity
  * Time: 16:22
  */
 
-class EntityDescription( override val aspects : List[EntityAspect])
-  extends SpecificDescription[Entity](PlainEntity, aspects.toList) {
+class EntityDescription(val aspects : List[EntityAspect],
+                        name : Symbol = Symbol("unnamed-entity"),
+                        path : List[Symbol] = Nil )
+  extends SpecificEntityDescription[Entity](PlainEntity, aspects.toList, name, path) with Serializable {
+  def this(name : String, aspects : EntityAspect*) = this(aspects.toList, Symbol(name))
   def this(aspects : EntityAspect*) = this(aspects.toList)
 }
 
+class SpecificEntityDescription[Type <: Entity](entityDesc : EntitySVarDescription[Type],
+                                                aspects    : List[EntityAspect],
+                                                name       : Symbol,
+                                                path       : List[Symbol] = Nil,
+                                                features   : Seq[ConvertibleTrait[_]] = Seq())
+  extends Subelement[Type](new SpecificDescription[Type](entityDesc, aspects, name, path, features)) with Serializable
+{
+  def this(entityDesc : EntitySVarDescription[Type], aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
+    this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)
+}
 
 
-protected abstract class SpecificDescription[T <: Entity]( entityDesc : EntitySVarDescription[T],
-                                                 aspects    : List[EntityAspect],
-                                                 features   : ConvertibleTrait[_]* )
-  extends GeneralEntityDescription[T](entityDesc, entityDesc.ctor, None,
+protected[core] class SpecificDescription[T <: Entity]( entityDesc : EntitySVarDescription[T],
+                                                        aspects    : List[EntityAspect],
+                                                        name       : Symbol,
+                                                        path       : List[Symbol] = Nil,
+                                                        features   : Seq[ConvertibleTrait[_]] = Seq() )
+
+  extends GeneralEntityDescription[T, T](entityDesc, entityDesc.ctor, None, path :+ name,
     if (features.nonEmpty) FeatureDefinition(features.toSet) :: aspects else aspects)
+{
+  def this(entityDesc : EntitySVarDescription[T], aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
+    this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)
+}
 
 
-private object PlainEntity extends EntitySVarDescription[Entity](Symbols.entity, new simx.core.entity.Entity(_) {
-  override protected def getSimpleName = "PlainEntity"
-})
+private object PlainEntity extends EntitySVarDescription[Entity](Symbols.entity,  new Entity(_)(_), types.Entity.ontoLink.get)
 
 private case class FeatureDefinition(getFeatures : Set[ConvertibleTrait[_]])
   extends EntityAspect(Symbols.nullType, Symbols.nullType, Nil)

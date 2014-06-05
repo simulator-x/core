@@ -20,12 +20,11 @@
 
 package simx.core.entity.typeconversion
 
-import simx.core.svaractor.{SVarActor, SVarImpl, SVar}
-import simx.core.ontology.GroundedSymbol
-import simx.core.entity.{InvalidConverterException, Entity}
+import simx.core.svaractor._
+import simx.core.ontology.{Annotation, GroundedSymbol}
+import simx.core.entity.Entity
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
-
 /* author: dwiebusch
 * date: 27.08.2010
 */
@@ -33,15 +32,19 @@ import scala.reflect.runtime.universe.TypeTag
 /**
  *  base class for conversion infos
  */
-trait ConversionInfo[T, O] extends Serializable {
+abstract class ConversionInfo[T, O]private ( private var theConverter : Option[IConverter[T, O]] = None,
+                                             private var theReverter  : Option[IReverter[T, O]]  = None)
+  extends Serializable
+{
+  protected def this(verters : Option[(IConverter[T, O], IReverter[T, O])]) =
+    this(if (verters.isDefined) Some(verters.get._1) else None, if (verters.isDefined) Some(verters.get._2) else None)
+
+  def this() =
+    this(None, None)
   //! the input type
   def from : ConvertibleTrait[T]
   //! the output type
   def to   : ConvertibleTrait[O]
-  //! the converter to be used, will be set automagically
-  private var theConverter : Option[IConverter[T, O]] = None
-  //! the reverter to be used, will be set automagically
-  private var theReverter  : Option[IReverter[T, O]]  = None
 
   /**
    * sets the con- and reverter, requiring an IConverter
@@ -49,12 +52,13 @@ trait ConversionInfo[T, O] extends Serializable {
    * @throws NoConverterFoundException if converter did not match converting requirements
    * @throws NoReverterFoundException if converter did not match reverting requirements
    */
-  protected def setVerters(c : IConverter[T, O]) {
-    theConverter = if (c._canConvert(from, to)) Some(c) else throw new NoConverterFoundException(from, to)
-    theReverter  = c match {
-      case r : IReverter[_, _] if r._canRevert(from, to) => Some(r.asInstanceOf[IReverter[T, O]])
+  protected def setVerters(c : IConverter[T, O]) = {
+    val aConverter = if (c._canConvert(from, to)) c else throw new NoConverterFoundException(from, to)
+    val aReverter  = c match {
+      case r : IReverter[_, _] if r._canRevert(from, to) => r.asInstanceOf[IReverter[T, O]]
       case _ => throw new NoReverterFoundException(from, to)
     }
+    Some(aConverter -> aReverter)
   }
 
   /**
@@ -63,12 +67,13 @@ trait ConversionInfo[T, O] extends Serializable {
    * @throws NoConverterFoundException if converter did not match converting requirements
    * @throws NoReverterFoundException if converter did not match reverting requirements
    */
-  protected def setVerters(r : IReverter[T, O]) {
-    theReverter = if (r._canRevert(from, to)) Some(r) else throw new NoReverterFoundException(from, to)
-    theConverter  = r match {
-      case c : IConverter[_, _] if c._canConvert(from, to) => Some(c.asInstanceOf[IConverter[T, O]])
+  protected def setVerters(r : IReverter[T, O]) = {
+    val aReverter = if (r._canRevert(from, to)) r else throw new NoReverterFoundException(from, to)
+    val aConverter  = r match {
+      case c : IConverter[_, _] if c._canConvert(from, to) => c.asInstanceOf[IConverter[T, O]]
       case _ => throw new NoConverterFoundException(from, to)
     }
+    Some(aConverter -> aReverter)
   }
 
   /**
@@ -108,35 +113,38 @@ trait ConversionInfo[T, O] extends Serializable {
  *  Representation of a conversion used to provide svars. Reads like provide a svar of type T as a svar of type O.
  * Actually creates a svar of type O, injects it to an entity and returns an adapter which looks like a svar of type T 
  */
-class ProvideConversionInfo[T, O : ClassTag](val from : ConvertibleTrait[T], val to : ConvertibleTrait[O],
-                                  private var annotations : Set[GroundedSymbol]= Set())
-  extends ConversionInfo[T, O] with Serializable {
-  //! the optional initial value
-  private var initialValue : Option[T] = None
+class ProvideConversionInfo[T, O : ClassTag] private( val from : ConvertibleTrait[T],
+                                                      val to : ConvertibleTrait[O],
+                                                      val const : Boolean,
+                                                      private val annotations : Set[Annotation],
+                                                      private val initialValue : Option[T],
+                                                      verters : Option[(IConverter[T, O], IReverter[T, O])])
+  extends ConversionInfo[T, O](verters) with Serializable
+{
+  def this(from : ConvertibleTrait[T], to : ConvertibleTrait[O], annotations : Set[Annotation]= Set()) =
+    this(from, to, false, annotations, None, None)
+
+  def asConst =
+    new ProvideConversionInfo(from, to, true, annotations, initialValue, verters)
 
   /**
    *  sets the initial value
    *
    * @param value the initial value
    */
-  def setInitialValue( value : T ) {
-    initialValue = Some(value)
-  }
+  def setInitialValue( value : T ) =
+    new ProvideConversionInfo(from, to, const, annotations, Some(value), verters)
 
-  def addAnnotations( as : Set[GroundedSymbol] ) {
-    annotations = annotations ++ as
-  }
+  def addAnnotations( as : Set[GroundedSymbol] ) =
+    new ProvideConversionInfo(from, to, const, annotations ++ as, initialValue, verters)
 
   /**
    *  defines the converter to be used
    * @param c the converter to be used
    * @return the conversion info having the converter set
    */
-  def using(c: IConverter[T, O]) : ProvideConversionInfo[T, O] = {
-    setVerters(c)
-    //TODO: perhaps a copy should be returned to ensure reusability
-    this
-  }
+  def using(c: IConverter[T, O]) : ProvideConversionInfo[T, O] =
+    new ProvideConversionInfo(from, to, const, annotations, initialValue, setVerters(c))
 
   /**
    *  creates and injects a svar into an entity. Uses the initial value if set, calls the constructor provided
@@ -144,34 +152,24 @@ class ProvideConversionInfo[T, O : ClassTag](val from : ConvertibleTrait[T], val
    * @param e the entity into which the created svar should be injected
    * @return a tuple of a wrapped svar having the required type and the entity after injecting the svar
    */
-  protected[entity] def injectSVar( e : Entity )(implicit actorContext : SVarActor) : ( SVar[T], Entity ) = {
-    val svar   = SVarImpl(accessConverter().convert( initialValue.getOrElse( from.defaultValue() ) ) )
-    val entity = e.injectSVar(getSVarName, svar, to, annotations.toSeq :_*)
-    new ConvertedSVar(svar, this) -> entity
+  protected[core] def injectSVar( e : Entity )(handler : Entity => Any)(implicit actorContext : SVarActor) {
+    val sval = to apply accessConverter().convert( initialValue.getOrElse( throw new Exception) )
+    val svar = if (const) sval else SVarImpl(sval)
+    e.injectSVar(getSVarName, svar, to, annotations.toSeq :_*)( handler(_))
   }
 }
 
 // the conversion is kind of inverted, as the adapter has to do the same stuff as the provided version does
 // in other words: even though the adapter looks like some output converter, it is an input converter
-class RequireConversionInfo[O, T](val to : ConvertibleTrait[O], val from : ConvertibleTrait[T])
+class RequireConversionInfo[O, T](val to : ConvertibleTrait[O], val from : ConvertibleTrait[T],
+                                  verters : Option[(IConverter[T, O], IReverter[T, O])] = None)
   extends ConversionInfo[T, O] with Serializable {
   /**
    *  defines the reverter to be used
    * @param c the reverter to be used
    * @return the conversion info having the reverter set
    */
-  def using(c: IReverter[T, O]) : RequireConversionInfo[O, T] = {
-    setVerters(c)
-    //TODO: perhaps a copy should be returned to ensure reusability
-    this
-  }
+  def using(c: IReverter[T, O]) : RequireConversionInfo[O, T] =
+    new RequireConversionInfo(to, from, setVerters(c))
 
-  /**
-   *  retrieves the svar specified by this conversion info, wraps it and returns the wrapper (which mimics a svar
-   * of the required type)
-   * @param e the entity from which the svar should be looked up
-   * @return a svar of the required type
-   */
-  def createAdapter( e : Entity, annotations : GroundedSymbol* ) : List[SVar[T]] =
-    e.get(from, accessReverter(), annotations :_*)
 }

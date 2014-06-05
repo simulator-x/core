@@ -83,13 +83,13 @@ object Plan{
 
 
   def main( args : Array[String] ){
-    (new A).bind(new Entity())
-    (new B).bind(new Entity())
-    (new C).bind(new Entity())
-    //println(find(Prerequisite(null, types.Velocity(Vec3(0,0,0))), Set[Prerequisite[_]](), Nil))
-    generatePlanFor( Set(), Set(Effect(null, types.Velocity(Vec3f(0,0,0))))).collect{
-      case p => p.apply(() => println("done"))
-    }
+//    (new A).bind(new Entity(null))
+//    (new B).bind(new Entity(null))
+//    (new C).bind(new Entity(null))
+//    //println(find(Prerequisite(null, types.Velocity(Vec3(0,0,0))), Set[Prerequisite[_]](), Nil))
+//    generatePlanFor( Set(), Set(Effect(null, types.Velocity(Vec3f(0,0,0))))).collect{
+//      case p => p.apply(() => println("done"))
+//    }
   }
 
 

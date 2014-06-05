@@ -4,3 +4,4 @@ target/**
 lib_managed/**/*
 lib_managed/*
 *.log
+/target/

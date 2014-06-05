@@ -36,7 +36,7 @@ object Execute{
   def allInParallel[T]( tasks : Seq[(T => Unit) => Unit] ) : ExecInParallel[T, _] =
     inParallel(tasks.head) andAllOf tasks.tail
 
-  @deprecated("check this, seems to yield wrong results")
+  @deprecated("check this, seems to yield wrong results", "")
   def allInParallel2[T](tasks : Seq[(T => Unit) => Unit] ) =
     tasks.tail.foldLeft(ExecInParallel2(tasks.head))(_ and _)
 

@@ -33,6 +33,6 @@ import simx.core.worldinterface.WorldInterfaceHandling
 
 trait IODeviceProvider extends WorldInterfaceHandling{
   final protected def publishDevice[T <: Entity]( device : SVal[T], path : List[Symbol] = Nil){
-    registerEntity(types.OntologySymbol(device.typedSemantics.semantics).value.toSymbol :: path, device.value)
+    registerEntity(device.typedSemantics.sVarIdentifier :: path, device.value)
   }
 }

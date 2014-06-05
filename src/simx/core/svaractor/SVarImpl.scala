@@ -23,38 +23,33 @@ package simx.core.svaractor
 import java.util.UUID
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
+import simx.core.entity.description.SVal
 
 
 object SVarImpl extends SVarObjectInterface {
-  def apply[T](value: T)(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T] =
-    actorContext.createSVar(value)(typeTag)
+  def apply[T](value: SVal[T])(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T] =
+    actorContext.createSVar(value)
 }
 
-class SVarImpl[T : ClassTag] private(val initialOwner: SVarActor.Ref,
+class SVarImpl[T] private(val initialOwner: SVarActor.Ref,
                                     val id: UUID,
-                                    val containedValueManifest: ClassTag[T]) extends SVar[T] with Serializable {
+                                    implicit val containedValueManifest: ClassTag[T],
+                                    implicit val typeTag : TypeTag[T]) extends SVar[T] with Serializable {
 
-  def this(initialOwner: SVarActor.Ref, man: ClassTag[T]) =
-    this(initialOwner, UUID.randomUUID, man)
+  def this(initialOwner: SVarActor.Ref, man: ClassTag[T], typeTag : TypeTag[T]) =
+    this(initialOwner, UUID.randomUUID, man, typeTag)
 
-  def get(handler: (T) => Any)(implicit actorContext : SVarActor){
+  def get(handler: (T) => Unit)(implicit actorContext : SVarActor){
     actorContext.get(this)(handler)
   }
 
-  def set(value: T)(implicit actorContext : SVarActor) {
-    actorContext.set(this, value)
-  }
+  protected[core] def set(value: T, forceUpdate : Boolean)(implicit actorContext : SVarActor) : Boolean =
+    actorContext.set(this, value, forceUpdate)
 
-  def observe(handler: (T) => Any)(implicit actorContext : SVarActor) {
-    observe(handler, Set())
-  }
-
-  def observe(handler: (T) => Any, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) {
+  def observe(handler: (T) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
     actorContext.observe(this, ignoredWriters)(handler)
-  }
 
   def ignore()(implicit actorContext : SVarActor) {
     actorContext.ignore(this)
   }
-
 }

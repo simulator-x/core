@@ -20,38 +20,52 @@
 
 package simx.core.entity.description
 
-import simx.core.entity.typeconversion.{TypeInfo, Reverter, Converter, ConvertibleTrait}
+import simx.core.entity.typeconversion._
 import scala.reflect.runtime.universe.TypeTag
-import simx.core.svaractor.{SValTrait, SVarActor}
+import scala.reflect.ClassTag
+import simx.core.svaractor.{StateParticle, SVarActor, ImmutableSVar}
 
 
 object SVal{
-  def apply[T, V <: T]( semantics : TypeInfo[T] )( value : V ) : SVal[T] =
+  def apply[T : ClassTag, V <: T]( semantics : TypeInfo[T, T] )( value : V ) : SVal[T] =
     new SVal(semantics)(value)
+}
+
+final class SVal[T](typedSemantics : TypeInfo[T, T])(value : T)
+  extends SValBase[T, T](typedSemantics, value) with StateParticle[T] with Serializable
+{
+  protected[description] def asSVal =
+    this
+
+  protected def typedValue: T =
+    value
 }
 
 /**
  *
  * This class represents a value with a semantics.
  */
-final class SVal[+T](val typedSemantics: TypeInfo[T])(val value: T) extends SValTrait with Serializable {
-  /**
-   * The type of the contained value
-   */
-  type dataType = typedSemantics.dataType
+sealed abstract class SValBase[+T, B <: T] protected (val typedSemantics: TypeInfo[T, B], val value: T)
+  extends ImmutableSVar[T, B] with Serializable
+{
+  protected[description] def asSVal : SVal[B]
 
-  val typedValue : dataType =
-      value.asInstanceOf[dataType]
+  protected def typedValue: B
 
   private val baseValue =
     Converter(typedSemantics.asConvertibleTrait, typedSemantics.getBase).convert(typedValue)
 
-  def get(handler: (dataType) => Any)(implicit actorContext: SVarActor) {
-    handler(typedValue)
-  }
-
   def asProvide =
     typedSemantics.asConvertibleTrait.isProvided.withInitialValue(typedValue)
+
+
+  def get(handler: (T) => Unit)(implicit actorContext: SVarActor){
+    handler(value)
+  }
+
+
+  def as[T2](cInfo: ConversionInfo[T2, B]): SVal[T2] =
+    cInfo from as(cInfo.from)
 
   /**
    *
@@ -64,9 +78,14 @@ final class SVal[+T](val typedSemantics: TypeInfo[T])(val value: T) extends SVal
     Reverter(outputHint, typedSemantics.getBase ).revert(baseValue)
 
 
+//  def as[T2](p: ProvideAndRequire[T2, T]): SVar[T2] = {
+//    implicit val ct = p.convInfo.from.classTag
+//    SVal(p.convInfo.from)(as(p.convInfo.from))
+//  }
+
   //! the typeinfo of the type of the contained value
-  val containedValueManifest =
-    typedSemantics.typeinfo
+  val containedValueManifest  =
+    typedSemantics.classTag
 
   /**
    *
@@ -93,14 +112,14 @@ final class SVal[+T](val typedSemantics: TypeInfo[T])(val value: T) extends SVal
     41 * ( 41 + typedSemantics.hashCode() )  + value.hashCode()
   //41 * ( 41 + typedSemantics.typeinfo.hashCode ) + typedSemantics.sVarIdentifier.hashCode
 
-  override def toString: String = "SVal(" + typedSemantics.typeinfo.toString + " as " +
-    typedSemantics.semantics + ") = " +  value.toString
+  override def toString: String = "SVal(" + typedSemantics.typeTag.toString + " as " +
+    typedSemantics.semantics.value + ") = " +  value.toString
 
   def ::(that : SVal[_]) : List[SVal[_]] =
-    this :: that :: Nil
+    asSVal :: that :: Nil
 
   def and(that : SVal[_]) : SValSeq =
-    new SValSeq and this and that
+    new SValSeq and asSVal and that
 
   def and : Seq[SVal[_]] => SValSeq =
     _.foldLeft(new SValSeq)( _ and _ )

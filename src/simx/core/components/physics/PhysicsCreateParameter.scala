@@ -49,6 +49,7 @@ abstract class PhysicsAspect(aspectType : GroundedSymbol, targets : List[Symbol]
  * Defines implicit conversion for Either
  */
 object ImplicitEitherConversion {
+  import scala.language.implicitConversions
   implicit def left2Either[A,B](a:A):Either[A,B] = Left(a)
   implicit def right2Either[A,B](b:B):Either[A,B] = Right(b)
 }

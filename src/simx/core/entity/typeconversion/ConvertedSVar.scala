@@ -35,49 +35,41 @@ import scala.reflect.ClassTag
  * internalType = O
  * externalType = T
  */
-class ConvertedSVar[O, T]( val wrappedSVar : SVar[O], c : ConversionInfo[T, O]) extends SVar[T]{
-  /**
-   * constructor for ease of use
-   */
+class ConvertedSVar[O, T](val wrappedSVar : SVar[O], c : ConversionInfo[T, O])
+  extends PartiallyConvertedSVar[O, T](wrappedSVar, c.accessConverter().convert, c.accessReverter().revert)
+{
+  //! constructor for ease of use
   protected[entity] def this( wrappedSVar : SVar[O], par : Require[O, T] ) = this(wrappedSVar, par.wrapped)
-  //! the convert function
-  val convert : (T) => O = c.accessConverter().convert
-  //! the revert function
-  val revert  : (O) => T = c.accessReverter().revert
   //! conversions, implicit for nicer code
-  private implicit def converter( input : (T) => Unit ) = (x : O) => input( revert(x) )
+  val containedValueManifest: ClassTag[T]  = c.from.classTag
+
+  override def as[T2](cInfo: ConversionInfo[T2, T]) : SVar[T2] =
+    wrappedSVar as c.to.requiredAs(cInfo.from).wrapped
+}
+
+protected[core] abstract class PartiallyConvertedSVar[O, T](wrappedSVar : SVar[O],
+                                                            convert : (T) => O,
+                                                            revert  : (O) => T)
+  extends SVar[T]
+{
   //! reversions, implicit for nicer code
-  private implicit def converter( input : T ) : O = convert(input)
+  private def converter( input : T ) : O = convert(input)
   //! loop method calls through to the wrapped svar
   //def update( updateMethod : T => T )  { wrappedSVar.update( (v : O) => updateMethod(revert(v))) }
   //! loop method calls through to the wrapped svar
-  def observe(handler: (T) => Any)(implicit actorContext: SVarActor) {
-    observe(handler, Set())
-  }
-
-  def observe(handler: (T) => Any, ignoredWriters : Set[SVarActor.Ref] = Set())(implicit actorContext : SVarActor){
+  def observe(handler: (T) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
     wrappedSVar.observe( v => handler(revert(v)), ignoredWriters)(actorContext)
-  }
   //! loop method calls through to the wrapped svar
-  //def owner(owner: SVarActor)          { wrappedSVar.owner(owner) }
-  //! loop method calls through to the wrapped svar
-  def get(consume : (T) => Any)(implicit actorContext : SVarActor){
+  def get(consume : (T) => Unit)(implicit actorContext : SVarActor){
     wrappedSVar.get( v => consume(revert(v)))(actorContext)
   }
   //! loop method calls through to the wrapped svar
-  def set(value : T)(implicit actorContext : SVarActor){
-    wrappedSVar.set(value)(actorContext)
-  }
+  protected[core] def set(value : T, forceUpdate : Boolean = false)(implicit actorContext : SVarActor) =
+    wrappedSVar.set(converter(value), forceUpdate)(actorContext)
   //! loop method calls through to the wrapped svar
   def ignore()(implicit actorContext : SVarActor){
     wrappedSVar.ignore()(actorContext)
   }
-  //! loop method calls through to the wrapped svar
-  //def owner()                          = wrappedSVar.owner()
-  //! set the classmanifest of the contained value
-  val containedValueManifest: ClassTag[T]  = c.from.typeinfo
-  //! loop method calls through to the wrapped svar
-  //def observe(ignoredWriters : Set[Actor])(handler: (T) => Unit)  { wrappedSVar.observe(ignoredWriters)(handler) }
   //! redicrect id lookups to wrapped svar
   final def id = wrappedSVar.id
 
