@@ -153,6 +153,7 @@ trait EntityConfigLayer extends SVarActor with HandlerSupport with EntityUpdateH
   //add handler react to EntityCompleteMsgs
   addHandler[EntityCompleteMsg]{
     msg => entityConfigComplete(msg.e, msg.asp)
+      provideAnswer[Unit](())
   }
 
   /**

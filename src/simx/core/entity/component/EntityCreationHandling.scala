@@ -373,7 +373,7 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
         case x => x.values.exists(_.exists(_.providings.objects.exists(_.sVarIdentifier == p._1)))
       }.getOrElse(true)
     }.foreach( doubleVal => println(doubleVal._1 + " was provided although it was not requested") )
-    status.values ++= SValSet(status.openGetInitRequests(sender).flatMap(remap(_)).toSeq :_*)
+    status.values ++= SValSet(status.openGetInitRequests(sender()).flatMap(remap(_)).toSeq :_*)
     requestInitialValues(status)
   }
 
@@ -425,19 +425,25 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
         val result = status createFrom entityWithObservers
         val finalPath = status.description.path :+ Symbol(result.id.toString)
         onNextCreation(finalPath) { entity =>
-          status.entityAspects.filterNot(_.componentType == Symbols.entityCreation).foreach {
+          val componentsToNotify = status.entityAspects.filterNot(_.componentType == Symbols.entityCreation)
+          var numberOfCompleteRequests = componentsToNotify.size
+          componentsToNotify.foreach {
             asp => status.componentsCache(asp.componentType).foreach {
-              _ ! EntityCompleteMsg(asp, entity)
+              waitUntilProcessed(_, EntityCompleteMsg(asp, entity)){
+                numberOfCompleteRequests -= 1
+                if (numberOfCompleteRequests == 0){
+                  info("completed " + status.entityAspects.map(_.getCreateParams.semantics.value).mkString(", "))
+                  status.handle()
+                }
+              }
             }
           }
-          info("completed " + status.entityAspects.map(_.getCreateParams.semantics.value).mkString(", "))
-          status.handle()
         }
 
         if (finalPath.head == Symbols.component.value.toSymbol)
           result.get(types.Component).head {
-            component => ask(component, FinalizeComponentConfigMsg(result)) {
-              _ : Any => registerEntity(finalPath, result)
+            waitUntilProcessed(_, FinalizeComponentConfigMsg(result)) {
+              registerEntity(finalPath, result)
             }
           }
         else

@@ -128,6 +128,10 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
     ask[T](receiver ! _, msg)(replyHandler)
   }
 
+  def waitUntilProcessed(receiver : SVarActor.Ref, msg : Any)(replyHandler : => Unit){
+    ask[Any](receiver ! _, msg)(_ => replyHandler)
+  }
+
   private var replyContext : ReplyContext =
     UnknownReplyContext
 
