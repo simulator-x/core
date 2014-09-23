@@ -20,16 +20,26 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import simx.core.svaractor.TimedRingBuffer.Time
 import simx.core.svaractor.{SVarActor, SVar}
 
 /**
  * Created by dwiebusch on 14.03.14
  */
-trait EntityBase extends EntityRelationAccess{
-  protected val selfSVar : SVar[SelfType]
 
-  protected def setSelf(value : SelfType)(implicit actorContext : SVarActor) =
-    if (selfSVar.set(value, forceUpdate = true))
+trait OuterType[T]{
+  def asOuterType : T
+}
+
+trait EntityBase[T <: EntityBase[T]] extends EntityRelationAccess with OuterType[T]{
+  type SelfType = T
+
+  override def asOuterType: T = asSelfType
+
+  protected var selfSVar : SVar[Option[SelfType]]
+
+  protected def setSelf(value : Option[SelfType], at : Time)(implicit actorContext : SVarActor) =
+    if (selfSVar.set(value, at, forceUpdate = true))
       value
     else
       throw new Exception("Failed to set self SVar")

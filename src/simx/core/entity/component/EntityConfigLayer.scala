@@ -20,6 +20,8 @@
 
 package simx.core.entity.component
 
+import simx.core.svaractor.TimedRingBuffer.{BufferMode, Now}
+
 import scala.collection.mutable
 import simx.core.svaractor.handlersupport.HandlerSupport
 import simx.core.svaractor.{SVarActor, SimXMessage}
@@ -66,9 +68,9 @@ case class GetInitialValuesAns( id : java.util.UUID, initialValues : SValSet )
 //! information of completed svar insertion
 case class SVarsCreatedMsg( id : java.util.UUID, entity : Entity )
 //! request to create svars
-case class CreateSVarsMsg( id : java.util.UUID, toCreate : List[ProvideConversionInfo[_,_]],
+case class CreateSVarsMsg( id : java.util.UUID, toCreate : List[(ProvideConversionInfo[_,_], BufferMode)],
                            entity : Entity,
-                           queue : List[(SVarActor.Ref, List[ProvideConversionInfo[_,_]])] )
+                           queue : List[(SVarActor.Ref, List[(ProvideConversionInfo[_,_], BufferMode)])] )
                          (implicit @(transient @param) actor : SVarActor.Ref)
   extends SimXMessage
 
@@ -144,10 +146,10 @@ trait EntityConfigLayer extends SVarActor with HandlerSupport with EntityUpdateH
       }
     }
 
-    msg.toCreate.foldRight(handler(_)){ (toAdd, hnd) => toAdd.injectSVar(_)(hnd) }.apply(msg.entity)
+    msg.toCreate.foldRight(handler(_)){ (toAdd, hnd) => toAdd._1.injectSVar(_, Now, toAdd._2)(hnd) }.apply(msg.entity)
   }
 
-  protected def injectSVarCreation(e : Entity) : List[(SVarActor.Ref, List[ProvideConversionInfo[_, _]])] =
+  protected def injectSVarCreation(e : Entity) : List[(SVarActor.Ref, List[(ProvideConversionInfo[_, _], BufferMode)])] =
     Nil
 
   //add handler react to EntityCompleteMsgs
@@ -194,5 +196,6 @@ trait EntityConfigLayer extends SVarActor with HandlerSupport with EntityUpdateH
     if (open.nonEmpty) throw new Exception("Error: " + open.mkString(" and ") + " was/were not provided")
     creator ! GetInitialValuesAns(entityToIDMap(e), providings)(self)
     openCreateRequests.remove(e)
+    entityToIDMap.remove(e)
   }
 }

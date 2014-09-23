@@ -21,11 +21,9 @@
 package simx.core.helper
 
 import org.slf4j.LoggerFactory
-import org.apache.log4j.PropertyConfigurator
 
 
 trait Loggable {
- PropertyConfigurator.configure("log4j.properties")
  private val log = LoggerFactory.getLogger(getClass)
 
  def trace( message:String, values:Any* ) { log.trace( message, values.map( _.asInstanceOf[Object]).toArray ) }

@@ -26,9 +26,7 @@
  */
 package simx.core.ontology.types
 
-import simx.core.ontology.{types, SpecificDescription, Symbols, SVarDescription}
-import scala.reflect.ClassTag
-import scala.pickling.FastTypeTag
+import simx.core.ontology.{SpecificDescription, Symbols, SVarDescription}
 
 object TypeDefinitions {
   type Enum = Enumeration#Value

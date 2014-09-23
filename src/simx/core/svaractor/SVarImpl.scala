@@ -21,33 +21,35 @@
 package simx.core.svaractor
 
 import java.util.UUID
-import scala.reflect.runtime.universe.TypeTag
-import scala.reflect.ClassTag
+import simx.core.entity.typeconversion.TypeInfo
+import simx.core.svaractor.TimedRingBuffer.{ContentType, Time, BufferMode}
 import simx.core.entity.description.SVal
+import scala.reflect.ClassTag
 
 
 object SVarImpl extends SVarObjectInterface {
-  def apply[T](value: SVal[T])(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T] =
-    actorContext.createSVar(value)
+  def apply[T](value: SVal.SValType[T], timeStamp : Time, bufferLength : BufferMode = TimedRingBuffer.Unbuffered)
+              (implicit actorContext : SVarActor) : SVar[T] =
+    actorContext.createSVar(value, timeStamp, bufferLength)
 }
 
 class SVarImpl[T] private(val initialOwner: SVarActor.Ref,
-                                    val id: UUID,
-                                    implicit val containedValueManifest: ClassTag[T],
-                                    implicit val typeTag : TypeTag[T]) extends SVar[T] with Serializable {
-
-  def this(initialOwner: SVarActor.Ref, man: ClassTag[T], typeTag : TypeTag[T]) =
+                          val id: UUID,
+                          implicit val containedValueManifest: ClassTag[T],
+                          implicit val typeTag : TypeInfo.DataTag[T] ) extends SVar[T] with Serializable
+{
+  def this(initialOwner: SVarActor.Ref, man: ClassTag[T], typeTag : TypeInfo.DataTag[T]) =
     this(initialOwner, UUID.randomUUID, man, typeTag)
 
-  def get(handler: (T) => Unit)(implicit actorContext : SVarActor){
-    actorContext.get(this)(handler)
+  def get(time : Time, accessMethod : AccessMethod)(handler: ContentType[T] => Unit)(implicit actorContext : SVarActor){
+    actorContext.get(time, accessMethod, this)(handler)
   }
 
-  protected[core] def set(value: T, forceUpdate : Boolean)(implicit actorContext : SVarActor) : Boolean =
-    actorContext.set(this, value, forceUpdate)
+  protected[core] def set(value: T, at : Time, forceUpdate : Boolean)(implicit actorContext : SVarActor) : Boolean =
+    actorContext.set(this, value, at, forceUpdate)
 
-  def observe(handler: (T) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
-    actorContext.observe(this, ignoredWriters)(handler)
+  def observe(handler: (T, Time) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
+    actorContext.observe(this, ignoredWriters)(x => handler(x._1, x._2))
 
   def ignore()(implicit actorContext : SVarActor) {
     actorContext.ignore(this)

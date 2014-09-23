@@ -20,8 +20,8 @@
 
 package simx.core.entity.typeconversion
 
-import simx.core.svaractor.{SVarActor, SVar}
-import scala.reflect.runtime.universe.TypeTag
+import simx.core.svaractor.TimedRingBuffer.{ContentType, Time}
+import simx.core.svaractor.{AccessMethod, SVarActor, SVar}
 import scala.reflect.ClassTag
 
 /* author: dwiebusch
@@ -57,15 +57,15 @@ protected[core] abstract class PartiallyConvertedSVar[O, T](wrappedSVar : SVar[O
   //! loop method calls through to the wrapped svar
   //def update( updateMethod : T => T )  { wrappedSVar.update( (v : O) => updateMethod(revert(v))) }
   //! loop method calls through to the wrapped svar
-  def observe(handler: (T) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
-    wrappedSVar.observe( v => handler(revert(v)), ignoredWriters)(actorContext)
+  def observe(handler: (T, Time) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) =
+    wrappedSVar.observe( (v, t) => handler(revert(v), t), ignoredWriters)(actorContext)
   //! loop method calls through to the wrapped svar
-  def get(consume : (T) => Unit)(implicit actorContext : SVarActor){
-    wrappedSVar.get( v => consume(revert(v)))(actorContext)
+  def get(time : Time, accessMethod : AccessMethod)(consume : ContentType[T] => Unit)(implicit actorContext : SVarActor){
+    wrappedSVar.get(time, accessMethod)( v => consume(revert(v._1), v._2))(actorContext)
   }
   //! loop method calls through to the wrapped svar
-  protected[core] def set(value : T, forceUpdate : Boolean = false)(implicit actorContext : SVarActor) =
-    wrappedSVar.set(converter(value), forceUpdate)(actorContext)
+  protected[core] def set(value : T, at : Time, forceUpdate : Boolean)(implicit actorContext : SVarActor) =
+    wrappedSVar.set(converter(value), at, forceUpdate)(actorContext)
   //! loop method calls through to the wrapped svar
   def ignore()(implicit actorContext : SVarActor){
     wrappedSVar.ignore()(actorContext)

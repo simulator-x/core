@@ -20,16 +20,22 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import java.util.UUID
+
 import simx.core.svaractor.{RemoveEntityMessage, SVar, SVarActor}
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.entity.description.SVal
+import simx.core.entity.description.SValBase
 import simx.core.entity.Entity
+import scala.collection.mutable
 
 /**
  * Created by dennis on 24.04.14.
  *
  */
 trait EntityUpdateHandling extends SVarActor{
+  protected implicit def arrowAssocToRightUnknownTuple[T](tuple : (T, Unknown)) : RightUnknownTuple[T] =
+    RightUnknownTuple(tuple._1)
+
   addHandler[HandleEntityUpdate[_]]{
     msg => delayedReplyWith[Entity](msg.e.set(msg.sval, _))()
   }
@@ -42,8 +48,9 @@ trait EntityUpdateHandling extends SVarActor{
     msg => delayedReplyWith[Entity](msg.e.addRemoveObservers(msg.newObservers, _))()
   }
 
-  addHandler[RemoveEntityMessage]{
-    msg => removeFromLocalRep(msg.e)
+  addHandler[RemoveEntityMessage]{ msg =>
+    removeUpdaters(msg.e)
+    removeFromLocalRep(msg.e)
   }
 
   addHandler[HandleRemoveEntity]{
@@ -52,48 +59,65 @@ trait EntityUpdateHandling extends SVarActor{
 
   protected def removeFromLocalRep(e : Entity)
 
-  private var eRefs = Map[java.util.UUID, Entity]()
-  private var observedEntities = Set[java.util.UUID]()
-  private var onUpdates = Map[java.util.UUID, Map[java.util.UUID, StateParticleAccess => Any]]()
-  private var storedIds = Map[Any, java.util.UUID]()
+  private val eRefs = mutable.Map[java.util.UUID, Entity]()
+  private val observedEntities = mutable.Map[Entity, java.util.UUID]()
+  private val onUpdates = mutable.Map[java.util.UUID, Map[java.util.UUID, Entity => Any]]()
+  private val storedIds = mutable.Map[Any, java.util.UUID]()
 
-  protected[core] def addInternalUpdater(ref : SVar[Entity], handler : StateParticleAccess => Any) = {
+  private def removeUpdaters(e : Entity){
+    observedEntities remove e collect{
+      case svarId =>
+        e.getAllStateParticles.map(_.svar.ignore())
+        eRefs.remove(svarId)
+        onUpdates.remove(svarId)
+        e.ignore()
+    }
+    eRefs.retain((a, b) => b != e)
+  }
+
+  protected[core] def addInternalUpdater(e : Entity, ref : SVar[Option[Entity]], handler : Entity => Any) = {
     val id = java.util.UUID.randomUUID()
-    onUpdates = onUpdates.updated(ref.id, onUpdates.getOrElse(ref.id, Map()).updated(id, handler))
-    if (!observedEntities.contains(ref.id))
-      updateObserve(ref, Set())
+    onUpdates.update(ref.id, onUpdates.getOrElse(ref.id, Map()).updated(id, handler))
+    if (!observedEntities.contains(e))
+      updateObserve(e, ref)
     id
   }
 
   protected[core] def storeUpdateId(id : java.util.UUID, ref : Any){
-    storedIds = storedIds + (ref -> id)
+    storedIds.update(ref, id)
   }
 
   protected[core] def getUpdateId(ref : Any) =
     storedIds.get(ref)
 
 
-  protected[core] def removeInternalUpdater(ref : SVar[Entity], id : java.util.UUID){
-    onUpdates = onUpdates.updated(ref.id, onUpdates.getOrElse(ref.id, Map()) - id)
+  protected[core] def removeInternalUpdater(ref : SVar[Option[Entity]], id : java.util.UUID){
+    onUpdates.update(ref.id, onUpdates.getOrElse(ref.id, Map()) - id)
   }
 
-  protected[core] def get(ref : SVar[Entity]) =
+  protected[core] def updateInternalRep[T <: Entity](id : UUID, newVal : T) {
+    eRefs.update(id, newVal)
+  }
+
+  protected[core] def get(ref : SVar[Option[Entity]]) =
     eRefs.get(ref.id)
 
   protected def get(e : Entity) =
     eRefs.find(_._2 == e).collect{ case (_, entity) => entity }
 
-  protected[core] def updateObserve(ref : SVar[Entity], handler : Entity => Any = _ => {}) = {
-    observedEntities = observedEntities + ref.id
+  protected[core] def updateObserve[T <: Entity](e : Entity, ref : SVar[Option[T]], handler : T => Any = (_ : T) => {}) = {
+    observedEntities.update(e, ref.id)
     ref.observe({ newVal =>
-      eRefs = eRefs.updated(ref.id, newVal)
-      onUpdates.getOrElse(ref.id, Map()).foreach(_._2.apply(newVal))
-      handler(newVal)
+      if (newVal.isDefined) {
+        eRefs.update(ref.id, newVal.get)
+        onUpdates.getOrElse(ref.id, Map()).foreach(_._2.apply(newVal.get))
+        handler(newVal.get)
+      }
     }, Set())
   }
 }
 
 protected[core] case class HandleRemoveEntity(e : Entity)
-protected[core] case class HandleEntityUpdate[T](e : Entity, sval : SVal[T])
+protected[core] case class HandleEntityUpdate[T](e : Entity, sval : SValBase[T, _ <: T])
 protected[core] case class HandleEntityRemove[T](e : Entity, sval : ConvertibleTrait[T])
 protected[core] case class HandleObserverUpdate(e : Entity, newObservers : Set[SVarActor.Ref])

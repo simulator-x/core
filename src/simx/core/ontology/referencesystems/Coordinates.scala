@@ -23,10 +23,12 @@ package simx.core.ontology.referencesystems
 import java.io.File
 import java.util.UUID
 
+import simplex3d.math.double._
+import functions._
+import simplex3d.math.floatx.ConstMat4f
 import simx.core.svaractor.{SVarActor, SVar}
 import simx.core.helper.SchemaAwareXML
 import simx.core.ontology.{GroundedSymbol, Symbols}
-import simplex3d.math.floatx._
 import xml.Node
 
 /**
@@ -38,6 +40,51 @@ import xml.Node
 // TODO: Is this stuff used anywhere?
 
 object CoordinateSystemConverter{
+  var screenTransformation = Mat4.Identity
+  var vrpnToWorldRotation = Quat4.Identity
+  var vrpnToWorldOffsetInWorldCS = Vec3.Zero
+  var vrpnToWorldScale = Vec3.One //* 0.001f
+
+  def registerMat( mat : ConstMat4) {
+    screenTransformation = mat
+    update()
+  }
+
+  def update() {
+    vrpnToWorldRotation = quaternion(Mat3(screenTransformation))
+    vrpnToWorldOffsetInWorldCS = rotationMat(vrpnToWorldRotation) * Vec3(screenTransformation(3).xyz)
+    vrpnToWorldScale = ConstVec3(Vec3.One) //* 0.001f
+  }
+
+  private def removeScale(t: ConstMat3): ConstMat3 = {
+    val scale = Vec3(1f/length(t(0).xyz), 1f/length(t(1).xyz), 1f/length(t(2).xyz))
+    t * ConstMat3(Mat4x3.scale(scale))
+  }
+
+  def calcPos(newValue : ConstMat4) = {
+    ConstMat4(
+      ConstMat4(Mat4x3.translate(vrpnToWorldOffsetInWorldCS / vrpnToWorldScale)) *
+        ConstMat4(rotationMat(inverse(vrpnToWorldRotation))) *
+        newValue
+    )(3).xyz * vrpnToWorldScale
+
+    //val eyeOffset  = (inverse(ori) * ConstVec4(0f, 0.04f, 0.3f, 0f)).xyz
+    //val pos = pos - eyeOffset
+  }
+
+  def calcRot(newValue : ConstMat4) = {
+    val oriM = inverse(ConstMat4(rotationMat(vrpnToWorldRotation))) * newValue * ConstMat4(rotationMat(vrpnToWorldRotation))
+    ConstMat4(removeScale(ConstMat3(oriM(0).xyz,oriM(1).xyz,oriM(2).xyz)))
+  }
+
+
+  def targetToScreenCoordinates( newValue : ConstMat4 ) : ConstMat4f = {
+    val pos = calcPos(newValue)
+    val ori = calcRot(newValue)
+    ConstMat4f(ori(0), ori(1), ori(2), ConstVec4(pos, 1))
+  }
+
+
   /**
    * creates an wrapper for an already registered system
    * @param name the name of the registered system
@@ -47,7 +94,7 @@ object CoordinateSystemConverter{
     new CoordinateSystemConverter[U](name)
 }
 
-class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform : ConstMat4f ){
+class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform : ConstMat4 ){
   //register this system
   Coordinates.setSystem(name, transform)
   //some shortcuts to the function calls
@@ -78,10 +125,10 @@ class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform :
    * @param translation the translation part of the coordinate transform
    */
   def this( name : GroundedSymbol,
-            rotation : Mat4x3f  = Mat4x3f.scale(1f),
-            scale    : Mat4x3f  = Mat4x3f.scale(1f),
-            translation : Vec3f = Vec3f(0, 0, 0) ) =
-    this(name, ConstMat4f(rotation.translate(scale * Vec4f(translation, 1))))
+            rotation : Mat4x3  = Mat4x3.scale(1f),
+            scale    : Mat4x3  = Mat4x3.scale(1f),
+            translation : Vec3 = Vec3(0, 0, 0) ) =
+    this(name, ConstMat4(rotation.translate(scale * Vec4(translation, 1))))
 
   /**
    * transforms local coordinates into the reference coordinate system
@@ -112,19 +159,19 @@ class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform :
 /**
  * holder for coordinate systems, providing conversion methods
  */
-protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4f]{
+protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4]{
   private var names = Map[GroundedSymbol, UUID](Symbols.origin -> UUID.randomUUID)
   private var viewPlatformObserver : Option[SVarActor.Ref] = None
 
   private case class End()
-  private case class Update( vpf : SVar[ConstMat4f] )
+  private case class Update( vpf : SVar[ConstMat4] )
   private class ViewPlatformObserver extends SVarActor{
-    private var svar : Option[SVar[ConstMat4f]] = None
+    private var svar : Option[SVar[ConstMat4]] = None
     private def ignoreVP = svar.collect{ case sv => ignore(sv)  }
-    private def observeVP( vpf : SVar[ConstMat4f] ) : Option[SVar[ConstMat4f]] = {
+    private def observeVP( vpf : SVar[ConstMat4] ) : Option[SVar[ConstMat4]] = {
       ignoreVP
-      get    (vpf)( value => setSystem( Symbols.viewPlatform, value ) )
-      observe(vpf)( value => setSystem( Symbols.viewPlatform, value ) )
+      //get    (vpf)( value => setSystem( Symbols.viewPlatform, value ) )
+      vpf.observe( value => setSystem( Symbols.viewPlatform, value ) )
       Some(vpf)
     }
 
@@ -132,24 +179,24 @@ protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4f]
     addHandler[End]{    msg => ignoreVP                  }
   }
 
-  setSystem(Symbols.origin, ConstMat4f(Mat4f.Identity))
-  setSystem(Symbols.viewPlatform, ConstMat4f(Mat4f.Identity))
+  setSystem(Symbols.origin, ConstMat4(Mat4.Identity))
+  setSystem(Symbols.viewPlatform, ConstMat4(Mat4.Identity))
 
   def loadCoordinateSetup(name : GroundedSymbol, filename : String, nodeName : String ) =
     setSystem( name, loadFile(new File(filename), nodeName) )
 
-  def getSystem( name : GroundedSymbol ) : Option[ConstMat4f] =
+  def getSystem( name : GroundedSymbol ) : Option[ConstMat4] =
     getMapping(names.getOrElse(name, throw NoMappingException(name.toString)))
 
-  def setSystem( name : GroundedSymbol, rotation : Mat4x3f, scale : Float, translation : Vec3f ) : UUID =
-    setSystem(name, ConstMat4f(rotation.translate(translation) * scale))
+  def setSystem( name : GroundedSymbol, rotation : Mat4x3, scale : Float, translation : Vec3 ) : UUID =
+    setSystem(name, ConstMat4(rotation.translate(translation) * scale))
 
-  def setSystem( name : GroundedSymbol, transform : ConstMat4f) : UUID = synchronized {
+  def setSystem( name : GroundedSymbol, transform : ConstMat4) : UUID = synchronized {
     names = names.updated(name, names.getOrElse(name, UUID.randomUUID))
-    addMapping(names(name), transform, functions.inverse(transform))
+    addMapping(names(name), transform, inverse(transform))
   }
 
-  def setViewPlatform( vpf : SVar[ConstMat4f] ) {
+  def setViewPlatform( vpf : SVar[ConstMat4] ) {
     if (viewPlatformObserver.isEmpty)
       viewPlatformObserver = Some(SVarActor.createActor(new ViewPlatformObserver()))
     viewPlatformObserver.get ! Update(vpf)
@@ -179,18 +226,18 @@ protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4f]
       getMapping(outSystem).getOrElse(throw NoMappingException("id " + outSystem))
     )
 
-  def loadFile(descFile : File, nodeName : String) : ConstMat4f =
+  def loadFile(descFile : File, nodeName : String) : ConstMat4 =
     readTransformFromXML((SchemaAwareXML.loadFile(descFile) \ nodeName).head)
 
-  protected def convertTo[U, V](toConvert: U, inSystem: ConstMat4f, outSystem: ConstMat4f) : V = (toConvert match {
-    case value : Mat3x4f => outSystem * inSystem * value
-    case value : Mat2x4f => outSystem * inSystem * value
-    case value : Mat4f   => outSystem * inSystem * value
-    case value : Vec4f   => outSystem * inSystem * value
+  protected def convertTo[U, V](toConvert: U, inSystem: ConstMat4, outSystem: ConstMat4) : V = (toConvert match {
+    case value : Mat3x4 => outSystem * inSystem * value
+    case value : Mat2x4 => outSystem * inSystem * value
+    case value : Mat4   => outSystem * inSystem * value
+    case value : Vec4   => outSystem * inSystem * value
     case _                => throw NoConversionPossibleException(toConvert)
   }).asInstanceOf[V]
 
-  private def readTransformFromXML(n: Node) : ConstMat4f = {
+  private def readTransformFromXML(n: Node) : ConstMat4 = {
     val translateX = (n \ "translateX").text.toFloat
     val translateY = (n \ "translateY").text.toFloat
     val translateZ = (n \ "translateZ").text.toFloat
@@ -201,9 +248,9 @@ protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4f]
 
     val scale = (n \ "scale").text.toFloat
 
-    ConstMat4f( Mat4x3f.
-      rotateX(functions.radians(rotateX)).rotateY(functions.radians(rotateY)).rotateZ(functions.radians(rotateZ)).
-      scale(scale).translate( Vec3f(translateX, translateY, translateZ) )
+    ConstMat4( Mat4x3.
+      rotateX(radians(rotateX)).rotateY(radians(rotateY)).rotateZ(radians(rotateZ)).
+      scale(scale).translate( Vec3(translateX, translateY, translateZ) )
     )
   }
 }

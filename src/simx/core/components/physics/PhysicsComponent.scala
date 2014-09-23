@@ -27,6 +27,7 @@ import simx.core.entity.Entity
 import simx.core.entity.description.SVal
 import scala.reflect.ClassTag
 import simx.core.entity.component.ComponentAspect
+import simx.core.entity.typeconversion.TypeInfo
 
 //Global Types
 import simx.core.ontology.{types => gt}
@@ -57,7 +58,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleSetTransformation(e: Entity, t: SVal[gt.Transformation.dataType])
+  def handleSetTransformation(e: Entity, t: SVal[gt.Transformation.dataType,TypeInfo[gt.Transformation.dataType,gt.Transformation.dataType]])
   addHandler[SetTransformation]{msg => handleSetTransformation(msg.e, gt.Transformation(msg.t))}
 
   /**
@@ -68,7 +69,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleApplyImpulse(e: Entity, i: SVal[gt.Impulse.dataType])
+  def handleApplyImpulse(e: Entity, i: SVal[gt.Impulse.dataType,TypeInfo[gt.Impulse.dataType,gt.Impulse.dataType]])
   addHandler[ApplyImpulse]{msg => handleApplyImpulse(msg.e, gt.Impulse(msg.i))}
 
   /**
@@ -79,7 +80,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleApplyTorqueImpulse(e: Entity, i: SVal[gt.Impulse.dataType])
+  def handleApplyTorqueImpulse(e: Entity, i: SVal[gt.Impulse.dataType,TypeInfo[gt.Impulse.dataType,gt.Impulse.dataType]])
   addHandler[ApplyTorqueImpulse]{msg => handleApplyTorqueImpulse(msg.e, gt.Impulse(msg.i))}
 
   /**
@@ -90,7 +91,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleSetLinearVelocity(e: Entity, v: SVal[gt.Velocity.dataType])
+  def handleSetLinearVelocity(e: Entity, v: SVal[gt.Velocity.dataType,TypeInfo[gt.Velocity.dataType,gt.Velocity.dataType]])
   addHandler[SetLinearVelocity]{msg => handleSetLinearVelocity(msg.e, gt.Velocity(msg.v))}
 
   /**
@@ -101,7 +102,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleSetAngularVelocity(e: Entity, v: SVal[gt.Velocity.dataType])
+  def handleSetAngularVelocity(e: Entity, v: SVal[gt.Velocity.dataType,TypeInfo[gt.Velocity.dataType,gt.Velocity.dataType]])
   addHandler[SetAngularVelocity]{msg => handleSetAngularVelocity(msg.e, gt.Velocity(msg.v))}
 
   /**
@@ -112,7 +113,7 @@ abstract class PhysicsComponent(name : Symbol) extends Component(name, PhysicsCo
    *
    * @see   [[simx.core.components.physics.PhysicsMessage]]
    */
-  def handleSetGravity(e: Entity, g: SVal[gt.Gravity.dataType])
+  def handleSetGravity(e: Entity, g: SVal[gt.Gravity.dataType,TypeInfo[gt.Gravity.dataType,gt.Gravity.dataType]])
   addHandler[SetGravity]{msg => handleSetGravity(msg.e, gt.Gravity(msg.g))}
 
   /**

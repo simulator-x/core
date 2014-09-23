@@ -20,6 +20,8 @@
 
 package simx.core.svaractor
 
+import akka.actor.ActorRef
+
 import scala.reflect.ClassTag
 
 /**
@@ -40,7 +42,7 @@ abstract class SingletonActor[T <: SVarActor : ClassTag](ctor: => T, val name : 
   override def toString: String =
     name + " (Singleton)"
 
-  def !(msg : Any)(implicit sender : SVarActor.Ref){
+  def !(msg : Any)(implicit sender : SVarActor.Ref = ActorRef.noSender){
     self.!(msg)(sender)
   }
 }

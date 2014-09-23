@@ -135,7 +135,7 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
       appEntity.get(types.Entity).forall {
         entities =>
           val tasks = entities.values.map {
-            e => (x : (SVarActor.Ref, EntityBase) => Unit) => e.get{ y => y.get(types.Component).foreach{ x(_, y) } }
+            e => (x : (SVarActor.Ref, EntityBase[_]) => Unit) => e.get{ y => y.get(types.Component).foreach{ x(_, y) } }
           }
           serialize(tasks.toList).apply(handler)
       }
@@ -147,12 +147,12 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
 
 
 
-  private def serialize(x : List[((SVarActor.Ref, EntityBase) => Unit) => Unit]): (SVarActor.Ref => Unit) => Unit = x match{
+  private def serialize(x : List[((SVarActor.Ref, EntityBase[_]) => Unit) => Unit]): (SVarActor.Ref => Unit) => Unit = x match{
     case Nil => handler => handler(self)
     case head :: tail => handler => head{ (actor, entity) => serialize(tail)(handler) }
   }
 
-  protected class ComponentHandler(private var handleComp : SVarActor.Ref => Any = _ => ()){
+  protected class ComponentHandler(private var handleComp : SVarActor.Ref => Any = _ => ()) extends Serializable{
     def attachHandler(f : SVarActor.Ref => Any){ handleComp = f }
     private[SimXApplication] def and(next : SVarActor.Ref => Unit)(comp : SVarActor.Ref) {
       handleComp(comp)

@@ -117,7 +117,7 @@ object ConfigureComponent {
   /**
    *  Creates a ConfigureComponentMessage using Actor.self as sender and params to create a new SValSet
    */
-  def apply(params: SVal[_]*)(implicit actorContext : SVarActor.Ref) = new ConfigureComponentMessage( new SValSet(params:_*))
+  def apply(params: SVal[_,_]*)(implicit actorContext : SVarActor.Ref) = new ConfigureComponentMessage( new SValSet(params:_*))
 }
 
 /**

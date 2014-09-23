@@ -21,12 +21,13 @@
 package simx.core.svaractor.unifiedaccess
 
 import simx.core.svaractor.SVarActor
+import simx.core.svaractor.TimedRingBuffer.Time
 
 /**
  * Created by dwiebusch on 04.03.14
  */
-trait Immutability[B] extends Mutability[B]{
-  protected[core] def set(value : B, forceUpdate : Boolean)(implicit actorContext : SVarActor) =
+trait Immutability[B] extends Mutability[B] with Serializable{
+  protected[core] def set(value : B, at : Time, forceUpdate : Boolean)(implicit actorContext : SVarActor) =
     false
 
   override def isMutable: Boolean =

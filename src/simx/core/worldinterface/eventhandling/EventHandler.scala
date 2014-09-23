@@ -130,10 +130,10 @@ trait EventProvider extends SVarActor with WorldInterfaceHandling {
     toRemove.foreach{ internalRemoveEventHandler(_) }
     toRemove = Set()
     eventHandlers.getOrElse( e.name, Set() ).foreach { pair =>
-      if (e.name.equals(simx.core.ontology.types.OntologySymbol(new Semantics{ def toSymbol : Symbol= 'publishDevice })))
+      if (e.name.equals(simx.core.ontology.types.OntologySymbol(Semantics('publishDevice ))))
         println("publish device event shall be sent")
       if ( pair._2.collect{ case f => f(e) }.getOrElse(true) && filter(pair._1, e) ) {
-        if (e.name.equals(simx.core.ontology.types.OntologySymbol(new Semantics{ def toSymbol : Symbol= 'publishDevice })))
+        if (e.name.equals(simx.core.ontology.types.OntologySymbol(Semantics('publishDevice))))
           println("sending publish device event to " + pair._1)
         if (deadOwners.contains(SVarActor.addressOf(pair._1)))
           toRemove += pair._1

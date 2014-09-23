@@ -20,25 +20,43 @@
 
 package simx.core.entity.description
 
+import simx.core.svaractor.TimedRingBuffer.{Now, ContentType, Time}
+import simx.core.svaractor.{AccessMethod, StateParticle, SVarActor, ImmutableSVar}
 import simx.core.entity.typeconversion._
-import scala.reflect.runtime.universe.TypeTag
+import simx.core.ontology._
 import scala.reflect.ClassTag
-import simx.core.svaractor.{StateParticle, SVarActor, ImmutableSVar}
 
 
 object SVal{
-  def apply[T : ClassTag, V <: T]( semantics : TypeInfo[T, T] )( value : V ) : SVal[T] =
-    new SVal(semantics)(value)
+  def apply[T : ClassTag, V <: T]( semantics : TypeInfo[T,T] )( value : V ) : SVal[T,TypeInfo[T,T]] =
+    new SVal[T,TypeInfo[T,T]] (semantics)(value)
+
+  def applyAs[T : ClassTag, V <: T, TType <: TypeInfo[T,T]]( semantics : TType )( value : V ) : SVal[T,TType] =
+    new SVal[T,TType] (semantics)(value)
+
+  type SValType[T] = SVal[T,TypeInfo[T,T]]
 }
 
-final class SVal[T](typedSemantics : TypeInfo[T, T])(value : T)
+class SVal[T, +TType <: TypeInfo[T,T]](typedSemantics : TypeInfo[T, T])(value : T)
   extends SValBase[T, T](typedSemantics, value) with StateParticle[T] with Serializable
 {
-  protected[description] def asSVal =
-    this
+  def asSVal =
+    this.asInstanceOf[SVal[T,TypeInfo[T,T]]]
 
-  protected def typedValue: T =
+  def typedValue: T =
     value
+
+  def as(gs : GroundedSymbol) =
+    SVal(typedSemantics.asConvertibleTrait.addAnnotations(gs))(value)(typedSemantics.classTag)
+}
+
+case class WrappedSVal[T,TType <: ConvertibleTrait[T],R,RType](sVal: (T,TType), func: ((T,TType))  => (R,RType)) {
+  def calculate =
+    func.apply(sVal)._1
+}
+
+case class Executor[T,TType<:TypeInfo[T,T],R,RType <: TypeInfo[R,R]](sVal: SVal[T,TType], func: SVal[T,TType] => SVal[R,RType]) {
+  def execute() = func(sVal)
 }
 
 /**
@@ -48,9 +66,21 @@ final class SVal[T](typedSemantics : TypeInfo[T, T])(value : T)
 sealed abstract class SValBase[+T, B <: T] protected (val typedSemantics: TypeInfo[T, B], val value: T)
   extends ImmutableSVar[T, B] with Serializable
 {
-  protected[description] def asSVal : SVal[B]
+  def asSVal : SVal[B,TypeInfo[B,B]]
 
-  protected def typedValue: B
+  def typedValue: B
+
+  override def getValue: Option[B] =
+    Some(typedValue)
+
+  def observe(handler: (T, Time) => Unit, ignoredWriters: Set[SVarActor.Ref] = Set())(implicit actorContext: SVarActor) = {
+    handler(value, Now)
+    java.util.UUID.randomUUID()
+  }
+
+  override def get(time: Time, accessMethod: AccessMethod)(handler: ContentType[T] => Unit)(implicit actorContext: SVarActor): Unit ={
+    handler(value -> time)
+  }
 
   private val baseValue =
     Converter(typedSemantics.asConvertibleTrait, typedSemantics.getBase).convert(typedValue)
@@ -58,13 +88,10 @@ sealed abstract class SValBase[+T, B <: T] protected (val typedSemantics: TypeIn
   def asProvide =
     typedSemantics.asConvertibleTrait.isProvided.withInitialValue(typedValue)
 
+  def asBaseType : SVal.SValType[typedSemantics.baseType] =
+    typedSemantics.getBase.apply(baseValue)
 
-  def get(handler: (T) => Unit)(implicit actorContext: SVarActor){
-    handler(value)
-  }
-
-
-  def as[T2](cInfo: ConversionInfo[T2, B]): SVal[T2] =
+  def as[T2](cInfo: ConversionInfo[T2, B]): SVal[T2,TypeInfo[T2,T2]] =
     cInfo from as(cInfo.from)
 
   /**
@@ -96,7 +123,7 @@ sealed abstract class SValBase[+T, B <: T] protected (val typedSemantics: TypeIn
    * @see Programming in Scala - Odersky, Spoon, Venners - First Edition, Version 6
    */
   override def equals(other: Any): Boolean = other match {
-    case that: SVal[_] => typedSemantics.equals(that.typedSemantics) && value.equals(that.value)
+    case that: SVal[_,_] => typedSemantics.equals(that.typedSemantics) && value.equals(that.value)
     case _             => false
   }
 
@@ -112,25 +139,28 @@ sealed abstract class SValBase[+T, B <: T] protected (val typedSemantics: TypeIn
     41 * ( 41 + typedSemantics.hashCode() )  + value.hashCode()
   //41 * ( 41 + typedSemantics.typeinfo.hashCode ) + typedSemantics.sVarIdentifier.hashCode
 
-  override def toString: String = "SVal(" + typedSemantics.typeTag.toString + " as " +
+  override def toString: String = "SVal(" + typedSemantics.classTag.toString + " as " +
     typedSemantics.semantics.value + ") = " +  value.toString
 
-  def ::(that : SVal[_]) : List[SVal[_]] =
+  def ::[thatT,thatTType<:TypeInfo[thatT,thatT]](that : SVal[thatT,thatTType]) : List[SVal[_,_]] =
     asSVal :: that :: Nil
 
-  def and(that : SVal[_]) : SValSeq =
+  def and(that : SVal[_,_ <: TypeInfo[_, _]]) : SValSeq =
     new SValSeq and asSVal and that
 
-  def and : Seq[SVal[_]] => SValSeq =
+  def and : Seq[SVal[_,_ <: TypeInfo[_, _]]] => SValSeq =
     _.foldLeft(new SValSeq)( _ and _ )
 }
 
-class SValSeq ( cvar : SVal[_]* ) extends Seq[SVal[_]]{
-  private var internalList = List[SVal[_]](cvar : _*)
+class SValSeq ( cvar : SVal[_,_]* ) extends Seq[SVal[_,_]]{
+  private var internalList = List[SVal[_,_]](cvar : _*)
   def iterator = internalList.iterator
-  def apply(idx: Int) = internalList(idx)
+  //def apply(idx: Int) = internalList(idx)
+
+  override def apply(idx: Int): SVal[_, _] = internalList(idx)
+
   def length = internalList.length
-  def and( cvar : SVal[_] ) : SValSeq = { internalList = cvar :: internalList; this }
+  def and( cvar : SVal[_,_ <: TypeInfo[_, _]] ) : SValSeq = { internalList = cvar :: internalList; this }
 }
 
 
@@ -148,8 +178,9 @@ case class SValNotFound(sVarIdentifier: Symbol) extends Exception(sVarIdentifier
  * date: 27.08.2010
  */
 
-abstract class Semantics extends Serializable {
-  def toSymbol: Symbol
+case class Semantics(toSymbol: Symbol) extends Serializable {
+  def asGroundedSymbol(typeInfo : TypeInfo[Semantics, Semantics]) : GroundedSymbol =
+    SVal.apply[Semantics,Semantics](typeInfo)(this)
 
   override def toString: String = toSymbol.name
   override def hashCode() = toSymbol.hashCode()

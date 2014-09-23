@@ -20,11 +20,12 @@
 
 package simx.core.svaractor
 
-import scala.reflect.runtime.universe.TypeTag
 import java.util.UUID
+import simx.core.entity.description.SVal.SValType
+import simx.core.svaractor.TimedRingBuffer.{Time, BufferMode, ContentType}
+
 import scala.reflect.ClassTag
 import scala.util.continuations
-import simx.core.entity.description.{SValBase, SVal}
 import simx.core.entity.typeconversion.{ConvertedSVar, ConversionInfo}
 import unifiedaccess.{Observability, Mutability, Immutability, Accessibility}
 import simx.core.svaractor.SVarActor.Ref
@@ -37,23 +38,6 @@ import simx.core.svaractor.SVarActor.Ref
  * It has two methods to create a new State Variables.
  */
 trait SVarObjectInterface {
-  // Create a new SVar with initial value and owner.
-  /**
-   * This method creates a new State Variable at the given actor.
-   * The State Variable will have the given value and will have
-   * the given and not changeable datatype of the given value.
-   * The method blocks until the state variable can be provided.
-   *
-   *
-   * @ param value The initial value of the State Variable
-   * @ param owner The owner of the state variable. Must not be null.
-   * @ tparam T The datatype of the state variable.
-   * @ return The created state variable. Never returns null.
-   */
-//  def apply[T](value: T, owner: SVarActor.Ref)(implicit actorContext : SVarActor) : SVar[T]
-
-  // Create a new SVar with initial value and self. Fails if self is not an SVarActor.
-  // throws NotSVarActorException
   /**
    * This method creates a new state variable on the calling actor. This
    * method must be called within a SVarActor, otherwise a NotSVarActorException is
@@ -65,20 +49,21 @@ trait SVarObjectInterface {
    * @tparam T The data type of the state variable
    * @return The created state variable. Never returns null.
    */
-  def apply[T](value: SVal[T])(implicit actorContext : SVarActor, typeTag : ClassTag[T]) : SVar[T]
+  def apply[T](value: SValType[T], timestamp : Time, bufferLength : BufferMode)(implicit actorContext : SVarActor) : SVar[T]
 }
 
-trait SVBase[+T, B <: T] extends Observability[T] with Accessibility[T] with Mutability[B]{
-  def observe(handler: (T) => Unit, ignoredWriters: Set[Ref] = Set())(implicit actorContext: SVarActor) : java.util.UUID
+trait SVBase[+T, B <: T] extends Observability[T] with Accessibility[T] with Mutability[B] with Serializable{
+  def observe(handler: (T, Time) => Unit, ignoredWriters: Set[Ref] = Set())(implicit actorContext: SVarActor) : java.util.UUID
   def containedValueManifest : ClassTag[_ <: T]
   def ignore()(implicit actorContext : SVarActor)
   def as[T2](cInfo : ConversionInfo[T2, B]) : StateParticle[T2]
   def isMutable : Boolean
+  def getValue : Option[B] = None
   def read(implicit actorContext : SVarActor) : T @continuations.cpsParam[Unit, Unit] =
     continuations.shift { k : (T => Unit) => get(k) }
 }
 
-trait StateParticle[T] extends SVBase[T, T]
+trait StateParticle[T] extends SVBase[T, T] with Serializable
 
 /**
  * This trait represents a state variable. State Variables
@@ -114,8 +99,6 @@ trait SVar[T] extends StateParticle[T]  with Serializable{
 
 trait ImmutableSVar[+T, B <: T] extends SVBase[T, B] with Immutability[B] with Serializable{
   def ignore()(implicit actorContext: SVarActor){}
-  def observe(handler: (T) => Unit, ignoredWriters: Set[SVarActor.Ref] = Set())(implicit actorContext: SVarActor) =
-    java.util.UUID.randomUUID()
 }
 
 

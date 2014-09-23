@@ -21,14 +21,16 @@
 package simx.core.worldinterface
 
 import simx.core.entity.Entity
-import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
 import simx.core.worldinterface.eventhandling.{EventDescription, Event}
-import simx.core.entity.description.{SVal, SValSet}
+import simx.core.entity.description.{SValBase, SVal, SValSet}
 import simx.core.svaractor.{SimXMessage, SVarActor, SVar}
 import simx.core.ontology._
 import simx.core.ontology
 import simx.core.svaractor.unifiedaccess.{EntityBase, Relation, Request}
 import simx.core.svaractor.unifiedaccess.Relation
+
+import scala.reflect.ClassTag
 
 /* author: dwiebusch
 * date: 10.09.2010
@@ -213,14 +215,18 @@ private case class AllComponentsLookupRequest()
 //
 private case class ComponentLookUpByType(componentType : ontology.GroundedSymbol)
 
-private case class AddRelation(r :  SVal[Relation])
-private case class RemoveRelation(r : SVal[Relation])
+private case class AddRelation(r :  SValBase[Relation, _ <: Relation])
+private case class RemoveRelation(r : SValBase[Relation, _ <: Relation])
 private case class HandleRelationRequest[S <: Entity, O <: Entity](r : Request[S, O])
 
 
 private case class ListenForRegistrationsMessage( actor : SVarActor.Ref, path : List[Symbol] )
 
 private case class OnNextRegistration( path : List[Symbol])
+
+private[core] case class RegisterSVarDescription[T, B](desc : SVarDescription[T, B])
+private case class ObserveSVarDescRegistrations(sender : SVarActor.Ref)
+private case class GetRegisteredSVarDescriptions()
 
 private trait ForwardableMessage extends SimXMessage{
   protected var forwarded = false

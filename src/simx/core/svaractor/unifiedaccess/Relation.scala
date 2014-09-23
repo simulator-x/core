@@ -21,114 +21,43 @@
 package simx.core.svaractor.unifiedaccess
 
 import simx.core.entity.Entity
-import simx.core.ontology.{types, SVarDescription, GroundedSymbol}
+import simx.core.entity.typeconversion.TypeInfo.DataTag
+import simx.core.svaractor.TimedRingBuffer.{Now, Unbuffered, BufferMode}
 import simx.core.worldinterface.WorldInterfaceHandling
-import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.svaractor.SVarActor
-import reflect.runtime.universe.TypeTag
-import reflect.ClassTag
 
 
-final class Relation(val subj : Entity, d : RelationDescription[_ <: Entity, _ <: Entity], val obj : Entity){
-  val description = d.setAnnotations(types.RelationSubject(subj), types.RelationObject(obj))
+abstract class Relation private[unifiedaccess](subj : Entity, description : RelationDescription[_ <: Entity, _ <: Entity], obj :Entity){
+  def remove()(implicit context : WorldInterfaceHandling with EntityUpdateHandling)
+  def getSubject : Entity
+  def getObject : Entity
+}
 
-  def publish()(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
-    context setRelation description(this)
+final case class TypedRelation[S <: Entity : DataTag, O <: Entity : DataTag, X <: StateParticleAccess : DataTag] private[unifiedaccess](subj : S, description : RelationDescription[S, O], obj : O,
+                                                                                                                                        update : (X => ((X#SelfType => Any) => Unit)) => Unit )
+  extends Relation(subj, description, obj){
+  def publish(bufferMode : BufferMode = Unbuffered)(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
+    val sval = description(this)
+    update{ toSet => handler =>
+      (if (toSet == obj) subj else obj).set(sval, Now, bufferMode)((_ : Any) => toSet.set(sval, Now, bufferMode)(handler))
+    }
+    context.setRelation(sval)
   }
 
   def remove()(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
+    update { toSet => handler =>
+      (if (toSet == obj) subj else obj).remove(description, (_: Any) => toSet.remove(description, handler)(context))
+    }
     context removeRelation description(this)
   }
+
+  override def getSubject: S =
+    subj
+
+  override def getObject: O =
+    obj
 
   override def toString: String =
     subj.getSimpleName + " " + description.semantics.value.toString + " " + obj.getSimpleName
 }
 
-abstract class RelationDescription[S <: Entity : TypeTag : ClassTag, O <: Entity : TypeTag : ClassTag]
-(val leftDesc : ConvertibleTrait[S], relationName : GroundedSymbol, val rightDesc : ConvertibleTrait[O])
-  extends SVarDescription(types.Relation.asConst as relationName)
-{
-  def get(right : LeftUnknownTuple[O]) =
-    right.getValue.get(LeftRequest[S, O](this, right.getValue))
 
-  def get(left : RightUnknownTuple[S] ) =
-    left.getValue.get(RightRequest[S, O](this, left.getValue))
-
-  def get(tuple : (S, O)) =
-    tuple._1.get(RightRelationPart[S#SelfType, O](this, tuple._2))
-
-  def observe(right : (Unknown, O), ignoredWriters : Set[SVarActor.Ref]) =
-    right._2.observe(LeftRequest[S, O](this, right._2), ignoredWriters)
-
-  def observe(left : RightUnknownTuple[S], ignoredWriters : Set[SVarActor.Ref]) =
-    left.getValue.observe(RightRequest(this, left.getValue), ignoredWriters)
-
-  def observe(tuple : (S, O)) =
-    tuple._1.observe(RightRelationPart[S#SelfType, O](this, tuple._2))
-
-  def set(subj : S, obj : O)(implicit actor : WorldInterfaceHandling with EntityUpdateHandling) : Unit =
-    new Relation(subj, this, obj).publish()
-
-  def set(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    set(tuple._1, tuple._2)
-
-  def remove(subj : S, obj : O)(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    new Relation(subj, this, obj).remove()
-
-  def remove(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    remove(tuple._1, tuple._2)
-
-  def ?  : S => LeftRelationPart[S, O] =
-    LeftRelationPart(this, _)
-
-  def ->(x : Unknown) : S => LeftRelationPart[S, O] =
-    LeftRelationPart(this, _)
-
-  def ->(x : O) =
-    RightRelationPart[S, O](this, x)
-}
-
-sealed trait PartialRelation[-X, S <: Entity, O <: Entity]{
-  def complete(missingPart : X) : Relation
-}
-
-case class LeftRelationPart[S <: Entity : ClassTag, O <: Entity : ClassTag : TypeTag] private[unifiedaccess]
-(desc : RelationDescription[S, O], subj : S) extends PartialRelation[O, S, O] with PartialRequest[O]
-{
-  def complete(obj: O) = new Relation(subj, desc, obj)
-  def asRequest: Request[O, S] = RightRequest(desc, subj)
-}
-
-case class RightRelationPart[S <: Entity : ClassTag : TypeTag, O <: Entity : ClassTag] private[unifiedaccess]
-(desc : RelationDescription[_ <: S, _ <: O], obj : O) extends PartialRelation[S, S, O] with PartialRequest[S]
-{
-  def complete(subj: S) = new Relation(subj, desc, obj)
-  def asRequest: Request[S, O] = LeftRequest(desc, obj)
-}
-
-
-sealed abstract class Request[T <: Entity, V <: Entity] (val desc : RelationDescription[_, _], val isLeft : Boolean) {
-  def accessValue(r: Relation) : T
-  def getKnownValue : V
-
-  val description : ConvertibleTrait[Relation] =
-    desc.setAnnotations( if (isLeft) types.RelationObject(getKnownValue) else types.RelationSubject(getKnownValue))
-}
-
-sealed trait PartialRequest[Y <: Entity]{
-  def asRequest : Request[Y, _]
-}
-
-case class LeftRequest[S <: Entity: TypeTag, O <: Entity] protected[unifiedaccess]
-(d : RelationDescription[_ <: S, _ <: O], getKnownValue: O) extends Request[S, O](d, true)
-{
-  override def accessValue(r: Relation) : S =
-    types.Entity.convert(d.leftDesc)(r.subj)
-}
-
-case class RightRequest[S <: Entity, O <: Entity: TypeTag] protected[unifiedaccess]
-(d : RelationDescription[S, O], getKnownValue: S) extends Request[O, S](d, false)
-{
-  override def accessValue(r : Relation) : O =
-    types.Entity.convert(d.rightDesc)(r.obj)
-}

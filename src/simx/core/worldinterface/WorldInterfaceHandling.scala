@@ -20,18 +20,17 @@
 
 package simx.core.worldinterface
 
-import simx.core.svaractor.{SVarActor, SVar}
-import simx.core.entity.Entity
-import simx.core.entity.typeconversion.ConvertibleTrait
-import eventhandling.{EventDescription, Event}
-import scala.reflect.runtime.universe.TypeTag
-import scala.reflect.ClassTag
-import simx.core.ontology
-import simx.core.ontology.{Symbols, GroundedSymbol}
-import simx.core.svaractor.unifiedaccess._
-import simx.core.entity.description.{EntityAspect, SVal}
-import simx.core.svaractor.unifiedaccess.Relation
 import simx.core.component.{DisableAspect, EnableAspect}
+import simx.core.entity.Entity
+import simx.core.entity.description.{EntityAspect, SValBase}
+import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.entity.typeconversion.TypeInfo._
+import simx.core.ontology.{GroundedSymbol, SVarDescription, Symbols}
+import simx.core.svaractor.unifiedaccess._
+import simx.core.svaractor.{SVar, SVarActor}
+import simx.core.worldinterface.eventhandling.{Event, EventDescription}
+
+import scala.reflect.ClassTag
 
 
 /**
@@ -55,17 +54,13 @@ import simx.core.component.{DisableAspect, EnableAspect}
  * @author Stephan Rehfeld
  * date: 02.07.2010
  */
-trait WorldInterfaceHandling extends SVarActor with RelationAccess {
-  final def setRelation(r : SVal[Relation])(implicit context : EntityUpdateHandling){
-    r.value.subj.set(r)
-    r.value.obj.set(r)
-    WorldInterfaceActor ! AddRelation(r)
+trait WorldInterfaceHandling extends SVarActor{
+  final def setRelation(relSVal : SValBase[Relation, _ <: Relation])(implicit context : EntityUpdateHandling){
+    WorldInterfaceActor ! AddRelation(relSVal)
   }
 
-  final def removeRelation(r : SVal[Relation])(implicit context : EntityUpdateHandling){
-    r.value.subj.remove(r.typedSemantics.asConvertibleTrait)
-    r.value.obj.remove(r.typedSemantics.asConvertibleTrait)
-    WorldInterfaceActor ! RemoveRelation(r)
+  final def removeRelation(relSVal : SValBase[Relation, _ <: Relation])(implicit context : EntityUpdateHandling){
+    WorldInterfaceActor ! RemoveRelation(relSVal)
   }
 
   def enableAspect[T <: Entity](e : T, asp : EntityAspect, handler : Boolean => Unit = e => {}){
@@ -209,7 +204,7 @@ trait WorldInterfaceHandling extends SVarActor with RelationAccess {
     nonBlockingHandler( ComponentLookupRequest(name ), handler )
   }
 
-  final protected def handleComponents(componentType : ontology.GroundedSymbol)( handler : List[(Symbol, SVarActor.Ref)] => Any ){
+  final protected def handleComponents(componentType : GroundedSymbol)( handler : List[(Symbol, SVarActor.Ref)] => Any ){
     nonBlockingHandler[List[(Symbol, SVarActor.Ref)]]( ComponentLookUpByType( componentType ), handler )
   }
 
@@ -229,6 +224,14 @@ trait WorldInterfaceHandling extends SVarActor with RelationAccess {
     nonBlockingHandler[Entity](OnNextRegistration(path), f)
   }
 
+  final protected def handleResisteredSVarDescriptions(handler : Map[String, SVarDescription[_, _]] => Unit) =
+    nonBlockingHandler[Map[String, SVarDescription[_, _]]](GetRegisteredSVarDescriptions(), handler)
+
+  final protected def onSVarDescRegistration(handler : SVarDescription[_, _] => Unit){
+    addHandler[RegisterSVarDescription[_, _]](msg => handler(msg.desc))
+    WorldInterfaceActor ! ObserveSVarDescRegistrations(self)
+  }
+
   /**
    *
    * this one is a bit advanced, so here is what happens:
@@ -242,7 +245,7 @@ trait WorldInterfaceHandling extends SVarActor with RelationAccess {
    *
    */
   protected def nonBlockingHandler[T](msg : Any, handler : T => Any)
-                                     (implicit actorContext : SVarActor, m : ClassTag[T], t : TypeTag[T]) {
+                                     (implicit actorContext : SVarActor, m : ClassTag[T], t : DataTag[T]) {
     actorContext.ask[T](WorldInterfaceActor.self, msg)(handler)
   }
 }

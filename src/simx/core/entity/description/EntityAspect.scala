@@ -23,6 +23,7 @@ package simx.core.entity.description
 import simx.core.ontology.GroundedSymbol
 import simx.core.entity.typeconversion._
 import simx.core.entity.Entity
+import simx.core.svaractor.TimedRingBuffer.BufferMode
 import scala.annotation.meta.field
 
 /**
@@ -63,6 +64,12 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
    * @return a set of features
    */
   def getProvidings   : Set[ConvertibleTrait[_]]
+
+  /**
+   * a mapping for types to buffer modes
+   * @return a mapping for types to buffer modes
+   */
+  def getBufferSettings : Map[ConvertibleTrait[_], BufferMode] = Map()
 
   /**
    *
@@ -173,7 +180,7 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
    * @param tuples the set of create parameters to be added
    * @return a list of create parameters
    */
-  protected def addCVars( tuples : => TraversableOnce[SVal[_]] ) : NamedSValSet =
+  protected def addCVars( tuples : => TraversableOnce[SVal[_,_]] ) : NamedSValSet =
     tuples.foldLeft(new NamedSValSet(aspectType))( (cps, cvar) => cps += cvar )
 
   /**
@@ -181,6 +188,6 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
    * @param value the create parameter to be added
    * @return a list of create parameters
    */
-  protected def addCVar( value : SVal[_] ) : NamedSValSet =
+  protected def addCVar( value : SVal[_,_] ) : NamedSValSet =
     new NamedSValSet(aspectType, value)
 }

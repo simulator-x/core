@@ -20,8 +20,9 @@
 
 package simx.core.entity.typeconversion
 
+import simx.core.svaractor.unifiedaccess.Relation
+
 import scala.reflect.runtime.universe.TypeTag
-import java.lang.Exception
 import scala.reflect.ClassTag
 import simx.core.svaractor.StateParticle
 import simx.core.entity.description.SVal
@@ -34,7 +35,14 @@ import scala.language.existentials
  */
 
 
-trait TypeInfo[+T, dataType <: T]{
+object TypeInfo{
+  final type DataTag[dataType] = TypeTag[dataType]
+
+  def isSubtypeOf(typeInQuestion : DataTag[_], superType : DataTag[_]) : Boolean =
+    typeInQuestion.tpe <:< superType.tpe
+}
+
+trait TypeInfo[+T, dataType <: T] extends Serializable{
   type baseType
   //!
   val classTag           : ClassTag[dataType]
@@ -43,7 +51,7 @@ trait TypeInfo[+T, dataType <: T]{
   //! the identifier which is used to inject and lookup svars into/from entities
   def sVarIdentifier     : Symbol = semantics.value.toSymbol
   //! the class manifest of the represented type (should become a typetag some day)
-  def typeTag            : TypeTag[dataType]
+  def typeTag            : TypeInfo.DataTag[dataType]
   //!
   def annotations        : Set[Annotation]
   //!
@@ -54,7 +62,22 @@ trait TypeInfo[+T, dataType <: T]{
   val ontoLink           : Option[String]
   //!
   val isCoreType =
-    getClass.getPackage == NullType.getClass.getPackage || getClass.getPackage == SVarDescription.getClass.getPackage
+    getClass.getPackage == classOf[NullType].getPackage || getClass.getPackage == SVarDescription.getClass.getPackage ||
+      getClass.getPackage == classOf[Relation].getPackage
+  //!
+  final def isSubtypeOf[U](that : TypeInfo.DataTag[U]) : Boolean =
+  TypeInfo.isSubtypeOf(typeTag, that)
+  //!
+  final def isSubtypeOf[U](that : TypeInfo[U, _]) : Boolean =
+    TypeInfo.isSubtypeOf(typeTag, that.typeTag)
+
+  /**
+   * Checks if this [[TypeInfo]] is of the same semantics as moreSpecialTypeInfo and
+   * if all annotations of this [[TypeInfo]] are also present in moreSpecialTypeInfo.
+   */
+  def >@(moreSpecialTypeInfo: TypeInfo[_,_]): Boolean =
+    semantics == moreSpecialTypeInfo.semantics &&
+      (annotations.isEmpty || annotations.forall(moreSpecialTypeInfo.annotations.contains))
 }
 
 /**
@@ -94,7 +117,7 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
    */
   def isProvided : Provide[T1, _] = {
     implicit val ct  = classTag
-    implicit val tt  = typeTag
+    //implicit val tt  = typeTag
     providedAs(this)
   }
 
@@ -117,7 +140,7 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
    * @param o information on the type of the svar to be injected
    * @return a Provide that will create a svar of type T1 and inject a svar of type T2
    */
-  final def providedAs[T2 : TypeTag : ClassTag](o: ConvertibleTrait[T2]) =
+  final def providedAs[T2: ClassTag](o: ConvertibleTrait[T2]) =
     if (isSValDescription)
       Provide(new ProvideConversionInfo[T1, T2](this, o, annotations).asConst)
     else
@@ -135,8 +158,12 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
    *
    * Augments the ConvertibleTrait with a value to create a complete CreateParam.
    */
-  def apply(value: T1) : SVal[T1] =
-    SVal.apply[T1, T1](this)(value)(classTag)
+  def apply(value: T1) : SVal[T1,TypeInfo[T1,T1]] =
+    SVal.apply[T1,T1](this)(value)(classTag)
+
+  //TODO: Keep in mind
+  def apply[TType >: this.type <: TypeInfo[T1,T1]](typeInfo: TType, value: T1) : SVal[T1,TType] =
+    SVal.applyAs[T1,T1,TType](typeInfo)(value)(classTag)
 
   override def toString =
     sVarIdentifier.name + " (" + typeTag.toString() +

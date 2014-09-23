@@ -20,8 +20,6 @@
 
 package simx.core.entity.typeconversion
 
-import reflect.runtime.universe.TypeTag
-
 /**
  * @author dwiebusch
  * date: 27.08.2010
@@ -38,8 +36,8 @@ import reflect.runtime.universe.TypeTag
 trait ConverterBase{
   protected type localType
   protected type globalType
-  protected def tManifest : TypeTag[localType]
-  protected def oManifest : TypeTag[globalType]
+  protected def tManifest : TypeInfo.DataTag[localType]
+  protected def oManifest : TypeInfo.DataTag[globalType]
   val localRepresentations : List[ConvertibleTrait[localType]]
   val globalRepresentation : Option[ConvertibleTrait[globalType]]
 
@@ -51,14 +49,21 @@ trait ConverterBase{
   }
 }
 
+private object ConverterBase{
+  type IDType = Symbol
+
+  def getId(c : ConvertibleTrait[_]) : IDType =
+    Symbol(c.ontoLink + "." + c)
+}
+
 /**
  *  base class for user (e.g. component developer) defined converters. provides constructor to make creating
  * converters a lot easier. A Converter has to provide convert and revert methods
  */
 abstract class Converter[T, O] private[typeconversion](override val localRepresentations : List[ConvertibleTrait[T]],
                                                        override val globalRepresentation : Option[ConvertibleTrait[O]])
-                                                      (implicit val tManifest : TypeTag[T],
-                                                       implicit val oManifest : TypeTag[O])
+                                                      (implicit val tManifest : TypeInfo.DataTag[T],
+                                                       implicit val oManifest : TypeInfo.DataTag[O])
   extends IConverter[T, O] with IReverter[T, O]
 {
   protected type localType = T
@@ -87,11 +92,9 @@ abstract class Converter[T, O] private[typeconversion](override val localReprese
  * to avoid the necessity of specifiying the converter to be used (unless one wants to do so)
  */
 object Converter{
-  private type IDType = Symbol
-  //! the map of registered converters
-  private var registeredConverters = Map[IDType, Map[IDType, ConverterBase]]()
 
-  private def getId(c : ConvertibleTrait[_]) : IDType = Symbol(c.getClass.getPackage.getName + "." + c)
+  //! the map of registered converters
+  private var registeredConverters = Map[ConverterBase.IDType, Map[ConverterBase.IDType, ConverterBase]]()
 
   /**
    *  register the provided converter
@@ -101,8 +104,9 @@ object Converter{
   private[typeconversion] def register( c : ConverterBase) {
     synchronized {
       registeredConverters = c.localRepresentations.foldLeft(registeredConverters){
-        (map, elem) => map.updated(getId(elem),
-          map.getOrElse(getId(elem), Map[IDType, ConverterBase]()).updated(getId(c.globalRepresentation.get.getBase), c)
+        (map, elem) => map.updated(ConverterBase.getId(elem),
+          map.getOrElse(ConverterBase.getId(elem), Map[ConverterBase.IDType, ConverterBase]()).
+            updated(ConverterBase.getId(c.globalRepresentation.get.getBase), c)
         )
       }
     }
@@ -120,8 +124,9 @@ object Converter{
       NC.asInstanceOf[IConverter[T, O]]
     else
       registeredConverters.
-        getOrElse(getId(inputHint), throw NoConverterFoundException(inputHint, outputHint)).
-        getOrElse(getId(outputHint.getBase), throw NoConverterFoundException(inputHint, outputHint)).asInstanceOf[IConverter[T, O]]
+        getOrElse(ConverterBase.getId(inputHint), throw NoConverterFoundException(inputHint, outputHint)).
+        getOrElse(ConverterBase.getId(outputHint.getBase), throw NoConverterFoundException(inputHint, outputHint)).
+        asInstanceOf[IConverter[T, O]]
 }
 
 /**
@@ -129,12 +134,8 @@ object Converter{
  * to avoid the necessity of specifiying the reverter to be used (unless one wants to do so)
  */
 object Reverter{
-  private type IDType = Symbol
   //! the list of registered reverters
-  private var registeredReverters = Map[IDType,  Map[IDType, ConverterBase]]()
-
-  private def getId(c : ConvertibleTrait[_]) : IDType =
-    Symbol(c.getClass.getPackage.getName + "." + c)
+  private var registeredReverters = Map[ConverterBase.IDType,  Map[ConverterBase.IDType, ConverterBase]]()
 
   /**
    *  register the provided reverter
@@ -143,8 +144,9 @@ object Reverter{
   private[typeconversion] def register( c : ConverterBase) {
     synchronized{
       registeredReverters = c.localRepresentations.foldLeft(registeredReverters){
-        (map, elem) => map.updated(getId(elem),
-          map.getOrElse(getId(elem), Map[IDType, ConverterBase]()).updated(getId(c.globalRepresentation.get.getBase), c)
+        (map, elem) => map.updated(ConverterBase.getId(elem),
+          map.getOrElse(ConverterBase.getId(elem), Map[ConverterBase.IDType, ConverterBase]()).
+            updated(ConverterBase.getId(c.globalRepresentation.get.getBase), c)
         )
       }
     }
@@ -159,8 +161,8 @@ object Reverter{
   def apply[T, O](outputHint : ConvertibleTrait[T], inputHint : ConvertibleTrait[O]) : IReverter[T, O] =
     if (NC._canConvert(outputHint, inputHint))
       NC.asInstanceOf[IReverter[T, O]]
-    else registeredReverters.getOrElse(getId(outputHint), throw NoReverterFoundException(inputHint, outputHint)).
-      getOrElse(getId(inputHint.getBase), throw NoReverterFoundException(inputHint, outputHint)).asInstanceOf[IReverter[T, O]]
+    else registeredReverters.getOrElse(ConverterBase.getId(outputHint), throw NoReverterFoundException(inputHint, outputHint)).
+      getOrElse(ConverterBase.getId(inputHint.getBase), throw NoReverterFoundException(inputHint, outputHint)).asInstanceOf[IReverter[T, O]]
 }
 
 /**
@@ -193,7 +195,7 @@ protected[entity] trait IConverter[-T, +O] extends ConverterBase{
    * @return true if the converter can convert from from to to ;-) false if it can't
    */
   private[typeconversion] def _canConvert(from : ConvertibleTrait[_], to : ConvertibleTrait[_]) : Boolean =
-    if (from.typeTag.tpe <:< tManifest.tpe && oManifest.tpe <:< to.typeTag.tpe) canConvert(from, to) else false
+    if (from.isSubtypeOf(tManifest) && TypeInfo.isSubtypeOf(oManifest, to.typeTag)) canConvert(from, to) else false
 
   //! register this converter
   Converter.register(this)
@@ -230,7 +232,7 @@ protected[entity] trait IReverter[+T, -O] extends ConverterBase{
    * @return true if the reverter can revert from from to to ;-) false if it can't
    */
   private[typeconversion] def _canRevert(to : ConvertibleTrait[_], from : ConvertibleTrait[_]) : Boolean =
-    if (from.typeTag.tpe <:< oManifest.tpe && tManifest.tpe <:< to.typeTag.tpe ) canRevert(to, from) else false
+    if (from.isSubtypeOf(oManifest) && TypeInfo.isSubtypeOf(tManifest, to.typeTag)) canRevert(to, from) else false
 
   //! register this reverter
   Reverter.register(this)
@@ -243,16 +245,16 @@ protected[entity] trait IReverter[+T, -O] extends ConverterBase{
 private object NC extends Converter[Any, Any](Nil, None){
   override private[typeconversion] def _canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) = canConvert(from, to)
   override private[typeconversion] def _canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = canRevert(from, to)
-  override def canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) : Boolean = from.typeTag.tpe <:< to.typeTag.tpe
-  override def canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = from.typeTag.tpe <:< to.typeTag.tpe
+  override def canConvert(from: ConvertibleTrait[_], to: ConvertibleTrait[_]) : Boolean = from.isSubtypeOf(to)
+  override def canRevert(to: ConvertibleTrait[_], from: ConvertibleTrait[_])  = from.isSubtypeOf(to)
   def convert(i: Any) = i
   def revert(i: Any)  = i
 }
 
 // Some Exception definitions
 case class NoConverterFoundException[T](from : TypeInfo[T, _ <: T], to : TypeInfo[T, _ <: T]) extends Exception(
-  from + "(" + from.typeTag +") => "  + to + "(" + to.typeTag +")"
+  from + "(" + from.classTag +") => "  + to + "(" + to.classTag +")"
 )
 case class NoReverterFoundException[T](from : TypeInfo[T, _ <: T], to : TypeInfo[T, _ <: T]) extends Exception(
-  from + "(" + from.typeTag +") => "  + to + "(" + to.typeTag +")"
+  from + "(" + from.classTag +") => "  + to + "(" + to.classTag +")"
 )

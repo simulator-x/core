@@ -21,14 +21,22 @@
 package simx.core.svaractor.unifiedaccess
 
 import simx.core.svaractor.SVarActor
+import simx.core.svaractor.TimedRingBuffer.{Time, ContentType}
 
 /**
  * Created by dwiebusch on 04.03.14
  */
-trait Observability[+T] {
-  def observe(handler : T => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) : java.util.UUID
+trait Observability[+T] extends Serializable {
+  final def observe(handler : T => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) : java.util.UUID =
+    observe((x : T, _) => handler(x), ignoredWriters)
 
-  final private[unifiedaccess] def observe(ignoredWriters : Set[SVarActor.Ref])(handler : T => Unit, actorContext : SVarActor){
-    observe(handler, ignoredWriters)(actorContext)
+  final def observe(handler : T => Unit)(implicit actorContext : SVarActor) : java.util.UUID =
+    observe(handler, Set[SVarActor.Ref]())
+
+  def observe(handler : (T, Time) => Unit, ignoredWriters : Set[SVarActor.Ref])(implicit actorContext : SVarActor) : java.util.UUID
+
+
+  final private[unifiedaccess] def observe(ignoredWriters : Set[SVarActor.Ref])(handler : ContentType[T] => Unit, actorContext : SVarActor){
+    observe((value, time) => handler(value -> time), ignoredWriters)(actorContext)
   }
 }

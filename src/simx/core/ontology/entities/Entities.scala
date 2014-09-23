@@ -13,7 +13,10 @@ class Arm( e : Entity, a : SVarActor ) extends Entity(e)(a)
 class Barrel( e : Entity, a : SVarActor ) extends Entity(e)(a) 
 class Bucket( e : Entity, a : SVarActor ) extends Entity(e)(a) 
 
+class CircularProgressBar( e : Entity, a : SVarActor ) extends Entity(e)(a) 
+
 class Ghost( e : Entity, a : SVarActor ) extends Entity(e)(a) 
+class GuiEffect( e : Entity, a : SVarActor ) extends Entity(e)(a) 
 class GuiElement( e : Entity, a : SVarActor ) extends Entity(e)(a) 
 
 class Hand( e : Entity, a : SVarActor ) extends Entity(e)(a) 
@@ -26,3 +29,4 @@ class Sound( e : Entity, a : SVarActor ) extends Entity(e)(a)
 class User( e : Entity, a : SVarActor ) extends Entity(e)(a) 
 
 class Well( e : Entity, a : SVarActor ) extends Entity(e)(a) 
+class Window( e : Entity, a : SVarActor ) extends Entity(e)(a) 

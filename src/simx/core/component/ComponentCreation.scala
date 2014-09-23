@@ -22,15 +22,17 @@ package simx.core.component
 
 import simx.core.entity.Entity
 import simx.core.entity.component._
-import simx.core.entity.typeconversion.{ConvertibleTrait, ProvideConversionInfo}
+import simx.core.entity.typeconversion.ProvideConversionInfo
 import simx.core.entity.description.{SValSet, EntityAspect}
-import simx.core.ontology.{GroundedSymbol, types, Symbols}
+import simx.core.ontology.{types, Symbols}
 import simx.core.component.remote.{RemoteActor, Start}
 import simx.core.svaractor.SVarActor
+import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
+import collection.mutable
 import java.util.UUID
 
 protected[core] trait ComponentCreation extends SVarActor with EntityCreationHandling with StackableEntityConfigLayer {
-  private var openCreateRequests = Map[Entity, (SVarActor.Ref, List[ProvideConversionInfo[_ , _]])]()
+  private val openCreateRequests = mutable.Map[Entity, (SVarActor.Ref, List[(ProvideConversionInfo[_ , _], BufferMode)])]()
 
   provideInitialValuesFor{
     case (toProvide, aspect, e, given) if aspect.semanticsEqual(Symbols.component) =>
@@ -45,10 +47,10 @@ protected[core] trait ComponentCreation extends SVarActor with EntityCreationHan
 
   private def requestConfig(component : SVarActor.Ref, c : ComponentAspect[_], e : Entity){
     ask[SValSet](component, GetInitialConfigValuesMsg(UUID.randomUUID(), c, e)){ set =>
-      val toCreate  = set.values.flatMap( _.map( _.asProvide.wrapped ) )
+      val toCreate  = set.values.flatMap( _.map( _.asProvide.wrapped -> Unbuffered) )
 
       if (toCreate.nonEmpty)
-        openCreateRequests = openCreateRequests.updated(e, component -> toCreate.toList)
+        openCreateRequests.update(e, component -> toCreate.toList)
 
       provideInitialValues(e, SValSet( types.Component(component), types.Name(c.cName.name) ) )
     }
@@ -58,11 +60,6 @@ protected[core] trait ComponentCreation extends SVarActor with EntityCreationHan
     if (openCreateRequests contains entity) openCreateRequests(entity) :: Nil else Nil
 
   protected def entityConfigComplete(e: Entity, aspect: EntityAspect){
-    openCreateRequests = openCreateRequests - e
+    openCreateRequests remove e
   }
-
-  protected def configure(params: SValSet){}
-  protected def removeFromLocalRep(e: Entity){}
-  protected def requestInitialConfigValues( toProvide: Set[ConvertibleTrait[_]], aspect: EntityAspect, e: Entity) =
-    SValSet()
 }

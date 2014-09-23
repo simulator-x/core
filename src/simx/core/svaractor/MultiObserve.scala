@@ -20,17 +20,19 @@
 
 package simx.core.svaractor
 
+import simx.core.svaractor.TimedRingBuffer.ContentType
 import simx.core.svaractor.synclayer.AtomicSetSupport
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.svaractor.unifiedaccess.{StateParticleAccess, EntityUpdateHandling, AnnotationSet}
 import simx.core.svaractor.ExtensibleObserve.HandlerType
+import scala.collection.mutable
 
 /**
  * Created by dwiebusch on 09.05.14
  */
 trait MultiObserve extends EntityUpdateHandling with AtomicSetSupport{
-  private var updateHandlers = Map[SVar[_], Map[java.util.UUID, Any => Unit]]()
-  private var reverseHandlerLookup = Map[java.util.UUID, SVar[_]]()
+  private val updateHandlers = mutable.WeakHashMap[SVar[_], Map[java.util.UUID, Any => Unit]]()
+  private val reverseHandlerLookup = mutable.Map[java.util.UUID, SVar[_]]()
 
   protected[core] def observe(e : StateParticleAccess, cs: ConvertibleTrait[_]*) =
     new ExtensibleObserve(e, cs :_*)
@@ -39,8 +41,8 @@ trait MultiObserve extends EntityUpdateHandling with AtomicSetSupport{
     reverseHandlerLookup.get(handlerId).collect{
       case svar =>
         val newHandlerMap    = updateHandlers.getOrElse(svar, Map()) - handlerId
-        updateHandlers       = updateHandlers.updated(svar, newHandlerMap)
-        reverseHandlerLookup = reverseHandlerLookup - handlerId
+        updateHandlers.update(svar, newHandlerMap)
+        reverseHandlerLookup remove handlerId
         if (newHandlerMap.nonEmpty) {
           val newHandlers = newHandlerMap.values
           sVarObserveHandlers.update(svar, value => newHandlers.foreach(_.apply(value)))
@@ -49,11 +51,11 @@ trait MultiObserve extends EntityUpdateHandling with AtomicSetSupport{
     }
   }
 
-  override private[svaractor] def addSVarObserveHandler[T](svar : SVar[T])(handler : T => Unit ) = {
+  override private[svaractor] def addSVarObserveHandler[T](svar : SVar[T])(handler : ContentType[T] => Unit ) = {
     val id = java.util.UUID.randomUUID()
     val newHandlers      = updateHandlers.getOrElse(svar, Map()).updated(id, handler.asInstanceOf[Any => Unit])
-    updateHandlers       = updateHandlers.updated(svar, newHandlers)
-    reverseHandlerLookup = reverseHandlerLookup.updated(id, svar)
+    updateHandlers.update(svar, newHandlers)
+    reverseHandlerLookup.update(id, svar)
     val newHandlerFuncs  = newHandlers.values
     super.addSVarObserveHandler(svar)( value => newHandlerFuncs.foreach(_.apply(value)) )
     id
@@ -117,13 +119,13 @@ class ExtensibleObserve private(private val toObserve : Map[StateParticleAccess,
 class InnerSet private[svaractor]{
   private type ValueTuple[T] = (ConvertibleTrait[T], T)
   private var updatedValues = Set[(StateParticleAccess, ConvertibleTrait[_], AnnotationSet)]()
-  private var values : Map[ConvertibleTrait[_], Map[AnnotationSet, ValueTuple[_]]] = Map()
+  private val values = mutable.Map[ConvertibleTrait[_], Map[AnnotationSet, ValueTuple[_]]]()
 
   private def convertTuple[T, U](tuple : ValueTuple[T], to : ConvertibleTrait[U]) : U =
     tuple._1.convert(to)(tuple._2)
 
   def updateValue[T](e : StateParticleAccess, sp : AnnotationSet, tuple : ValueTuple[T]){
-    values = values.updated(tuple._1, values.getOrElse(tuple._1, Map()).updated(sp, tuple))
+    values.update(tuple._1, values.getOrElse(tuple._1, Map[AnnotationSet, ValueTuple[_]]()).updated(sp, tuple))
     updatedValues = updatedValues + ((e, tuple._1, sp))
   }
 

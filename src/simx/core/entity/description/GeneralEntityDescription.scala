@@ -50,6 +50,8 @@ class GeneralEntityDescription[+Type <: Entity, B <: Type] protected (val typeDe
   def copy(newAspects : Seq[EntityAspect] = aspects) =
     new GeneralEntityDescription[Type,  B](typeDef, createType, theHandler, path, newAspects)
 
+  def createSVal(that : B) = typeDef.asConvertibleTrait.apply(that)
+
   /**
    *  checks the description fort validity. Throws an InvalidEntityDescriptionException if it's not
    */
@@ -141,7 +143,7 @@ case class DoubleDefinitionException( doubles : String )
 case class InvalidEntityDescriptionException[T <: Entity]( ed : GeneralEntityDescription[T, _ <: T], reason : String )
   extends Exception("Invalid EntityDescription " + ed + ":\n" + reason)
 
-case class NoInitialValuesException(m : Seq[TypeInfo[_, _]], ownerMap : Map[Symbol, SVarActor.Ref], as : Seq[EntityAspect])
+case class NoInitialValuesException(m : Seq[TypeInfo[_, _]], ownerMap : collection.mutable.Map[Symbol, SVarActor.Ref], as : Seq[EntityAspect])
   extends Exception( m.foldLeft("The following values are never provided:"){
     (str, elem) => str + "\n\t" + elem + " (owner: " + ownerMap.get(elem.sVarIdentifier).collect{
 //      case c : Component => c.componentName.name + ", semantics: " +

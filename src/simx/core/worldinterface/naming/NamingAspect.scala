@@ -33,14 +33,17 @@ import simx.core.ontology.Symbols
  */
 
 object NamingAspect{
+  val providing =
+    Name.addAnnotations(Symbols.identifier).asConst
+
   val componentType = OntologySymbol('naming)
 }
 
 case class NameIt(name : String) extends EntityAspect(NamingAspect.componentType, Symbols.name, Nil){
-  def getFeatures = Set(Name.addAnnotations(Symbols.identifier).asConst )
+  def getFeatures = Set( NamingAspect.providing )
 
   def getCreateParams =
-    addCVar(Name.addAnnotations(Symbols.identifier)(name))
+    addCVar( NamingAspect.providing(name) )
 
   def getProvidings =
     getFeatures

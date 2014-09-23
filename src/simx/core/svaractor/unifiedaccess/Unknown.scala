@@ -20,9 +20,10 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import simx.core.entity.typeconversion.TypeInfo._
+
 import scala.reflect.ClassTag
 import simx.core.entity.Entity
-import scala.reflect.runtime.universe.TypeTag
 import simx.core.svaractor.SVarActor
 
 
@@ -40,10 +41,10 @@ sealed abstract class UnknownTuple[+T]{
 }
 
 object ? extends Unknown{
-  def is[S <: Entity : TypeTag, O <: Entity : TypeTag](rDesc : RelationDescription[S, O]) =
+  def is[S <: Entity : DataTag, O <: Entity : DataTag](rDesc : RelationDescription[S, O]) =
     ->(rDesc)
 
-  def ->[S <: Entity : TypeTag, O <: Entity : TypeTag ](rDesc : RelationDescription[S, O])  =
+  def ->[S <: Entity : DataTag, O <: Entity : DataTag ](rDesc : RelationDescription[S, O])  =
     (a : O, b : EntityUpdateHandling) => LeftRequest[S, O](rDesc, a)
 
   def ->[T <: RelationAccess : ClassTag](x : T) =

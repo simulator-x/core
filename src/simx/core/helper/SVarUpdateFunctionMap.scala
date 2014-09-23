@@ -5,12 +5,14 @@
 
 package simx.core.helper
 
+import simx.core.entity.typeconversion.TypeInfo._
+import simx.core.svaractor.TimedRingBuffer.Now
+
 import scala.collection._
-import scala.reflect.runtime.universe.TypeTag
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.{SVal, SValSet}
-import simx.core.svaractor.{StateParticle, SVarActor, SVar}
+import simx.core.svaractor.{GetClosest, StateParticle, SVarActor, SVar}
 import scala.reflect.ClassTag
 import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 
@@ -30,8 +32,8 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
    */
   protected case class GetAndSet[T](consumeSVar:  ChangeableConsume[T], var updateSVar: Option[() => Boolean])
 
-  private val updateFunctionMap = mutable.Map[StateParticle[_], GetAndSet[_]]()
-  private val pausedFunctionMap = mutable.Map[StateParticle[_], GetAndSet[_]]()
+  private val updateFunctionMap = mutable.WeakHashMap[StateParticle[_], GetAndSet[_]]()
+  private val pausedFunctionMap = mutable.WeakHashMap[StateParticle[_], GetAndSet[_]]()
 
   /**
    *    Value changes by SVarActors contained in this set do not trigger consume functions via observe.
@@ -61,11 +63,11 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
 
     //Number of actual existing sVars in the entity that match toGet
     val targetSize = (for(ct <- toGet.toSeq) yield e.getSVars(ct).size).sum
-    var retrievedValues = Map[StateParticle[_], SVal[_]]()//new SValSet()
+    val retrievedValues = mutable.Map[StateParticle[_], SVal[_,_]]()//new SValSet()
 
     toGet.foreach((ct: ConvertibleTrait[_]) => {init(ct)})
 
-    def init[T : ClassTag : TypeTag](ct: ConvertibleTrait[T]) {
+    def init[T : ClassTag : DataTag](ct: ConvertibleTrait[T]) {
       e.getSVars(ct).foreach{
         sVar => addSVarUpdateFunctions(sVar._2, Some((x : T) => valueArrived[T](ct, sVar._2)(x)), None, useGet = true)
       }
@@ -84,7 +86,7 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
 
     def valueArrived[T](ct: ConvertibleTrait[T], sVar: StateParticle[T])(value: T) {
       implicit val classTag = ct.classTag
-      retrievedValues = retrievedValues.updated(sVar, SVal(ct)(value))
+      retrievedValues.update(sVar, SVal(ct)(value))
       if (retrievedValues.size == targetSize) done()
     }
 
@@ -109,10 +111,10 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
    *                        even if it does not change immediatelly.
    * @see removeSVarUpdateFunctions
    */
-  def addSVarUpdateFunctions[T : ClassTag : TypeTag](svar: StateParticle[T], consumeSVar: Option[T => Unit],
-                                getValueForSVar: Option[() => T] = None, useGet: Boolean = false)  {
+  def addSVarUpdateFunctions[T : ClassTag : DataTag](svar: StateParticle[T], consumeSVar: Option[T => Unit],
+                                                     getValueForSVar: Option[() => T] = None, useGet: Boolean = false)  {
     if(!svar.isMutable && useGet) {
-      get(svar)( (newValue: T) => {consumeSVar.collect{case f => f(newValue)}} )
+      get(Now, GetClosest, svar)( newValue => consumeSVar.collect{ case f => f(newValue._1) } )
       return
     }
     if(updateFunctionMap.contains(svar)) {
@@ -121,9 +123,9 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
     }
     val changeableConsume = new ChangeableConsume(consumeSVar)
     svar.observe({(newValue: T) => changeableConsume.func.collect{case f => f(newValue)}}  , ignoredWriters)
-      if(useGet) get(svar)( (newValue: T) => {changeableConsume.func.collect{case f => f(newValue)}} )
+    //if(useGet) get(svar)( (newValue: T) => {changeableConsume.func.collect{case f => f(newValue)}} )
 
-    val updateSVar = getValueForSVar collect { case func => () => svar.set( func.apply() ) }
+    val updateSVar = getValueForSVar collect { case func => () => svar.set( func.apply(), Now ) }
     updateFunctionMap += svar -> GetAndSet (changeableConsume, updateSVar)
   }
 
@@ -135,7 +137,7 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
    * @param getValueForSVar A function that retrieves the corresponding value from the internal entity associated with svar.
    * @see removeSVarUpdateFunctions
    */
-  def addSVarUpdateFunctions[T : ClassTag : TypeTag](svar: StateParticle[T], consumeSVar: T => Unit, getValueForSVar: => T) {
+  def addSVarUpdateFunctions[T : ClassTag : DataTag](svar: StateParticle[T], consumeSVar: T => Unit, getValueForSVar: => T) {
     addSVarUpdateFunctions(svar, Some(consumeSVar), Some(() => getValueForSVar))
   }
 
@@ -232,7 +234,7 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
   private def updateGetValueForSVar[T](svar: StateParticle[T], newGetValueForSVar: Option[() => T]) {
     updateFunctionMap.get(svar).collect {
       case gAs => gAs.asInstanceOf[GetAndSet[T]].updateSVar = newGetValueForSVar match {
-        case Some(func) => Some(() => {svar.set(  func.apply() )})
+        case Some(func) => Some(() => {svar.set(  func.apply(), Now )})
         case None => None
       }
     }

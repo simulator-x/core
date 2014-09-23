@@ -32,14 +32,14 @@ import scala.annotation.meta.param
  * @author Stephan Rehfeld
  *
  * @param identifier An arbitrary identifier.
- * @param timestamp A time stamp, when the ping was sent. Is filled with the result of [[java.lang.System.nanoTime()]]
+ * @param timestamp A time stamp, when the ping was sent. Is filled with the result of java.lang.System.nanoTime()
  *                  by default.
  */
 case class Ping( identifier : Any, timestamp : Long = System.nanoTime())
                (implicit @(transient @param) actor : SVarActor.Ref) extends SimXMessage
 
 /**
- * This message is sent as a reply to a [[simx.core.svaractor.Ping]].
+ * This message is sent as a reply to a simx.core.svaractor.Ping.
  *
  * @author Stephan Rehfeld
  *

@@ -19,40 +19,49 @@
  */
 
 package simx.core.svaractor
-import scala.ref.WeakReference
-import simx.core.entity.description.{SValBase, SVal}
+
+import simx.core.entity.description.SVal.SValType
 import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.svaractor.TimedRingBuffer._
 
-/**
- * @author Dennis Wiebusch
- * @author Stephan Rehfeld
- * date: 03.08.2010
- */
+import scala.ref.WeakReference
 
 
-protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[SVar[T]],
+protected class SVarDataImpl[T](private val data : TimedRingBuffer[T], val svar : WeakReference[SVar[T]],
                                 typeInfo : ConvertibleTrait[T] )  extends SVarData {
   protected var observers = Map[SVarActor.Ref, Set[SVarActor.Ref]]()
 
-  def this(sval : SVal[T], svar : WeakReference[SVar[T]]) =
-    this(sval.value, svar, sval.typedSemantics.asConvertibleTrait)
+  def this(data : T, timeStamp : Time, svar : WeakReference[SVar[T]], typeInfo : ConvertibleTrait[T],
+           bufferLength : BufferMode = TimedRingBuffer.Unbuffered ) =
+    this(TimedRingBuffer(data, timeStamp, bufferLength), svar, typeInfo)
 
-  def write[V]( writer: SVarActor.Ref, value : V )(implicit actor : SVarActor) {
-    data = value.asInstanceOf[T]
+  def this(sval : SValType[T], timeStamp : Time, svar : WeakReference[SVar[T]]) =
+    this(sval.value, timeStamp, svar, sval.typedSemantics.asConvertibleTrait)
+
+  def this(sval : SValType[T], timeStamp : Time, svar : WeakReference[SVar[T]], bufferLength : BufferMode) =
+    this(sval.value, timeStamp, svar, sval.typedSemantics.asConvertibleTrait, bufferLength)
+
+  def getBufferSetting : BufferMode =
+    if (data.getMaxTime > 0 ) MaxTime(data.getMaxTime) else Unbuffered
+
+  def write[V]( writer: SVarActor.Ref, value : V, at : Time )(implicit actor : SVarActor) {
+    data.put(value.asInstanceOf[T], at)
     notifyWrite(writer)
   }
 
-  def read[V] : V =
-    data.asInstanceOf[V]
+  def read[V](at : Time, accessMethod : AccessMethod) : ContentType[V] =
+    data(at, accessMethod).asInstanceOf[ContentType[V]]
 
-  def readFull[V] : SVal[V] =
-    typeInfo.asInstanceOf[ConvertibleTrait[V]](read)
+  def readFull[V](at: Time, accessMethod : AccessMethod) : ContentType[SValType[V]] = {
+    val value = read[V](at, accessMethod)
+    typeInfo.asInstanceOf[ConvertibleTrait[V]](value._1) -> value._2
+  }
 
-  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor) {
+  protected def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor) {
     svar.get match {
       case Some(ref) => observers.foreach{ kvPair =>
         if(!kvPair._2.contains(writer))
-          actor.notifyObserver(kvPair._1, NotifyWriteSVarMessage[T]( ref, data )(actor.self) ) }
+          actor.notifyObserver(kvPair._1, NotifyWriteSVarMessage[T]( ref, data.getHead )(actor.self) ) }
       case None =>
     }
   }
@@ -61,7 +70,8 @@ protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[S
     observers = observers - a
   }
 
-  def addObserver(a: SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref]) {
+  def addObserver(a: SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref])(implicit actor : SVarActor) {
+    svar.get.collect { case ref => actor.notifyObserver(a, NotifyWriteSVarMessage(ref, data.getHead)(actor.self)) }
     observers = observers + (a -> ignoredWriters)
   }
 
@@ -70,4 +80,7 @@ protected class SVarDataImpl[T](private var data : T, val svar : WeakReference[S
 
   def getObservers =
     observers
+
+  override def toString: String =
+    "SVarDataImpl for " + typeInfo + " with value " + data + " observed by " + observers.keys
 }

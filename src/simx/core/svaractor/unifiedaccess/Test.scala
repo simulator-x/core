@@ -21,7 +21,8 @@
 package simx.anypackage
 
 import simx.core.entity.Entity
-import simx.core.ontology.{EntityDescription, types, Symbols}
+import simx.core.ontology.entities.{Arm, User}
+import simx.core.ontology.{SVarDescription, EntityDescription, types, Symbols}
 import simx.core.svaractor.unifiedaccess._
 import simx.core.worldinterface.WorldInterfaceHandling
 import simx.core.svaractor.SVarActor
@@ -31,7 +32,6 @@ import simx.core.ontology.types.Transformation
 import simplex3d.math.floatx.Mat4f
 import scala.util.Random
 import simx.core.worldinterface.naming.NameIt
-import scala.Some
 
 
 /**
@@ -42,12 +42,12 @@ import scala.Some
 
 
 
-class Son()(implicit actor : EntityUpdateHandling) extends Entity(){
+object Son extends SVarDescription(types.Entity as Symbols.saturation){
   val myid = Random.nextInt()
   override def toString: String = "Son" + myid
 }
 
-class Father()(implicit actor : EntityUpdateHandling) extends Son {
+class Father extends  SVarDescription(types.Entity as Symbols.factor) {
 
 }
 
@@ -114,41 +114,52 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
 //          (a, y) => println(a, y)
 //        }
 
-        case class GrandFather() extends Father(){
+        object GrandFather extends Father{
           override def toString: String = "GrandFather"
         }
 
-        case class FatherOf() extends RelationDescription[Entity, Entity](types.Entity, Symbols.parentElement, types.Entity)
-        val fatherOf = FatherOf()
+        object HasArm extends RelationDescription(types.Entity, Symbols.parentElement, types.Entity, "")
+
 
         //      relations
-        val son = new Son()
-        val son2 = new Son()
-        val dad = GrandFather()
+        val arm = new Arm(new Entity, this)
+
+        val arm2 = new Entity
+        val user = new User(new Entity, this)
 
 //        dad.observe{
 //          e : Entity => println(dad + ": " + e)
 //        }
 
-        val onChangeId = dad.observe(fatherOf -> ?).onChange{
-          case change => println("detected change: " + change)
+
+
+        val onChangeId = user.observe(HasArm -> ?).onChange{
+          case Add(_, value)    => println("ADD:    user.observe(HasArm -> ?).onChange", value)
+          case Update(_, value) => println("UPDATE: user.observe(HasArm -> ?).onChange", value)
+          case Remove(_, value) => println("REMOVE: user.observe(HasArm -> ?).onChange", value)
         }
 
 //        dad.ignore(onChangeId)
-
-        fatherOf.observe(dad -> son)
-
-        dad.observe(fatherOf -> ?)(
-          s => println("dad.observe(fatherOf -> ?)", s)
-        )
-
-        dad.observe(fatherOf -> son){
-          println(_)
+//
+        HasArm.observe(user -> arm) head {
+          relation => println("HasArm.observe(user -> arm)", relation)
         }
+//
+        user.get(HasArm -> ?)
 
-      ?.get(fatherOf -> dad)
-      ?.observe(fatherOf -> son).foreach{
-        (_, e) => println("father of son " + e)
+        user.observe(HasArm -> ?)(
+          entity => println("user.observe(hasArm -> ?)", entity)
+        )
+//
+        user.observe(HasArm -> arm){
+          relation => println("user.observe(HasArm -> arm)", relation)
+        }
+//
+      ?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm).foreach{
+        x => println("?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm)", x)
+      }
+      ?.observe(HasArm -> arm).foreach{
+        (_, e) => println("?.observe(HasArm -> arm)", e)
       }
 
 //        son.observe{
@@ -158,9 +169,9 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
 //        dad.observe((e : Entity) => println(e) )
 
 
-        dad.set(fatherOf -> son)
-        dad.set(fatherOf -> son2)
-        dad.set(fatherOf -> son)
+        user.set(HasArm -> arm)
+        user.set(HasArm -> arm2)
+        user.set(HasArm -> arm)
 
       //        dad.observe(fatherOf -> ? ).foreach{
       //          (_, e)  => println("fatherOf.get(dad -> ?)", e)
@@ -173,19 +184,19 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
 //
 
 
-        fatherOf.get(? -> son).foreach{
-          (_, e) => println("fatherOf.get(? -> son)", e)
+        HasArm.observe(? -> arm).foreach{
+          e => println("hasArm.observe(? -> arm)", e)
         }
 
 
-        fatherOf.get(son -> ?).foreach{
-          (_, e) => println("fatherOf.get(? -> son)", e)
+        HasArm.get(user -> ?).foreach{
+          (_, e) => println("hasArm.get(user -> ?)", e)
         }
 //
 //        fatherOf.observe(? -> son)
 
-        fatherOf.remove(dad -> son)
-        dad.set(fatherOf -> son)
+        HasArm.remove(user -> arm)
+        user.set(HasArm -> arm)
     }
   }
 }

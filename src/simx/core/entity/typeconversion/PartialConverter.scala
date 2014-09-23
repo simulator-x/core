@@ -20,6 +20,7 @@
 //
 package simx.core.entity.typeconversion
 
+import simx.core.svaractor.TimedRingBuffer.Time
 import simx.core.svaractor.{SVar, SVarActor}
 import simx.core.entity.Entity
 import scala.reflect.ClassTag
@@ -60,7 +61,7 @@ abstract class PartialConverter[T : ClassTag, O : ClassTag] {
     new PartialConverter[T, O] {
       def convert(i: T): O = {
         val retVal = self.insert(i)
-        base.feedback(retVal, this)
+        //base.feedback(retVal, this)
         retVal
       }
 
@@ -85,8 +86,8 @@ protected class PartialConverterBase[L](svar : SVar[L], actorContext : SVarActor
       registeredConverters.foreach(_.update(newVal))
   }(actorContext)
 
-  protected[typeconversion] def feedback(value : L, sender : PartialConverter[_, _]){
-    svar.set(value, false)(actorContext)
+  protected[typeconversion] def feedback(value : L, at : Time,  sender : PartialConverter[_, _]){
+    svar.set(value, at, forceUpdate = false)(actorContext)
     registeredConverters.foreach{
       converter =>
         if (converter != sender)
@@ -104,13 +105,13 @@ protected class PartialConverterBase[L](svar : SVar[L], actorContext : SVarActor
 }
 
 trait PartialConverterSupport extends SVarActor{
-  protected var svar2converterbase    = Map[SVar[_], PartialConverterBase[_]]()
-  protected var converterBases        = Map[ConvertibleTrait[_], PartialConverterBase[_]]()
-  protected var registeredConverters  = Map[ConvertibleTrait[_], Map[ConvertibleTrait[_], PartialConverter[_,_]]]()
+//  protected val svar2converterbase    = collection.mutable.WeakHashMap[SVar[_], PartialConverterBase[_]]()
+//  protected var converterBases        = Map[ConvertibleTrait[_], PartialConverterBase[_]]()
+//  protected var registeredConverters  = Map[ConvertibleTrait[_], Map[ConvertibleTrait[_], PartialConverter[_,_]]]()
 
-  def registerPartialConverter[L, T](from : ConvertibleTrait[T], to : ConvertibleTrait[L], c : PartialConverter[T, L]){
-    registeredConverters = registeredConverters.updated(from, registeredConverters.getOrElse(from, Map()).updated(to, c))
-  }
+//  def registerPartialConverter[L, T](from : ConvertibleTrait[T], to : ConvertibleTrait[L], c : PartialConverter[T, L]){
+//    registeredConverters = registeredConverters.updated(from, registeredConverters.getOrElse(from, Map()).updated(to, c))
+//  }
 //
 //  def extract[L](c : ConvertibleTrait[L]) : A[L] =
 //    A[L](c)

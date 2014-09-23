@@ -24,6 +24,7 @@ import simx.core.ontology.types
 import simx.core.entity.Entity
 import simx.core.entity.description.SVal
 import simx.core.worldinterface.WorldInterfaceHandling
+import simx.core.entity.typeconversion.TypeInfo
 
 /**
  * @author dwiebusch
@@ -32,7 +33,7 @@ import simx.core.worldinterface.WorldInterfaceHandling
  */
 
 trait IODeviceProvider extends WorldInterfaceHandling{
-  final protected def publishDevice[T <: Entity]( device : SVal[T], path : List[Symbol] = Nil){
+  final protected def publishDevice[T <: Entity]( device : SVal[T,TypeInfo[T,T]], path : List[Symbol] = Nil){
     registerEntity(device.typedSemantics.sVarIdentifier :: path, device.value)
   }
 }

@@ -20,11 +20,12 @@
 
 package simx.core.entity.typeconversion
 
+import simx.core.entity.description.SVal
+import simx.core.svaractor.TimedRingBuffer.{BufferMode, Time}
 import simx.core.svaractor._
 import simx.core.ontology.{Annotation, GroundedSymbol}
 import simx.core.entity.Entity
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
 /* author: dwiebusch
 * date: 27.08.2010
 */
@@ -117,7 +118,7 @@ class ProvideConversionInfo[T, O : ClassTag] private( val from : ConvertibleTrai
                                                       val to : ConvertibleTrait[O],
                                                       val const : Boolean,
                                                       private val annotations : Set[Annotation],
-                                                      private val initialValue : Option[T],
+                                                      val initialValue : Option[T],
                                                       verters : Option[(IConverter[T, O], IReverter[T, O])])
   extends ConversionInfo[T, O](verters) with Serializable
 {
@@ -146,16 +147,17 @@ class ProvideConversionInfo[T, O : ClassTag] private( val from : ConvertibleTrai
   def using(c: IConverter[T, O]) : ProvideConversionInfo[T, O] =
     new ProvideConversionInfo(from, to, const, annotations, initialValue, setVerters(c))
 
+  def makeSVal : SVal.SValType[O] =
+    to apply accessConverter().convert( initialValue.getOrElse( throw new Exception) )
+
   /**
    *  creates and injects a svar into an entity. Uses the initial value if set, calls the constructor provided
    * with the from-convertible otherwise
    * @param e the entity into which the created svar should be injected
    * @return a tuple of a wrapped svar having the required type and the entity after injecting the svar
    */
-  protected[core] def injectSVar( e : Entity )(handler : Entity => Any)(implicit actorContext : SVarActor) {
-    val sval = to apply accessConverter().convert( initialValue.getOrElse( throw new Exception) )
-    val svar = if (const) sval else SVarImpl(sval)
-    e.injectSVar(getSVarName, svar, to, annotations.toSeq :_*)( handler(_))
+  protected[core] def injectSVar( e : Entity, at : Time, bufferMode : BufferMode )(handler : Entity => Any)(implicit actorContext : SVarActor) {
+    e.injectSVar(getSVarName, if (const) makeSVal else SVarImpl(makeSVal, at, bufferMode), to, annotations.toSeq :_*)( handler(_))
   }
 }
 

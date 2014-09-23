@@ -31,7 +31,7 @@ import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 object RemoteActor extends SingletonActor(new RemoteActor, "simx-remote-actor-" + UUID.randomUUID()){
   def checkRemoting(){
     if (SVarActor.getHostname.isEmpty)
-      throw new Exception("Remoting enabled. Pass \"enableRemoting\" to your application to enable remoting.")
+      throw new Exception("Remoting disabled. Pass \"enableRemoting\" to your application to enable remoting.")
   }
 }
 
@@ -92,7 +92,7 @@ protected class RemoteActor extends SVarActor with EntityCreationHandling with E
 
   addHandler[Instantiate]{
     msg => ComponentEntityDescription(msg.aspect).realize{
-      componentEntity => componentEntity.get(ontology.types.Component).head{
+      componentEntity  => componentEntity.get(ontology.types.Component).head{
         component => msg.sender ! Started(msg.id, getAddressOf(component))
       }
     }

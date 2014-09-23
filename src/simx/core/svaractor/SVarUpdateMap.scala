@@ -34,8 +34,8 @@ import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
  */
 trait SVarUpdateMap extends SVarActor with EntityUpdateHandling {
   private type updateHandlerType[T] = T => Any
-  private val storedValues = mutable.Map[SVar[_], Any]()
-  private val updateFuncs = mutable.Map[SVar[_], updateHandlerType[_]]()
+  private val storedValues = mutable.WeakHashMap[SVar[_], Any]()
+  private val updateFuncs = mutable.WeakHashMap[SVar[_], updateHandlerType[_]]()
 
   private def execOnFirstSVar[T, U](e : Entity, svarDesc : ConvertibleTrait[T])(handler : SVar[T] => U) {
     e.getSVars(svarDesc).headOption.collect {

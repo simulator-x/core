@@ -20,16 +20,25 @@
 
 package simx.core.svaractor.unifiedaccess
 
-import simx.core.svaractor.SVarActor
-import reflect.runtime.universe.TypeTag
+import simx.core.svaractor.{GetClosest, AccessMethod, SVarActor}
+import simx.core.svaractor.TimedRingBuffer.{ContentType, Time, Now}
 
 /**
  * Created by dwiebusch on 04.03.14
  */
-trait Accessibility[+T]{
-  def get(handler : T => Unit)(implicit actorContext : SVarActor)
+trait Accessibility[+T] extends Serializable{
+  def get(time : Time, accessMethod : AccessMethod)(handler : ContentType[T] => Unit)(implicit actorContext : SVarActor)
 
-  final private[unifiedaccess] def accessValue(handler : T => Unit, actorContext : SVarActor){
-    get(handler)(actorContext)
+  final def get(handler : T => Unit)(implicit actorContext : SVarActor){
+    get(Now, GetClosest)(v => handler(v._1))
+  }
+
+  final def get(handler : (T, Time) => Unit)(implicit actorContext : SVarActor){
+    get(Now, GetClosest)(v => handler(v._1, v._2))
+  }
+
+  final private[unifiedaccess] def accessValue(at : Time, accessMethod : AccessMethod)
+                                              (handler : ContentType[T] => Unit, actorContext : SVarActor){
+    get(at, accessMethod)(handler)(actorContext)
   }
 }

@@ -20,10 +20,11 @@
 
 package simx.core.ontology
 
-import simx.core.entity.description.{EntityAspect, GeneralEntityDescription}
+import simx.core.entity.description.{Semantics, EntityAspect, GeneralEntityDescription}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.Entity
 import simx.core.ontology.entities.Subelement
+import simx.core.ontology.types.OntologySymbol
 import simx.core.svaractor.SVarActor
 
 /**
@@ -32,16 +33,19 @@ import simx.core.svaractor.SVarActor
  * Time: 16:22
  */
 
-class EntityDescription(val aspects : List[EntityAspect],
+class EntityDescription(aspects : List[EntityAspect],
                         name : Symbol = Symbol("unnamed-entity"),
-                        path : List[Symbol] = Nil )
-  extends SpecificEntityDescription[Entity](PlainEntity, aspects.toList, name, path) with Serializable {
+                        path : List[Symbol] = Nil,
+                        annotations: Set[Annotation] = Set())
+  extends SpecificEntityDescription[Entity](
+    if(annotations.isEmpty) PlainEntity else PlainEntity.setAnnotations(annotations.toSeq:_*), aspects.toList, name, path)
+  with Serializable {
   def this(name : String, aspects : EntityAspect*) = this(aspects.toList, Symbol(name))
   def this(aspects : EntityAspect*) = this(aspects.toList)
 }
 
 class SpecificEntityDescription[Type <: Entity](entityDesc : EntitySVarDescription[Type],
-                                                aspects    : List[EntityAspect],
+                                                val aspects    : List[EntityAspect],
                                                 name       : Symbol,
                                                 path       : List[Symbol] = Nil,
                                                 features   : Seq[ConvertibleTrait[_]] = Seq())
@@ -66,7 +70,9 @@ protected[core] class SpecificDescription[T <: Entity]( entityDesc : EntitySVarD
 }
 
 
-private object PlainEntity extends EntitySVarDescription[Entity](Symbols.entity,  new Entity(_)(_), types.Entity.ontoLink.get)
+object PlainEntity extends EntitySVarDescription[Entity](
+  Semantics('plainEntity).asGroundedSymbol(OntologySymbol),
+  (entity: Entity, svarActor: SVarActor) => new Entity(entity)(svarActor), types.Entity.ontoLink.get)
 
 private case class FeatureDefinition(getFeatures : Set[ConvertibleTrait[_]])
   extends EntityAspect(Symbols.nullType, Symbols.nullType, Nil)

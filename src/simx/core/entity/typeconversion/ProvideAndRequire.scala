@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
 /**
  *  base class for unified handling of Provides and Requires
  */
-abstract class ProvideAndRequire[T, O]
+abstract class ProvideAndRequire[+T, O]
 //O : OntologyType
 //T : ComponentType
 

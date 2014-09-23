@@ -31,7 +31,7 @@ trait SVarData{
    *
    * @param a The actor that is to be added an an observer.
    */
-  def addObserver( a : SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref] )
+  def addObserver( a : SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref] )(implicit actor : SVarActor)
 
 
   /**
@@ -46,6 +46,6 @@ trait SVarData{
    * Calling this methods leads into a notification of all observers about a
    * change of values.
    */
-  def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor)
+  protected def notifyWrite(writer: SVarActor.Ref)(implicit actor : SVarActor)
 }
 

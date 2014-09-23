@@ -36,7 +36,7 @@ case class EntityConfiguration(e: Entity, csets: Map[Symbol, NamedSValSet]) {
         (s: Symbol, cps: NamedSValSet) =>
           if(cps != null) {          "\tComponent:\t" + s.toString + "\n\tAspect:\t\t\t" + cps.semantics + "\n" +
             cps.toSValSeq.map {
-              cp: SVal[_] =>
+              cp: SVal[_,_] =>
                 "\t\t" + cp.typedSemantics.sVarIdentifier.toString + " = " + cp.toString + "\n"
             }.foldLeft("")(_ + _)}
           else {"\tComponent:\t" + s.toString + "\n\tAspect:\t\t\t" + "Null"}

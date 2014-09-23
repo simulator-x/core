@@ -21,11 +21,10 @@
 package simx.core.components.physics
 
 import simplex3d.math.floatx.{ConstVec3f, ConstMat4f, Mat4x3f}
+import simx.core.entity.description.SVal.SValType
 import simx.core.ontology.{types => gt, Symbols, GroundedSymbol}
-import simx.core.entity.description.{SValSeq, SVal, EntityAspect}
+import simx.core.entity.description.{SValSeq, EntityAspect}
 import simx.core.entity.typeconversion.ConvertibleTrait
-import scala.Left
-import scala.Right
 
 //Global Types
 
@@ -89,7 +88,7 @@ case class PhysBaseProps (transform: Either[ConstMat4f, ConstVec3f] = null,
                           anDamping: Either[Float, Null] = Right(null),
                           anFactor: Either[Float, Null] = Right(null)) {
 
-  def and(that: SVal[_]) = {
+  def and(that: SValType[_]) = {
 
     var result = new SValSeq()
 

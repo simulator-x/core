@@ -20,8 +20,10 @@
 
 package simx.core.svaractor.synclayer
 
+import simx.core.svaractor.TimedRingBuffer.ContentType
 import simx.core.svaractor.{StateParticle, SVarActor}
 import simx.core.entity.Entity
+import collection.mutable
 
 /**
  * This class implements a three level cache for the sync groups.
@@ -51,22 +53,22 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
   /**
    * The first level cache.
    */
-  private var firstLevel = Map[StateParticle[_],Option[_]]()
+  private val firstLevel = mutable.WeakHashMap[StateParticle[_],Option[ContentType[_]]]()
 
   /**
    * The second level cache.
    */
-  private var secondLevel = Map[StateParticle[_],Option[_]]()
+  private val secondLevel = mutable.WeakHashMap[StateParticle[_],Option[ContentType[_]]]()
 
   /**
    * The third level cache.
    */
-  private var thirdLevel = Map[StateParticle[_],Option[_]]()
+  private val thirdLevel = mutable.WeakHashMap[StateParticle[_],Option[ContentType[_]]]()
 
   /**
    * The observe functions of the state variables.
    */
-  private var updateFunctions = Map[StateParticle[_],(Any => Unit)]()
+  private val updateFunctions = mutable.WeakHashMap[StateParticle[_],(Any => Unit)]()
 
   /**
    * A flag, if the second level cache contains a complete world step.
@@ -104,9 +106,9 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
     if( secondLevelCacheIsSealed ) {
       for( (sVar,data) <- secondLevel ) {
         if( thirdLevel( sVar ).isDefined ) {
-          secondLevel = secondLevel + (sVar -> thirdLevel( sVar ) )
+          secondLevel.update(sVar, thirdLevel( sVar ) )
         }
-        thirdLevel = thirdLevel + (sVar -> None)
+        thirdLevel.update(sVar, None)
       }
     } else {
       secondLevelCacheIsSealed = true
@@ -121,16 +123,16 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    */
   def update() {
     if( secondLevelCacheIsSealed ) {
-      var handlerToExecute = Map[StateParticle[_],(Any=>Unit)]()
+      val handlerToExecute = mutable.Map[StateParticle[_],(Any=>Unit)]()
       for( (sVar,data) <- secondLevel ) {
         if( data.isDefined ) {
-          firstLevel = firstLevel + (sVar -> data)
-          if( updateFunctions contains sVar ) handlerToExecute = handlerToExecute + (sVar ->updateFunctions(sVar) )
+          firstLevel.update(sVar, data)
+          if( updateFunctions contains sVar ) handlerToExecute.update(sVar, updateFunctions(sVar) )
         }
         if( thirdLevel( sVar ).isDefined ) {
-          secondLevel = secondLevel + (sVar -> thirdLevel( sVar ) )
+          secondLevel.update(sVar, thirdLevel( sVar ) )
         }
-        thirdLevel = thirdLevel + (sVar -> None)
+        thirdLevel.update(sVar, None)
       }
       for( (sVar,function) <- handlerToExecute ) function( firstLevel( sVar ).get )
       secondLevelCacheIsSealed = false
@@ -160,7 +162,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @tparam T The state type of the encapsulated data.
    * @return The value of the state variable read from the cache.
    */
-  def getDataFor[T]( sVar : StateParticle[T] ) : T = firstLevel( sVar ).get.asInstanceOf[T]
+  def getDataFor[T]( sVar : StateParticle[T] ) : ContentType[T] = firstLevel( sVar ).get.asInstanceOf[ContentType[T]]
 
   /**
    * This method sets the observe function of a state variable. This function is called on an update of the cache.
@@ -171,7 +173,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
   def addUpdateFunction[T]( sVar : StateParticle[T], f : (Any => Unit) ) {
     require( sVar != null, "The parameter 'sVar' must not be 'null'!" )
     require( f != null, "The parameter 'f' must not be 'null'!" )
-    updateFunctions = updateFunctions + (sVar -> f)
+    updateFunctions += (sVar -> f)
   }
 
   /**
@@ -181,7 +183,7 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    */
   def removeUpdateFunction( sVar : StateParticle[_] ) {
     require( sVar != null, "The parameter 'sVar' must not be 'null'!" )
-    updateFunctions = updateFunctions - sVar
+    updateFunctions.remove(sVar)
   }
 
   /**
@@ -191,11 +193,11 @@ private[synclayer] class Cache( val syncGroup : SyncGroup, onWorldStepComplete :
    * @param v The variable
    * @return Nothing
    */
-  def updateData[T]( sVar : StateParticle[T] )( v : Any ) {
+  def updateData[T]( sVar : StateParticle[T] )( v : ContentType[Any] ) {
     if( !secondLevelCacheIsSealed ) {
-      secondLevel = secondLevel + (sVar -> Some( v ) )
+      secondLevel.update(sVar, Some( v ) )
     } else {
-      thirdLevel = thirdLevel + ( sVar -> Some( v ) )
+      thirdLevel.update( sVar, Some( v ) )
     }
   }
 

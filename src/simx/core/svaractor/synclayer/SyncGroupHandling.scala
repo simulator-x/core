@@ -20,8 +20,8 @@
 
 package simx.core.svaractor.synclayer
 
-import simx.core.svaractor.{StateParticle, SVar, SVarActor}
-import scala.reflect.runtime.universe.TypeTag
+import simx.core.svaractor.TimedRingBuffer.{ContentType, Time}
+import simx.core.svaractor._
 import scala.reflect.ClassTag
 
 /**
@@ -84,7 +84,7 @@ trait SyncGroupHandling extends SVarActor {
 
   addHandler[EntitiesOfSyncGroup] {
     msg =>
-      var observeHandler = Map[SVar[_],(Any)=>Unit]()
+      val observeHandler = Map[SVar[_],(Any)=>Unit]()
       for( entity <- msg.entities ) {
         for( sVarDescription <- msg.syncGroup.sVarDescriptions ) {
 //          entity.get( sVarDescription ).headOption.collect{
@@ -106,13 +106,14 @@ trait SyncGroupHandling extends SVarActor {
   /**
    * A overwritten get function that is reading the values from the cache.
    */
-  override protected[svaractor] def get[T : ClassTag : TypeTag](sVar : StateParticle[T])( consume: T => Unit ) {
+  override protected[svaractor] def get[T : ClassTag /*: TypeTag*/](at : Time, accessMethod : AccessMethod, sVar : StateParticle[T])( consume: ContentType[T] => Unit ) {
     val cache = caches.foldLeft[Option[Cache]]( None )( (last : Option[Cache], d : (SyncGroup,Cache) ) => if( last.isDefined ) last else { if( d._2.hasDataFor( sVar ) ) Some( d._2 ) else None} )
     cache match {
       case Some( c ) =>
-        consume( c.getDataFor( sVar ))
+        val data = c.getDataFor( sVar )
+        consume( data )
       case None =>
-        super.get( sVar )(consume)
+        super.get(at, accessMethod, sVar)(consume)
     }
 
   }
@@ -120,16 +121,16 @@ trait SyncGroupHandling extends SVarActor {
   /**
    * A overwritten observe function that is handling the observe function correctly.
    */
-  override protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] )(handler: T => Unit) = {
+  override protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] )(handler: ContentType[T] => Unit) = {
     val cache = caches.foldLeft[Option[Cache]]( None )( (last : Option[Cache], d : (SyncGroup,Cache) ) => if( last.isDefined ) last else { if( d._2.doesCacheSVar( sVar ) ) Some( d._2 ) else None} )
     cache match {
       case Some( c ) =>
-        val retVal = super.observe( sVar, ignoredWriters )( handler )
-        sVarObserveHandlers.update( sVar, c.updateData( sVar ) )
+        val retVal = super.observe( sVar, ignoredWriters )( tuple => handler(tuple ) )
+        sVarObserveHandlers.update( sVar, c.updateData( sVar ) ) //TODO
         c.addUpdateFunction( sVar, handler.asInstanceOf[(Any => Unit)] )
         retVal
       case None =>
-        super.observe( sVar, ignoredWriters )( handler )
+        super.observe( sVar, ignoredWriters )( tuple => handler(tuple) )
     }
   }
 

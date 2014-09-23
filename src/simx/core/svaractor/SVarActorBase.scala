@@ -20,6 +20,10 @@
 
 package simx.core.svaractor
 
+import akka.actor.SupervisorStrategy.Stop
+import simx.core.entity.typeconversion.TypeInfo._
+import simx.core.helper.Loggable
+
 import concurrent.duration._
 import akka.actor._
 import handlersupport.HandlerSupportImpl
@@ -27,7 +31,6 @@ import java.util.concurrent.TimeUnit
 import collection.mutable
 import akka.actor.Terminated
 import reflect.{classTag, ClassTag}
-import reflect.runtime.universe.TypeTag
 
 /**
  * User: dwiebusch
@@ -80,10 +83,14 @@ trait SVarActorContext[ActorType <: SVarActor]{
 }
 
 
-trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerSupportImpl{
+trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerSupportImpl with Loggable{
   val printWarnings = true
 
-  protected implicit val actorContext : this.type = this
+  protected implicit val actorContext : this.type =
+    this
+
+  protected implicit def singletonToRef(in : SingletonActor[_]) : SVarActor.Ref =
+    in.self
 
   context.setReceiveTimeout(Duration.create(16, TimeUnit.MILLISECONDS))
   //SVarActorDeadWatch.register(self)
@@ -114,17 +121,17 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
     updateTimeout()
   }
 
-  protected def ask[T : TypeTag : ClassTag](send : ReplyRequest[Any, T] => Unit, msg : Any)(replyHandler : T => Any) {
+  protected def ask[T : DataTag : ClassTag](send : ReplyRequest[Any, T] => Unit, msg : Any)(replyHandler : T => Any) {
     val id = java.util.UUID.randomUUID
     actorContext.addSingleUseHandlerPF[(java.util.UUID, T)]({ case (`id`, value) => replyHandler(value) } )
     send(ReplyRequest(id, self, msg, classTag[T]))
   }
 
-  def ask[T : TypeTag : ClassTag](receiver : ActorSelection, msg : Any)(replyHandler : T => Any){
+  def ask[T : DataTag : ClassTag](receiver : ActorSelection, msg : Any)(replyHandler : T => Any){
     ask[T](receiver ! _, msg)(replyHandler)
   }
 
-  def ask[T : TypeTag : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Any) {
+  def ask[T : DataTag : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Any) {
     ask[T](receiver ! _, msg)(replyHandler)
   }
 
@@ -165,7 +172,7 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
     }
   }
 
-  protected def getAnswerTo : PartialFunction[Any, Any] = {
+  private def getAnswerTo : PartialFunction[Any, Any] = {
     case ActorCreation =>
       ActorCreation
     case msg =>
@@ -193,8 +200,9 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
         else if (printWarnings){
           if (answer == ((): Unit))
             println(this + " provided () as an answer to " + msg +
+              " (expected " + manifest.runtimeClass.getCanonicalName +")" +
               ", this behaviour is deprecated. please change your code to return DelayedAnswer" +
-              " (either using provideAnswer or delayedReplyWith)")
+              " (either using provideAnswer or delayedReplyWith and make sure you used parentheses when sending a case class)")
           else
             println(this + " provided bad answer of type " + answer.getClass.getCanonicalName + " to " + msg + "! " +
               "Make sure that " + manifest.runtimeClass.getCanonicalName + " or DelayedAnswer is returned" )
@@ -224,6 +232,14 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
    * calls the startUp method (redirects akka call)
    */
   override def preStart() {
+    super.preStart()
     startUp()
+  }
+
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 0, withinTimeRange = 1 minute) {
+    case e : Throwable =>
+      error(e.getMessage, e)
+      e.printStackTrace()
+      Stop
   }
 }

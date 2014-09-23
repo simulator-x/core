@@ -23,12 +23,13 @@ package simx.core.svaractor
 import akka.actor._
 import akka.remote.RemoteScope
 import akka.remote.DisassociatedEvent
-import scala.reflect.runtime.universe.TypeTag
 import com.typesafe.config.{Config, ConfigFactory}
-import simx.core.helper.{JVMTools, Loggable}
-import simx.core.entity.typeconversion.ConvertedSVar
+import simx.core.entity.description.SVal.SValType
+import simx.core.helper.{GarbageCollectionObserver, JVMTools, Loggable}
+import simx.core.entity.typeconversion.{TypeInfo, ConvertedSVar}
 import simx.core.clustering.ClusterSubSystem
 import simx.core.entity.description.SVal
+import simx.core.svaractor.TimedRingBuffer._
 import scala.collection.mutable
 import scala.ref.WeakReference
 import scala.reflect.ClassTag
@@ -234,31 +235,21 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    *
    * @param value The new value for the State Variable
    */
-  override protected[svaractor] def set[T](sVar: SVar[T], value: T): Boolean =
-    set(sVar, value, forceUpdate = false)
+  override protected[svaractor] def set[T](sVar: SVar[T], value: T, at : Time): Boolean =
+    set(sVar, value, at, forceUpdate = false)
 
-  private[svaractor] def set[T](sVar : SVar[T], value: T, forceUpdate : Boolean) = sVar match {
+  private[svaractor] def set[T](sVar : SVar[T], value: T, at : Time, forceUpdate : Boolean) = sVar match {
     case convertedSVar : ConvertedSVar[_,T] =>
-      convertedSVar.set(value)
+      convertedSVar.set(value, at, forceUpdate)
     case _ if sVar.isMutable =>
       val currentOwner = owner(sVar)
       if (currentOwner isSameAs self)
-        write(self, sVar, value, forceUpdate)
+        write(self, sVar, value, at, forceUpdate)
       else
-        currentOwner ! WriteSVarMessage( self, sVar, value, forceUpdate )
+        currentOwner ! WriteSVarMessage( self, sVar, value, at, forceUpdate )
       true
     case _ => false
   }
-
-  //  def observe(e : RelationalEntity){
-  //
-  //  }
-  //
-  //  def entityObserve[T](svars : List[StateParticle[T]])(handler : Map[RelationalEntity#AnnotationSet, T] => Any){
-  //
-  //  }
-  //
-
 
 
   protected[svaractor] def notifyObserver[T](observer : SVarActor.Ref, msg : NotifyWriteSVarMessage[T]){
@@ -283,16 +274,23 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    *
    * @param consume A function that consumes the value of the State Variable.
    */
-  protected[svaractor] def get[T : ClassTag : TypeTag](stateVariable : StateParticle[T])( consume: T => Unit )  {
+  protected[svaractor] def get[T : ClassTag ](stateVariable : StateParticle[T], at : Time = Now,
+                                              accessMethod : AccessMethod = GetClosest)( consume: T => Unit )  {
+    get(at, accessMethod, stateVariable)((x : ContentType[T]) => consume(x._1))
+  }
+
+  protected[svaractor] def get[T : ClassTag ](at : Time, accessMethod : AccessMethod, stateVariable : StateParticle[T])
+                                             ( consume: ContentType[T] => Unit )  {
     stateVariable match {
-      case convertedSVar : ConvertedSVar[_,_] =>
-        convertedSVar.get(consume)
-      case sval : SVal[T] => sval.get(consume)
+      case convertedSVar : ConvertedSVar[_, T] =>
+        convertedSVar.get(at, accessMethod)(consume)
+      case sval : SValType[T] =>
+        sval.get(at, accessMethod)(consume)
       case sVar : SVar[T] =>
         if( owner( sVar ) isSameAs self )
-          consume ( read( sVar ) )
+          consume ( read( sVar, at, accessMethod ) )
         else {
-          owner( sVar ) ! ReadSVarMessage( sVar )
+          owner( sVar ) ! ReadSVarMessage( sVar, at, accessMethod )
           addSingleUseHandler[ValueOfSVarMessage[T]]( {
             case ValueOfSVarMessage( svar, value) if svar == sVar => consume(value)
           } : PartialFunction[ValueOfSVarMessage[T], Unit])
@@ -300,28 +298,6 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     }
   }
 
-  // self observes future value changes. The supplied handle is reused.
-  /**
-   * Calling this method will observe the given state variable. Every time the
-   * value of the State Variable gets changed the given handler messages gets
-   * called. The handler message is running in the actor that called the
-   * observe method.
-   *
-   * Only one handler can be registered at one time. If the method gets called
-   * again within the the same actor the old handler gets replaced.
-   *
-   * An actor can observe the own state variable.
-   *
-   * A change of the value is only be notified if the value really change. E.g.
-   * a State Variable contains the value 1 and a write operation with the value 1
-   * is performed, no observers will be notified, because the value has not changed.
-   *
-   * @param handler The handler, that gets called when the value of the State Variable has changed.
-   */
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) =
-    observe(sVar, Set[SVarActor.Ref]())(handler)
-
-  // self observes future value changes. The supplied handle is reused.
   /**
    * Calling this method will observe the given state variable. Every time the
    * value of the State Variable gets changed the given handler messages gets
@@ -340,10 +316,10 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    * @param handler The handler, that gets called when the value of the State Variable has changed.
    * @param ignoredWriters Value changes by SVarActors contained in this set are ignored.
    */
-  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) =
+  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: ContentType[T] => Unit) =
     sVar match {
       case convertedSVar : ConvertedSVar[_, T] =>
-        convertedSVar.observe(handler, ignoredWriters)
+        convertedSVar.observe((v, t) => handler(v -> t), ignoredWriters)
       case _ =>
         if ( owner( sVar) isSameAs self )
           addObserver( sVar, self, ignoredWriters )
@@ -390,9 +366,9 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     val currentOwner = owner( sVar )
 
     if(currentOwner isSameAs self)
-      changeOwner(self, sVar, newOwner)
+      changeOwner(self, sVar, newOwner, bufferMode = data(sVar).getBufferSetting)
     else
-      currentOwner ! ChangeOwnerOfSVarMessage( sVar, newOwner )
+      currentOwner ! ChangeOwnerOfSVarMessage( sVar, newOwner, data(sVar).getBufferSetting )
   }
 
   // Stop observing this SVar.
@@ -411,8 +387,6 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     }
 
   }
-
-  var messageSendData : Map[Class[_],List[(SVarActor,java.util.UUID,Long,Long,Long)]] = Map() // (target,message id, beginEnque, endEnque)
 
   protected class ChangeOwnerStatus(val svar : SVar[_], val newOwner : SVarActor.Ref) {
     private def clearQueueFor( actor : SVarActor.Ref )(implicit context : SVarActor) {
@@ -463,16 +437,16 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   private val data = mutable.WeakHashMap[SVar[_],SVarDataImpl[_]]()
 
   //! the map which holds queues for each svar that is beeing transferred
-  private val heldMessages = mutable.Map[SVar[_], ChangeOwnerStatus]()
+  private val heldMessages = mutable.WeakHashMap[SVar[_], ChangeOwnerStatus]()
 
   //! the locally known owners
-  private val sVarOwners = mutable.Map[SVar[_], SVarActor.Ref]()
+  private val sVarOwners = mutable.WeakHashMap[SVar[_], SVarActor.Ref]()
   protected val deadOwners = mutable.Set[SVarActor.Address]()
 
   //!
   protected var isRunning : Boolean = true
 
-  protected val sVarObserveHandlers = mutable.Map[SVar[_], Any => Unit]()
+  protected val sVarObserveHandlers = mutable.WeakHashMap[SVar[_], ContentType[Any] => Unit]()
 
   //
   //
@@ -495,8 +469,8 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
       }
   }
 
-  private[svaractor] def addSVarObserveHandler[T](svar : SVar[T])( handler : T => Unit ) : java.util.UUID = {
-    sVarObserveHandlers.update(svar, handler.asInstanceOf[Any => Unit])
+  private[svaractor] def addSVarObserveHandler[T](svar : SVar[T])( handler : ContentType[T] => Unit ) : java.util.UUID = {
+    sVarObserveHandlers.update(svar, handler.asInstanceOf[ContentType[Any] => Unit])
     java.util.UUID.randomUUID()
   }
 
@@ -507,24 +481,25 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     sVarOwners += svar -> owner
   }
 
-  private[svaractor] def changeOwner[T](sender    : SVarActor.Ref,
-                                        svar      : SVar[T],
-                                        newOwner  : SVarActor.Ref,
-                                        value     : Option[SVal[T]] = None) : Boolean = {
+  private[svaractor] def changeOwner[T](sender     : SVarActor.Ref,
+                                        svar       : SVar[T],
+                                        newOwner   : SVarActor.Ref,
+                                        value      : Option[(SVal[T,TypeInfo[T,T]], Time)] = None,
+                                        bufferMode : BufferMode = Unbuffered ) : Boolean = {
     if (self == newOwner){
       if (!this.isOwnerOf(svar)) value match {
-        case Some(_data) => insertSVar(svar, _data)
+        case Some((_data, timeStamp)) => insertSVar(svar, _data, timeStamp, bufferMode)
         case None => throw new Exception
       }
       sender ! AcceptSVarMessage(svar)
     }
     else if (isOwnerOf(svar)) heldMessages.get(svar) match {
       case Some(changeOwnerStatus) if changeOwnerStatus.isAccepted => owner(svar, newOwner ) //!!! is this correct? don't we have to tell "ownerHasChanged"?
-      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage(ChangeOwnerOfSVarMessage( svar, newOwner))
+      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage(ChangeOwnerOfSVarMessage( svar, newOwner, bufferMode))
       case None =>
         heldMessages(svar) = new ChangeOwnerStatus(svar, newOwner)
         newOwner ! BunchOfSimXMessagesMessages(
-          OfferSVarMessage( getOriginal(svar), data(svar).readFull ) ::  moveObservers(svar, newOwner)
+          OfferSVarMessage( getOriginal(svar), data(svar).readFull(Now, GetClosest), bufferMode ) ::  moveObservers(svar, newOwner)
         )
     }
     //if nothing matched, the svar was unknown, so we return false
@@ -561,16 +536,17 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    * The weak reference that is stored with the data is used detrmine, if
    * the data is not needed any more.
    */
-  protected[svaractor] def createSVar[T]( value: SVal[T] ) = {
-    implicit val typeTag = value.typedSemantics.typeTag
+  protected[svaractor] def createSVar[T]( value: SVal[T,TypeInfo[T,T]], timeStamp : Time, bufferMode : BufferMode ) = {
     val retVal = new SVarImpl(self, value.typedSemantics.classTag, value.typedSemantics.typeTag)
-    insertSVar(retVal, value)
+    insertSVar(retVal, value, timeStamp, bufferMode)
     retVal
   }
 
-  private def insertSVar[T]( sVar: SVar[T], value: SVal[T] ) {
+  private def insertSVar[T]( sVar: SVar[T], value: SValType[T], timeStamp : Time, bufferSetting : BufferMode ) {
     if (sVar.isMutable){
-      data += sVar -> new SVarDataImpl( value, new WeakReference( sVar ) )
+      val dataSVar = new SVarDataImpl( value, timeStamp, new WeakReference( sVar ), bufferSetting )
+      GarbageCollectionObserver.observe(dataSVar)
+      data += sVar -> dataSVar
       addSVarOwner(sVar, self)
     }
   }
@@ -583,17 +559,17 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   private def removeSVarData( sVar: SVar[_] ) =
     data -= sVar
 
-  private[svaractor] final def write[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T, forceUpdate : Boolean) {
+  private[svaractor] final def write[T]( writer: SVarActor.Ref, sVar: SVar[T], value: T, at : Time, forceUpdate : Boolean) {
     heldMessages.get(sVar) match {
-      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( WriteSVarMessage( writer, sVar, value, forceUpdate) )
+      case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( WriteSVarMessage( writer, sVar, value, at, forceUpdate) )
       case None =>
-        if( forceUpdate  || !read( sVar ).equals( value )  )
-          data( sVar ).write( writer, value )
+        if( forceUpdate  || !read( sVar, at, GetClosest ).equals( value )  )
+          data( sVar ).write( writer, value, at )
     }
   }
 
-  private[svaractor] def read[T]( sVar: SVar[T] ) : T =
-    data( sVar ).read.asInstanceOf[T]
+  private[svaractor] def read[T]( sVar: SVar[T], at : Time, accessMethod : AccessMethod ) : ContentType[T] =
+    data( sVar ).read(at, accessMethod).asInstanceOf[ContentType[T]]
 
   private[svaractor] final def addObserver( sVar: SVar[_], a: SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref] ) {
     heldMessages.get(sVar) match {
@@ -652,8 +628,8 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     }
   }
 
-  private def createValueOfSVarMsg[T](sVar : SVar[T]) : ValueOfSVarMessage[T] =
-    ValueOfSVarMessage( sVar, read(sVar))
+  private def createValueOfSVarMsg[T](sVar : SVar[T], at : Time, accessMethod : AccessMethod) : ValueOfSVarMessage[T] =
+    ValueOfSVarMessage( sVar, read(sVar, at, accessMethod))
 
   //
   //
@@ -691,7 +667,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   addHandler[OfferSVarMessage[Any]]{
-    msg => changeOwner( msg.sender, msg.sVar, self, Some( msg.value ) )
+    msg => changeOwner( msg.sender, msg.sVar, self, Some( msg.value ), msg.bufferMode )
   }
 
   addHandler[Shutdown]{
@@ -741,7 +717,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     if (isOwnerChangeInProgress(msg.sVar))
       changeOwnerInProgessHandler( msg )
     else {
-      val successful = changeOwner(msg.sender, msg.sVar, msg.newOwner)
+      val successful = changeOwner(msg.sender, msg.sVar, msg.newOwner, bufferMode = msg.bufferMode)
       if (! successful) getLocallyKnownSVarOwner(msg.sVar) match {
         case Some(owner) => msg.sender ! SVarOwnerChangedMessage( msg.sVar, owner, msg)
         case _           => msg.sender ! UnknownSVarMessage(msg.sVar, msg)
@@ -750,15 +726,15 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   addHandler[CreateSVarMessage[Any]] { msg =>
-    msg.sender ! SVarCreatedMessage( SVarImpl( msg.value ), msg )
+    msg.sender ! SVarCreatedMessage( SVarImpl( msg.value, msg.timeStamp ), msg )
   }
 
   addHandler[ReadSVarMessage[_]]{
-    handleOwnerDependentMsg( msg => msg.sender ! createValueOfSVarMsg( msg.sVar ) )
+    handleOwnerDependentMsg( msg => msg.sender ! createValueOfSVarMsg( msg.sVar, msg.at, msg.accessMethod ) )
   }
 
   addHandler[WriteSVarMessage[Any]]{
-    handleOwnerDependentMsg( msg => write( msg.writer, msg.sVar, msg.value, msg.forceUpdate ) )
+    handleOwnerDependentMsg( msg => write( msg.writer, msg.sVar, msg.value, msg.at, msg.forceUpdate ) )
   }
 
   addHandler[ObserveSVarMessage[_]]{
@@ -818,13 +794,23 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   protected def addJobIn( in : Long )( job : => Unit ) {
     addJobAt(System.currentTimeMillis() + in)(job)
   }
+
+  private case class JobRequest(at : Long, job : () => Unit )
+
+  addHandler[JobRequest]{
+    request => addJobAt(request.at)(request.job())
+  }
+
+  def requestJobIn(in : Long)( job : => Unit) : Unit ={
+    self ! JobRequest(System.currentTimeMillis() + in, () => job)
+  }
 }
 
 trait SVarFunctions{
-  protected[svaractor] def set[T](sVar : SVar[T], value: T) : Boolean
-  protected[svaractor] def get[T : ClassTag : TypeTag](sVar : StateParticle[T])(consume: T => Unit)
-  protected[svaractor] def observe[T](sVar : SVar[T])( handler: T => Unit) : java.util.UUID
-  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: T => Unit) : java.util.UUID
+  protected[svaractor] def set[T](sVar : SVar[T], value: T, at : Time) : Boolean
+  protected[svaractor] def get[T : ClassTag /*: TypeTag*/]( at : Time, accessMethod : AccessMethod, sVar : StateParticle[T])(consume: ContentType[T] => Unit)
+  protected[svaractor] def observe[T](sVar : SVar[T])( handler: ContentType[T] => Unit) : java.util.UUID = observe(sVar, Set[SVarActor.Ref]())(handler)
+  protected[svaractor] def observe[T](sVar : SVar[T], ignoredWriters: Set[SVarActor.Ref] = Set())(handler: ContentType[T] => Unit) : java.util.UUID
   protected[svaractor] def ignore[T](sVar : SVar[T] )
   protected[svaractor] def owner[T](sVar : SVar[T], newOwner: SVarActor.Ref)
   //  protected[svaractor] def owner[T](sVar : SVar[T] ) : SVarActor.Ref

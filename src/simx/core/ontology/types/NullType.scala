@@ -20,56 +20,59 @@
 
 package simx.core.ontology.types
 
-import reflect.runtime.universe.TypeTag
+import simx.core.entity.typeconversion.TypeInfo._
+
 import simx.core.ontology._
-import simx.core.entity.typeconversion.ConvertibleTrait
+import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
 import simx.core.entity.description.{Semantics => CoreSemantics, SVal}
 import scala.reflect.ClassTag
-import scala.Some
 
 /**
  * User: dwiebusch
  * Date: 11.04.11
  * Time: 17:09
  */
-
-protected abstract class CBase[U : ClassTag : TypeTag] extends ConvertibleTrait[U]{
-  //! returns a copy of this convertible trait containing the annotations
-  override def setAnnotations(additionalAnnotations: Annotation*) = this
-
-  val classTag    = implicitly[ClassTag[U]]
-  def typeTag     = implicitly[TypeTag[U]]
-  def annotations = Set()
-  def getBase     = this
-  def asConst     = ???
-  type baseType   = U
-}
-
-//Base class for generated OntologyMembers
-object NullType {
-  def as( semantics : GroundedSymbol ) =
-    new NullType(semantics)
+object OntologySymbol extends SVarDescription[CoreSemantics, CoreSemantics](NullType(OSymBase)) with Serializable{
+  def apply(s : Symbol) : GroundedSymbol = CoreSemantics(s) asGroundedSymbol this
 }
 
 class NullType private(name : GroundedSymbol) extends Serializable {
-  @deprecated("use withType instead", "")
-  def createdBy[U : TypeTag : ClassTag]( ctor : => U ) =
-    withType[U](ctor.getClass.asInstanceOf[Class[U]])
-
-  def withType[U : TypeTag : ClassTag]( c : Class[U] ) : SVarDescription[U, U] = SVarDescription apply new CBase[U]{
+  def withType[U : DataTag : ClassTag]( c : Class[U] ) : SVarDescription[U, U] = NullType apply new CBase[U]{
     val ontoLink          = Some("http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#NullType")
     def isSValDescription = false
     val semantics         = name
   }
 }
 
-private object OSymBase extends CBase[CoreSemantics]{
-  protected object OntologySymbolBase extends CoreSemantics with Serializable{ def toSymbol = 'OntologySymbol }
+private abstract class CBase[U : ClassTag : DataTag] extends ConvertibleTrait[U] with Serializable{
+  //! returns a copy of this convertible trait containing the annotations
+  override def setAnnotations(additionalAnnotations: Annotation*) = this
+  def asConst     = throw new Exception("must not call asConst on CBase")
+  def typeTag     = implicitly[TypeInfo.DataTag[U]]
+  val classTag    = implicitly[ClassTag[U]]
+  def annotations = Set()
+  def getBase     = this
+  type baseType   = U
+}
+
+private object OntologySymbolBase extends CoreSemantics('OntologySymbol) with Serializable
+
+private object OSymBase extends CBase[CoreSemantics] with Serializable{
   val semantics         = SVal(this)(OntologySymbolBase)
   val ontoLink          = None
   def isSValDescription = true
 }
 
-object OntologySymbol extends SVarDescription[CoreSemantics, CoreSemantics](SVarDescription(OSymBase)) with Serializable{
-  def apply(s : Symbol) : GroundedSymbol = new SVal(this)(new CoreSemantics{ def toSymbol = s })
+//Base class for generated OntologyMembers
+object NullType {
+  def as( semantics : GroundedSymbol ) =
+    new NullType(semantics)
+
+  private[types] def apply[T : ClassTag : DataTag]( o : ConvertibleTrait[T] ) : SVarDescription[T, T] =
+    new SVarDescription[T, T](o.semantics, o, o.isSValDescription, o.annotations, o.ontoLink){
+      override def definedAt(iri: String) =
+        new SVarDescription(semantics, getBase, isSValDescription, annotations, Some(iri)){
+          override val getBase = this
+        }
+    }
 }

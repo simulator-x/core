@@ -20,16 +20,14 @@
 
 package simx.core.components.renderer.createparameter
 
-import simplex3d.math.floatx.{Mat4f, ConstMat4f, Mat3x4f}
+import simplex3d.math.floatx._
 import simx.core.ontology.{Symbols, GroundedSymbol}
 import simx.core.ontology.types._
 import java.awt.Color
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.entity.description.{EntityAspect, SValSeq}
-import scala.Left
-import scala.Right
-import simplex3d.math.float.ConstMat4
+import simx.core.entity.description.{NamedSValSet, EntityAspect, SValSeq}
+import simplex3d.math.float._
 
 /**
  * A flag that indicates that this value (like a transform) is provided by another create parameter.
@@ -343,6 +341,22 @@ case class ShapeFromFile( file: String,
     providings
   }
 
+}
+
+case class GroupNode(trafo : ConstMat4, scale : ConstVec3 = Vec3.One) extends RendererAspect(Symbols.parentElement){
+  /**
+   * the features the entity will at least have when it is created
+   * @return the features the entity will at least have when it is created
+   */
+  override def getFeatures: Set[ConvertibleTrait[_]] = Set(Transformation, Scale)
+
+  /**
+   *
+   * The list of create parameters
+   * @return a list of [[simx.core.entity.description.SVal]]'s containing the information needed to instantiate an
+   *         entity with this aspect
+   */
+  override def getCreateParams: NamedSValSet = addCVars(Transformation(trafo) and Scale(ConstMat4(Mat4x3.scale(scale))))
 }
 
 /**

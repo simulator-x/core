@@ -20,6 +20,8 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import simx.core.entity.Entity
+import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
 import simx.core.worldinterface.WorldInterfaceHandling
 
 /**
@@ -30,7 +32,41 @@ trait RelationAccess extends UnifiedAccess{
   protected implicit def toRightUnknownTuple[V](t : (V, Unknown)) : RightUnknownTuple[V] =
     RightUnknownTuple(t._1)
 
-  final def set(desc : PartialRelation[this.type, _ <: EntityBase , _ <: EntityBase])(implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling){
-    desc.complete(this).publish()
+  final def set(desc : PartialRelation[SelfType, _ <: Entity, _ <: EntityBase[_]])
+               (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling){
+    set(desc, Unbuffered)
+  }
+
+  final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]], bufferMode : BufferMode)
+               (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
+  {
+    desc.complete[SelfType](asSelfType,  (_ : SelfType ) => {}).publish(bufferMode)
+  }
+
+  final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]],
+                handler : SelfType => Any)
+               (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
+  {
+    set(desc, handler, Unbuffered)
+  }
+
+  final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]],
+                handler : SelfType => Any, bufferMode : BufferMode)
+               (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
+  {
+    desc.complete[SelfType](asSelfType, handler).publish(bufferMode)
+  }
+
+  final def remove(desc : PartialRelation[SelfType , _ <: Entity , _ <: EntityBase[_]])
+                  (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
+  {
+    remove(desc, (_ : SelfType ) => {} )
+  }
+
+  final def remove(desc : PartialRelation[SelfType , _ <: Entity , _ <: EntityBase[_]],
+                   handler : SelfType => Any)
+                  (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
+  {
+    desc.complete[SelfType](asSelfType, handler).remove()
   }
 }

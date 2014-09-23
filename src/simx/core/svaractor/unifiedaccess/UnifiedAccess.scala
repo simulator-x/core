@@ -20,8 +20,14 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import simx.core.entity.typeconversion.TypeInfo.DataTag
+
 /**
  * Created by dennis on 24.04.14.
  *
  */
-trait UnifiedAccess
+trait UnifiedAccess{
+  type SelfType <: EntityBase[SelfType]
+  implicit val selfTypeTag : DataTag[SelfType]
+  protected def asSelfType : SelfType
+}

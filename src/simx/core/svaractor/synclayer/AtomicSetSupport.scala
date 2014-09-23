@@ -21,6 +21,7 @@
 package simx.core.svaractor.synclayer
 
 import simx.core.entity.typeconversion.ConvertedSVar
+import simx.core.svaractor.TimedRingBuffer.Time
 import simx.core.svaractor._
 
 /**
@@ -110,17 +111,17 @@ trait AtomicSetSupport extends SVarActor{
   /**
    * overridden methods
    */
-  override protected[svaractor] def set[T](sVar : SVar[T], value: T, forceUpdate : Boolean) = sVar match {
+  override protected[svaractor] def set[T](sVar : SVar[T], value: T, at : Time, forceUpdate : Boolean) = sVar match {
     case convertedSVar : ConvertedSVar[_,T] =>
-      convertedSVar.set(value)
+      convertedSVar.set(value, at, forceUpdate)
     case _ if sVar.isMutable =>
       val currentOwner = owner(sVar)
       if (currentOwner isSameAs self)
-        write(self, sVar, value, forceUpdate) // notify write (see below) will take care in this case
+        write(self, sVar, value, at, forceUpdate) // notify write (see below) will take care in this case
       else if (inAtomicSetMode) // handle foreign owner
-        addAtomicSetMessage(currentOwner, WriteSVarMessage( self, sVar, value, forceUpdate ))
+        addAtomicSetMessage(currentOwner, WriteSVarMessage( self, sVar, value, at, forceUpdate ))
       else // standard case
-        currentOwner ! WriteSVarMessage( self, sVar, value, forceUpdate )
+        currentOwner ! WriteSVarMessage( self, sVar, value, at, forceUpdate )
       true
     case _ => false
   }

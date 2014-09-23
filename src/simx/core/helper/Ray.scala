@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The SIRIS Project
+ * Copyright 2014 The SIRIS Project
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,33 +18,11 @@
  * Federal Ministry of Education and Research (grant no. 17N4409).
  */
 
-package simx.core.dynamics
+package simx.core.helper
 
-import simx.core.entity.Entity
-import simx.core.entity.description.SVal
+import simplex3d.math.float._
 
 /**
- * Created by IntelliJ IDEA.
- * User: dwiebusch
- * Date: 24.02.12
- * Time: 11:53
- * To change this template use File | Settings | File Templates.
+ * Created by mmi on 7/30/14.
  */
-
-case class Prerequisite[T]( target : Entity, value : SVal[T] ){
-  def metBy( e : Effect[_]) =
-    e.changedValue.equals(value)
-
-  def asEffect =
-    Effect(target, value)
-
-  def bind(entity : Entity) =
-    Prerequisite(entity, value)
-
-  def metBy( es : Set[Effect[_]]) : Boolean = {
-    for( e <- es )
-      if (metBy(e))
-        return true
-    false
-  }
-}
+case class Ray(origin: ConstVec3, direction: ConstVec3)

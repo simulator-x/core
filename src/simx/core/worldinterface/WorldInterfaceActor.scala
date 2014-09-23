@@ -26,7 +26,7 @@ import simx.core.worldinterface.eventhandling._
 import simx.core.component.remote.RemoteServiceSupport
 import simx.core.worldinterface.eventhandling.EventDescription
 import scala.collection.mutable
-import simx.core.ontology.{GroundedSymbol, types, Symbols}
+import simx.core.ontology.{SVarDescription, GroundedSymbol, types, Symbols}
 import simx.core.component.ComponentCreation
 import simx.core.svaractor.unifiedaccess._
 import simx.core.svaractor.BunchOfSimXMessagesMessages
@@ -92,6 +92,16 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
     }
   }
 
+
+  /**
+   * method to be implemented by each component. Will be called when an entity has to be removed from the
+   * internal representation.
+   * @param e the Entity to be removed
+   */
+  override protected def removeFromLocalRep(e: Entity) {
+    removeEntityFromRegistry(e)
+  }
+
   private def addForeignWorldInterfaceActor(ref : SVarActor.Ref){
     def createMsg(receiver : SVarActor.Ref)(msg : SVarActor.Ref => ForwardableMessage, l : List[SimXMessage]) = {
       if (SVarActor isLocal receiver) msg(receiver).forward() :: l else l
@@ -138,6 +148,10 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
       e
     case head :: tail => setEntity( tail, e, holder.children.getOrElseUpdate(head, new RecursiveHolder), head :: path)
     case Nil => throw new Exception("provided empty list, cannot insert entity")
+  }
+
+  private def removeEntityFromRegistry(e : Entity) {
+    worldRoot.remove(e)
   }
 
   /**
@@ -230,6 +244,22 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
     }
   }
 
+  protected var svarDescRegistry = Map[String, SVarDescription[_, _]]()
+  protected var svarDescObservers = Set[SVarActor.Ref]()
+
+  addHandler[RegisterSVarDescription[_, _]]{ msg =>
+    svarDescRegistry += msg.desc.ontoLink.getOrElse(msg.desc.sVarIdentifier.name) -> msg.desc
+    svarDescObservers.foreach( _ ! msg)
+  }
+
+  addHandler[GetRegisteredSVarDescriptions]{
+    case msg => svarDescRegistry
+  }
+
+  addHandler[ObserveSVarDescRegistrations]{ msg =>
+    svarDescRegistry.foreach( tuple => msg.sender ! RegisterSVarDescription(tuple._2))
+    svarDescObservers += msg.sender
+  }
 
   addHandler[ActorRegisterRequest]{ msg =>
     forwardToForeignActors(msg)
@@ -305,7 +335,7 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
 
   addHandler[EntityUnregisterRequest]{ msg =>
     forwardToForeignActors(msg)
-    worldRoot.remove(msg.e)
+    removeEntityFromRegistry(msg.e)
   }
 
   addHandler[InternalStateValueObserveRequest[_]]{
@@ -324,23 +354,22 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
 //  private val otherKnownRelations = Map[Relation, Entity]()
 
   addHandler[AddRelation]{ msg =>
-    val relation = msg.r
-    knownRelations.update(relation)
+    knownRelations.update(msg.r.asSVal)
   }
 
   addHandler[RemoveRelation]{ msg =>
-    knownRelations.remove(msg.r)
+    knownRelations.remove(msg.r.asSVal)
   }
 
   addHandler[HandleRelationRequest[_, _]]{ msg =>
     if (msg.r.isLeft) {
       knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
-        filter(_.obj equals msg.r.getKnownValue).
-        map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.subj)).toMap
+        filter(_.getObject equals msg.r.getKnownValue).
+        map(x => MapKey(types.Entity, AnnotationSet()) -> x.getSubject).toMap
     } else {
         knownRelations.getOrElse(msg.r.description.sVarIdentifier, Nil).map(_ as msg.r.description.asConvertibleTrait).
-          filter(_.subj equals msg.r.getKnownValue).
-          map(x => MapKey(types.Entity, AnnotationSet()) -> types.Entity(x.obj)).toMap
+          filter(_.getSubject equals msg.r.getKnownValue).
+          map(x => MapKey(types.Entity, AnnotationSet()) -> x.getObject).toMap
     }
   }
 }

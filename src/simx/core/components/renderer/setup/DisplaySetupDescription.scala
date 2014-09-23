@@ -22,6 +22,9 @@ package simx.core.components.renderer.setup
 
 import simplex3d.math.floatx.ConstMat4f
 import simx.core.component.{Triggered, Unbound, Frequency}
+import simplex3d.math.float._
+import simx.core.component.Unbound
+import simx.core.component.Triggered
 
 /**
  * This enumeration describes different link types between different logical displays.
@@ -99,7 +102,9 @@ class CamDesc( val camId : Int, val eye : Eye.Value, val eyeSeparation : Option[
  * @param transformation The physical transformation of the screen relative to the view platform (like center of the CAVE).
  * @param view The description of the user, which eye, which seperation between the eyes.
  */
-class DisplayDesc( val resolution: Option[(Int, Int)], val size: (Double, Double), val transformation: ConstMat4f, val view: CamDesc ) extends Serializable
+class DisplayDesc( val resolution: Option[(Int, Int)], val size: (Double, Double), val transformation: ConstMat4f, val view: CamDesc ) extends Serializable {
+  def sizeVec = ConstVec2(size._1.toFloat, size._2.toFloat)
+}
 
 /**
  * This class respresent a hardware display device.
@@ -187,4 +192,14 @@ class DisplaySetupDesc extends Serializable {
    * @return The freuency of the device group.
    */
   def getFrequencyOf( groupId : Int ) = this.frequencies.getOrElse( groupId, Triggered() )
+
+  /**
+   * Returns the first display if existent.
+   * @return
+   */
+  def firstDisplay: DisplayDesc =
+    try{deviceGroups.head._2.dpys.head.displayDescs.head} catch {
+      case _: Throwable => throw new Exception("[DisplaySetupDesc] At least one display is required.")
+    }
+
 }

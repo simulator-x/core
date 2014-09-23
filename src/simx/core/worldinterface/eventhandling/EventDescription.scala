@@ -49,23 +49,23 @@ extends Serializable {
 class EventDescription(
   val name : GroundedSymbol,
   val hasToContain: List[ConvertibleTrait[_]] = Nil,
-  val restriction : Option[PartialFunction[Event, Boolean]] = None)
+  val restriction : Option[PartialFunction[Event, Boolean]] = None) extends Serializable
 {
   def matches( e : Event ) : Boolean =
     if (e.name equals name) restriction.collect{ case f => f(e) }.getOrElse(true) else false
 
-  def createEvent(affectedEntities : Set[Entity], values : SVal[_]* ) : Event = {
+  def createEvent(affectedEntities : Set[Entity], values : SVal[_,_]* ) : Event = {
     //TODO Check Values
     new Event(name, new SValSet(values:_*), affectedEntities)
   }
 
-  def createEvent( values : SVal[_]* ) =
+  def createEvent( values : SVal[_,_]* ) =
     apply(values :_*)
 
-  def apply(values : SVal[_]* ) : Event =
+  def apply(values : SVal[_,_]* ) : Event =
     apply(Set[Entity](), values:_*)
 
-  def apply( affectedEntities : Set[Entity], values : SVal[_]* ) : Event =
+  def apply( affectedEntities : Set[Entity], values : SVal[_,_]* ) : Event =
     createEvent(affectedEntities, values:_*)
 
   def restrictedBy(_restriction: PartialFunction[Event, Boolean]) : EventDescription =
@@ -87,10 +87,10 @@ class EventDescription(
     emit(SValSet(), affectedEntities )
   }
 
-  def emit(values : SVal[_]*)(implicit provider : EventProvider){
+  def emit(values : SVal[_,_]*)(implicit provider : EventProvider){
     emit(SValSet(values :_*), Set[Entity]())
   }
-  def emit(affectedEntitites : Set[Entity], values : SVal[_]*)(implicit provider : EventProvider){
+  def emit(affectedEntitites : Set[Entity], values : SVal[_,_]*)(implicit provider : EventProvider){
     emit(SValSet(values :_*), affectedEntitites)
   }
 
