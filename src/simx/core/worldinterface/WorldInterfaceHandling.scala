@@ -25,7 +25,8 @@ import simx.core.entity.Entity
 import simx.core.entity.description.{EntityAspect, SValBase}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.typeconversion.TypeInfo._
-import simx.core.ontology.{GroundedSymbol, SVarDescription, Symbols}
+import simx.core.ontology.{GroundedSymbol, SValDescription, Symbols}
+import simx.core.svaractor.semantictrait.base.{Thing, Base}
 import simx.core.svaractor.unifiedaccess._
 import simx.core.svaractor.{SVar, SVarActor}
 import simx.core.worldinterface.eventhandling.{Event, EventDescription}
@@ -92,25 +93,6 @@ trait WorldInterfaceHandling extends SVarActor{
   final protected def registerComponentEntity( entity : Entity, cName : Symbol, cType : GroundedSymbol ) {
     registerEntity(Symbols.component.value.toSymbol :: cType.value.toSymbol :: cName :: Nil, entity)
   }
-
-  /**
-   * registers an entity
-   *
-   * @param name the name under which the entity will be accessible after being registered
-   * @param e the entity to be registered
-   */
-  final protected def registerEntity(name : Symbol, e : Entity) {
-    WorldInterfaceActor ! EntityRegisterRequest(name :: Nil, e)
-  }
-
-  final protected  def registerEntity(name : List[Symbol], e : Entity) {
-    WorldInterfaceActor ! EntityRegisterRequest(name, e)
-  }
-
-  final protected def unregisterEntity(e : Entity) {
-    WorldInterfaceActor ! EntityUnregisterRequest(e)
-  }
-
 
   /**
    * registers a given EventHandler for all events having the same name as the given event
@@ -208,27 +190,88 @@ trait WorldInterfaceHandling extends SVarActor{
     nonBlockingHandler[List[(Symbol, SVarActor.Ref)]]( ComponentLookUpByType( componentType ), handler )
   }
 
-  final protected def handleRegisteredEntities( path : List[Symbol] )( handler : Set[Entity] => Any ) {
-    nonBlockingHandler[Set[Entity]](EntityGroupLookupRequest(path), handler)
-  }
-
   final protected def handleRegisteredComponents(handler : Map[Symbol, SVarActor.Ref] => Unit) {
     nonBlockingHandler[Map[Symbol, SVarActor.Ref]](AllComponentsLookupRequest(), handler)
   }
 
-  final protected def registerForCreationOf( path : List[Symbol] ) {
+  final protected def registerForCreationOf( path : Path ) {
     WorldInterfaceActor ! ListenForRegistrationsMessage( self, path )
   }
 
-  final protected def onNextCreation( path : List[Symbol] )( f : Entity => Any ) {
+  private type CreationMessageHandler = (Entity) => Any
+  type Path = List[Symbol]
+  private[core] var creationMessageHandlers = Map[Path, CreationMessageHandler]()
+
+  override def preStart(): Unit = {
+    super.preStart()
+    addHandler[CreationMessage]{msg =>
+      creationMessageHandlers.filter(h => msg.path.startsWith(h._1)).foreach(_._2.apply(msg.e))
+    }
+  }
+
+  /**
+   * Registers an entity using the given name as path.
+   */
+  final protected def registerEntity(name : Symbol, e : Entity) {
+    registerEntity(name :: Nil, e)
+  }
+
+  /**
+   * Registers an entity below the given path.
+   */
+  final protected  def registerEntity(path : Path, e : Entity) {
+    WorldInterfaceActor ! EntityRegisterRequest(path, e)
+  }
+
+  final protected def unregisterEntity(e : Entity) {
+    WorldInterfaceActor ! EntityUnregisterRequest(e)
+  }
+
+  /**
+   *  Applies the passed handler for the next entity that will be registered below the given path.
+   */
+  final protected def onNextEntityRegistration(path : Path)(f : Entity => Any) {
     nonBlockingHandler[Entity](OnNextRegistration(path), f)
   }
 
-  final protected def handleResisteredSVarDescriptions(handler : Map[String, SVarDescription[_, _]] => Unit) =
-    nonBlockingHandler[Map[String, SVarDescription[_, _]]](GetRegisteredSVarDescriptions(), handler)
+  /**
+   *  Applies the passed handler for all entities that will be registered below the given path.
+   */
+  final protected def onEntityRegistration(path : Path)(f : Entity => Any) {
+    registerForCreationOf(path)
+    creationMessageHandlers = creationMessageHandlers.updated(path, f)
+  }
 
-  final protected def onSVarDescRegistration(handler : SVarDescription[_, _] => Unit){
-    addHandler[RegisterSVarDescription[_, _]](msg => handler(msg.desc))
+  /**
+   *  Applies the passed handler for all entities that have been registered below the given path so far.
+   */
+  final protected def requestRegisteredEntities( path : Path )( handler : Set[Entity] => Any ) {
+    nonBlockingHandler[Set[Entity]](EntityGroupLookupRequest(path), handler)
+  }
+
+  /**
+   *  Applies the passed handler for the last entity that has been registered below the given path so far.
+   *  If no entity has been registers that way so far,
+   *  the passed handler is applied once for the next entity that will be registered below the given path.
+   */
+  final protected def handleOrWaitForEntityRegistration( path : Path )( f : Entity => Any ) {
+    nonBlockingHandler[Entity](OnOneRegistration(path), f)
+  }
+  
+  /**
+   *  Applies the passed handler for all entities that have been registered below the given path so far.
+   *  In addition, the passed handler is applied for all entities that will be registered below the given path.
+   */
+  final protected def handleEntityRegistration(path : Path)(f : Entity => Any){
+    requestRegisteredEntities(path){_.foreach(f)}
+    onEntityRegistration(path)(f)
+  }
+
+  final protected def handleRegisteredSVarDescriptions(handler : Map[String, SValDescription[_, _,_ <: Base,_ <: Thing]] => Unit) =
+    nonBlockingHandler[Map[String, SValDescription[_, _,_ <: Base,_ <: Thing]]](GetRegisteredSVarDescriptions(), handler)
+
+  final protected def onSVarDescRegistration(handler : SValDescription[_, _,_ <: Base,_ <: Thing] => Unit){
+    addHandler[RegisterSVarDescription[_, _,_ <: Base,_ <: Thing]](msg => handler(msg.desc))
     WorldInterfaceActor ! ObserveSVarDescRegistrations(self)
   }
 
@@ -246,6 +289,6 @@ trait WorldInterfaceHandling extends SVarActor{
    */
   protected def nonBlockingHandler[T](msg : Any, handler : T => Any)
                                      (implicit actorContext : SVarActor, m : ClassTag[T], t : DataTag[T]) {
-    actorContext.ask[T](WorldInterfaceActor.self, msg)(handler)
+    actorContext.ask[T](WorldInterfaceActor.self, msg)(handler(_) : Unit)
   }
 }

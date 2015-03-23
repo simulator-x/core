@@ -26,27 +26,26 @@ import simx.core.svaractor.TimedRingBuffer.{Now, Unbuffered, BufferMode}
 import simx.core.worldinterface.WorldInterfaceHandling
 
 
-abstract class Relation private[unifiedaccess](subj : Entity, description : RelationDescription[_ <: Entity, _ <: Entity], obj :Entity){
-  def remove()(implicit context : WorldInterfaceHandling with EntityUpdateHandling)
+abstract class Relation private[unifiedaccess](subj : Entity, description : RelationDescription[_ <: Entity, _ <: Entity], obj :Entity) extends Serializable{
+  protected type removeType <: StateParticleAccess
+  def remove(update : removeType#SelfType => Any)(implicit context : WorldInterfaceHandling with EntityUpdateHandling)
   def getSubject : Entity
   def getObject : Entity
 }
 
-final case class TypedRelation[S <: Entity : DataTag, O <: Entity : DataTag, X <: StateParticleAccess : DataTag] private[unifiedaccess](subj : S, description : RelationDescription[S, O], obj : O,
-                                                                                                                                        update : (X => ((X#SelfType => Any) => Unit)) => Unit )
-  extends Relation(subj, description, obj){
-  def publish(bufferMode : BufferMode = Unbuffered)(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
+final case class TypedRelation[S <: Entity : DataTag, O <: Entity : DataTag, X <: StateParticleAccess : DataTag] private[unifiedaccess](subj : S, description : RelationDescription[S, O], obj : O, x : X)
+  extends Relation(subj, description, obj) with Serializable{
+
+  protected type removeType = X
+
+  def publish(handler : X#SelfType => Any, bufferMode : BufferMode = Unbuffered)(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
     val sval = description(this)
-    update{ toSet => handler =>
-      (if (toSet == obj) subj else obj).set(sval, Now, bufferMode)((_ : Any) => toSet.set(sval, Now, bufferMode)(handler))
-    }
+    (if (x == obj) subj else obj).set(sval, Now, bufferMode)((_ : Any) => x.set(sval, Now, bufferMode)(handler))
     context.setRelation(sval)
   }
 
-  def remove()(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
-    update { toSet => handler =>
-      (if (toSet == obj) subj else obj).remove(description, (_: Any) => toSet.remove(description, handler)(context))
-    }
+  def remove(handler : (X#SelfType => Any))(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
+    (if (x == obj) subj else obj).remove(description, (_: Any) => x.remove(description, handler)(context))
     context removeRelation description(this)
   }
 
@@ -57,7 +56,7 @@ final case class TypedRelation[S <: Entity : DataTag, O <: Entity : DataTag, X <
     obj
 
   override def toString: String =
-    subj.getSimpleName + " " + description.semantics.value.toString + " " + obj.getSimpleName
+    subj.getSimpleName + " " + description.semantics.toString + " " + obj.getSimpleName
 }
 
 

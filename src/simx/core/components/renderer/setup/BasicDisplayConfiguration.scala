@@ -55,8 +55,8 @@ object BasicDisplayConfiguration {
   }
 }
 
-class ConfigurableDisplayConfiguration {
-  private var fullscreen = false
+class ConfigurableDisplayConfiguration(val initialFullscreen : Boolean = false) {
+  private var fullscreen = initialFullscreen
   private var resolution = (800, 600)
   private var sizeOfScreen = (0.8 , 0.45)
   private var linkType = LinkType.SingleDisplay
@@ -73,7 +73,7 @@ class ConfigurableDisplayConfiguration {
       "transformInMetersRelativeToWorldRoot = \n " + transformation
   }
 
-  def setFullscrean(enabled : Boolean) {
+  def setFullscreen(enabled : Boolean) {
     fullscreen = enabled
   }
 
@@ -104,7 +104,7 @@ class ConfigurableDisplayConfiguration {
   def getScreenTransform =
     transformation
 
-  def getFullscrean =
+  def getFullscreen =
     fullscreen
 
   def getResolution =

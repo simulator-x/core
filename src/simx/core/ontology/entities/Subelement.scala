@@ -26,6 +26,7 @@ import simx.core.entity.description.{NamedSValSet, EntityAspect}
 import simx.core.entity.Entity
 import simx.core.ontology.SpecificDescription
 import simx.core.entity.component.EntityCreationHandling
+import simx.core.svaractor.semantictrait.base.GroundedSymbolFeatures
 
 /**
  * @author dwiebusch
@@ -33,7 +34,7 @@ import simx.core.entity.component.EntityCreationHandling
  * Time: 19:42
  */
 
-protected[core] class Subelement[T <: Entity]( val desc : SpecificDescription[T] )
+protected[core] class Subelement( val desc : SpecificDescription )
   extends EntityAspect(entityCreation, entityDescription, Nil)
 {
   def getCreateParams = new NamedSValSet(aspectType, EntityDescription(desc))
@@ -43,6 +44,6 @@ protected[core] class Subelement[T <: Entity]( val desc : SpecificDescription[T]
   override def toString: String =
     "Subelement aspect containing " + desc
 
-  def realize(h : T => Any = _ => {})( implicit entityCreationContext : EntityCreationHandling ) =
+  def realize(h : Entity => Any = _ => {})( implicit entityCreationContext : EntityCreationHandling ) =
     desc.realize(h)
 }

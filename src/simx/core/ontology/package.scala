@@ -20,8 +20,7 @@
 
 package simx.core
 
-import entity.description.{Semantics, SVal}
-import simx.core.entity.typeconversion.TypeInfo
+import entity.description.SVal
 
 /**
  * User: dwiebusch
@@ -29,6 +28,6 @@ import simx.core.entity.typeconversion.TypeInfo
  * Time: 16:01
  */
 package object ontology {
-  type GroundedSymbol = SVal.SValType[Semantics]
-  type Annotation = SVal[_,_]
+  type GroundedSymbol = simx.core.svaractor.semantictrait.base.GroundedSymbolFeatures
+  type Annotation = SVal.SValType[_]
 }

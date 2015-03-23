@@ -20,6 +20,9 @@
 
 package simx.core
 
+import simx.core.svaractor.SVarActor.Ref
+import simx.core.svaractor.handlersupport.Types.CPSRet
+
 import collection.immutable
 
 import components.io.IORegistryHandling
@@ -37,6 +40,8 @@ import simx.core.entity.component.ComponentEntityDescription
 import java.lang.reflect.Constructor
 import javax.swing.{ImageIcon, JOptionPane}
 import simx.core.svaractor.unifiedaccess.{EntityUpdateHandling, EntityBase}
+
+import scala.util.continuations.cpsParam
 
 /**
  *
@@ -153,7 +158,6 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
   }
 
   protected class ComponentHandler(private var handleComp : SVarActor.Ref => Any = _ => ()) extends Serializable{
-    def attachHandler(f : SVarActor.Ref => Any){ handleComp = f }
     private[SimXApplication] def and(next : SVarActor.Ref => Unit)(comp : SVarActor.Ref) {
       handleComp(comp)
       next(comp)
@@ -178,7 +182,7 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
     })
   }
 
-  addHandler[ScheduleShutdownIn]{ case msg =>
+  addHandler[ScheduleShutdownIn]{ msg =>
     this.addJobIn(msg.millis){
       super.shutdown()
       SVarActor.shutdownSystem()
@@ -274,4 +278,63 @@ case class ApplicationConfig(componentAspects: List[ComponentAspect[_ <: Compone
 
   def onNode(name : String) =
     ApplicationConfig(componentAspects.init :+ componentAspects.last.onNode(name))
+}
+
+
+trait Continuations extends SimXApplication{
+  override protected def componentsCreated() {
+    println("[info][SimXApplication] Components created")
+    handleRegisteredComponents(configureComponents)
+  }
+
+
+  /**
+   * Called after all components were created
+   * @param components the map of components, accessible by their names
+   */
+  override final protected def configureComponents(components: Map[Symbol, Ref]) =
+    util.continuations.reset{
+      println("[info][SimXApplication] Configuring components")
+      configureComponentsCPS(components)
+      println("[info][SimXApplication] Creating entities")
+      createEntitiesCPS()
+      splash.dispose()
+      println("[info][SimXApplication] Configuring application")
+      finishConfigurationCPS()
+    }
+
+  /**
+   * Called when the entities are meant to be created
+   */
+  override final protected def createEntities(){
+    println("[warn][SimXApplication] plain createEntities was called in a CPS configuration")
+    util.continuations.reset{
+      createEntitiesCPS()
+      splash.dispose()
+      println("[info][SimXApplication] Configuring application")
+      finishConfiguration()
+    }
+  }
+
+  /**
+   * Called after components were configured and the creation of entities was initiated
+   */
+  override final protected def finishConfiguration() =
+    util.continuations.reset( finishConfigurationCPS() )
+
+  /**
+   * Called when the entities are meant to be created
+   */
+  protected def createEntitiesCPS() : Unit@CPSRet
+
+  /**
+   * Called after all components were created
+   * @param components the map of components, accessible by their names
+   */
+  protected def configureComponentsCPS(components: Map[Symbol, Ref]): Unit@CPSRet
+
+  /**
+   * Called after components were configured and the creation of entities was initiated
+   */
+  protected def finishConfigurationCPS(): Unit@CPSRet
 }

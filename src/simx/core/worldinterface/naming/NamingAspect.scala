@@ -36,7 +36,7 @@ object NamingAspect{
   val providing =
     Name.addAnnotations(Symbols.identifier).asConst
 
-  val componentType = OntologySymbol('naming)
+  object componentType extends OntologySymbol('naming)
 }
 
 case class NameIt(name : String) extends EntityAspect(NamingAspect.componentType, Symbols.name, Nil){

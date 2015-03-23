@@ -24,7 +24,8 @@ import description._
 import simx.core.ontology._
 import simx.core.svaractor.TimedRingBuffer.{Now, ContentType, Time, BufferMode}
 import simx.core.svaractor._
-import types.{OntologySymbol, NullType}
+import simx.core.svaractor.semantictrait.base.BasicGroundedSymbol
+import simx.core.ontology.types.NullType
 import simx.core.svaractor.unifiedaccess._
 import simx.core.worldinterface.WorldInterfaceHandling
 import typeconversion.{IReverter, ConvertibleTrait}
@@ -35,9 +36,10 @@ import typeconversion.TypeInfo.DataTag
  * Created by dwiebusch on 27.08.2010
  * updated 10.03.14
  */
-private object SelfDesc extends SVarDescription(NullType as OntologySymbol('internalEntityOption) withType classOf[Option[Entity]])
+private object internalEntityOption extends BasicGroundedSymbol
+private object SelfDesc extends SValDescription(NullType as internalEntityOption withType classOf[Option[Entity]])
 
-class Entity private(val description : GeneralEntityDescription[Entity, _ <: Entity],
+class Entity private(val description : GeneralEntityDescription,
                      val id : java.util.UUID,
                      val sVars : Map[Symbol, List[SVarContainer[_]]],
                      private val removeObservers : Set[SVarActor.Ref],
@@ -66,7 +68,7 @@ class Entity private(val description : GeneralEntityDescription[Entity, _ <: Ent
   def this(e : Entity)(implicit creator : SVarActor) =
     this(e.description, e.id, e.sVars, e.removeObservers, e.creator, _ => e.selfSVar)
 
-  def this(description : GeneralEntityDescription[Entity, _ <: Entity] = new EntityDescription().desc)(implicit creator : SVarActor) =
+  def this(description : GeneralEntityDescription = new EntityDescription().desc)(implicit creator : SVarActor) =
     this(description, java.util.UUID.randomUUID(), Map(), Set(creator.self), creator.self,
       (e : Entity) => SVarImpl(SelfDesc(Some(e)), Now))
 
@@ -162,7 +164,7 @@ class Entity private(val description : GeneralEntityDescription[Entity, _ <: Ent
   protected[entity] def injectSVar[T](sVarName : Symbol, sVar : StateParticle[T],
                                       info : ConvertibleTrait[T], annotations : Annotation*)
                                      (handler : SelfType => Unit)(implicit actor : SVarActor){
-    setSelf(Some(setSVars(insertParticle(sVarName, sVar, info.addAnnotations(annotations: _*), sVars))), Now)
+    setSelf(Some(setSVars(insertParticle(sVarName, sVar, info.addAnnotations(annotations.toSet), sVars))), Now)
     selfSVar.get(x => handler(x.getOrElse(this)))
   }
 
@@ -186,9 +188,9 @@ class Entity private(val description : GeneralEntityDescription[Entity, _ <: Ent
 
   private def prepareParticle[B](c : SValBase[_, B], timeStamp : Time, actor : SVarActor, bufferMode : BufferMode) =
     if (c.typedSemantics.asConvertibleTrait.isSValDescription)
-      c.asSVal.typedSemantics.asConvertibleTrait.asInstanceOf[ConvertibleTrait[B]] -> c.asSVal
+      c.asSVal.typedSemantics.asConvertibleTrait -> c.asSVal
     else
-      c.asSVal.typedSemantics.asConvertibleTrait.asInstanceOf[ConvertibleTrait[B]] -> SVarImpl.apply(c.asSVal, timeStamp, bufferMode)(actor)
+      c.asSVal.typedSemantics.asConvertibleTrait -> SVarImpl.apply(c.asSVal, timeStamp, bufferMode)(actor)
 
   private def addOrUpdate[T, B <: T](in : Map[Symbol, List[SVarContainer[_]]], c : SValBase[T, B], timeStamp : Time, actor : SVarActor, bufferMode : BufferMode) =
     in.getOrElse(c.typedSemantics.sVarIdentifier, Nil).find( _.annotations equals c.typedSemantics.annotations) match {
@@ -221,7 +223,7 @@ class Entity private(val description : GeneralEntityDescription[Entity, _ <: Ent
     }
 
   private def doIfSelf(doIf : Entity => Unit )(msg : => Any, handler : SelfType => Any = _ => {})(implicit actor : SVarActor){
-    if (creator == actor.self) accessMostRecent(doIf)(actor) else actor.ask[SelfType](creator, msg)(handler)
+    if (creator == actor.self) accessMostRecent(doIf)(actor) else actor.ask[SelfType](creator, msg)( handler(_) : Unit)
   }
 
   //convenience
@@ -285,7 +287,7 @@ protected case class SVarContainer[T]( svar : StateParticle[T], info : Convertib
     StateParticleInfo[T](identifier, annotations, svar, info)
 
   def as[O]( out : ConvertibleTrait[O], reverter : Option[IReverter[O, _]] = None) : SVarContainer[O] = {
-    val outWithCorrectAnnotations = out.setAnnotations(annotations.toSeq: _*)
+    val outWithCorrectAnnotations = out.setAnnotations(annotations)
     SVarContainer(convertSVar(outWithCorrectAnnotations, reverter), outWithCorrectAnnotations)
   }
 

@@ -1,6 +1,6 @@
 package simx.core.ontology.qa
 
-import simx.core.ontology.SVarDescription
+import simx.core.ontology.SValDescription
 
 /**
  * User: dwiebusch
@@ -8,4 +8,4 @@ import simx.core.ontology.SVarDescription
  * Time: 15:21
  */
 
-class Answer(val q : Question, val set : Set[SVarDescription[_, _]])
+class Answer(val q : Question, val set : Set[SValDescription[_, _,_,_]])

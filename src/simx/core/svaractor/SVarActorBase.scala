@@ -20,9 +20,10 @@
 
 package simx.core.svaractor
 
-import akka.actor.SupervisorStrategy.Stop
-import simx.core.entity.typeconversion.TypeInfo._
+import akka.actor.SupervisorStrategy.{Directive, Stop}
 import simx.core.helper.Loggable
+import simx.core.svaractor.handlersupport.Types.CPSRet
+import simx.core.svaractor.semantictrait.base.{Thing, Base, SemanticType}
 
 import concurrent.duration._
 import akka.actor._
@@ -82,6 +83,16 @@ trait SVarActorContext[ActorType <: SVarActor]{
   //protected implicit val actorContext : ActorType
 }
 
+sealed case class Question(receiver : SVarActor.Ref){
+  private def _apply[T : ClassTag](msg : Any, c : Class[T] = classOf[Any])(implicit context : SVarActorBase) : T@CPSRet =
+    context.waitFor(context.ask(receiver, msg))
+
+  def apply[T : ClassTag](msg : Any, c : Class[T] = classOf[Any])(implicit context : SVarActorBase) : T@CPSRet =
+    _apply(msg, c)
+
+  def ?[T : ClassTag](msg : Any, c : Class[T] = classOf[Any])(implicit context : SVarActorBase) : T@CPSRet =
+    _apply(msg, c)
+}
 
 trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerSupportImpl with Loggable{
   val printWarnings = true
@@ -121,19 +132,38 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
     updateTimeout()
   }
 
-  protected def ask[T : DataTag : ClassTag](send : ReplyRequest[Any, T] => Unit, msg : Any)(replyHandler : T => Any) {
+  protected def ask[T : ClassTag](send : ReplyRequest[Any, T] => Unit, msg : Any)(replyHandler : T => Any) {
     val id = java.util.UUID.randomUUID
     actorContext.addSingleUseHandlerPF[(java.util.UUID, T)]({ case (`id`, value) => replyHandler(value) } )
     send(ReplyRequest(id, self, msg, classTag[T]))
   }
 
-  def ask[T : DataTag : ClassTag](receiver : ActorSelection, msg : Any)(replyHandler : T => Any){
+  protected def ask[T : ClassTag](receiver : ActorSelection, msg : Any)(replyHandler : T => Any){
     ask[T](receiver ! _, msg)(replyHandler)
   }
 
-  def ask[T : DataTag : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Any) {
+  def ask[T : ClassTag](receiver : SVarActor.Ref, msg : Any)(replyHandler : T => Any) {
     ask[T](receiver ! _, msg)(replyHandler)
   }
+
+  def ask(receiver : SVarActor.Ref) =
+    Question(receiver)
+
+  protected object Result{
+    def of[T](access : (T => Any) => Any) : T@CPSRet =
+      resultOf(access)
+  }
+
+  case class Result[T](tpe : SemanticType[T, _ <: Base, _ <: Thing]){
+    def of(unitAccess : (T => Unit) => Any) : T@CPSRet =
+      resultOf[T](anyAccess => unitAccess(value => anyAccess(value)))
+  }
+
+  protected implicit def resultOf[T](access : (T => Any) => Any) : T@CPSRet=
+    util.continuations.shift((k : T => Any) => access(k))
+
+  protected[core] def waitFor[T](access : (T => Any) => Any) : T@CPSRet=
+    util.continuations.shift((k : T => Any) => access(k))
 
   def waitUntilProcessed(receiver : SVarActor.Ref, msg : Any)(replyHandler : => Unit){
     ask[Any](receiver ! _, msg)(_ => replyHandler)
@@ -145,8 +175,11 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
   protected case object DelayedAnswer extends AnswerType
   private case class UnknownReceiver(msg : String) extends AnswerType
 
-  protected def delayedReplyWith[T]( createResult : (T => Any) => Any )
-                                   ( handleResult : T => Any = (v : T) => v ) : AnswerType =
+  protected def delayedReply[T]( createResult : (T => Any) => Unit ) : AnswerType =
+    delayedReplyWith(createResult)()
+
+  protected def delayedReplyWith[T]( createResult : (T => Any) => Unit )
+                                   ( handleResult : T => Any =  (v : T) => v) : AnswerType =
   {
     val rContext = replyContext
     createResult{ result => rContext(handleResult(result)) }
@@ -156,6 +189,11 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
   protected def provideAnswer[T] : T => AnswerType = {
     val rContext = replyContext
     rContext.apply
+  }
+
+  protected def delayReply[T](handler : T => Unit)(msg : T) = {
+    handler(msg)
+    DelayedAnswer
   }
 
   private case object UnknownReplyContext extends ReplyContext{
@@ -196,6 +234,8 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
       if (answer != DelayedAnswer){
         if (manifest.runtimeClass.isInstance(answer))
           sender ! (id, answer)
+        else if (manifest == ClassTag(classOf[Boolean]) && answer.getClass == classOf[java.lang.Boolean])
+          sender !(id, answer)
         // TODO: Remove this later
         else if (printWarnings){
           if (answer == ((): Unit))
@@ -236,10 +276,17 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
     startUp()
   }
 
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 0, withinTimeRange = 1 minute) {
-    case e : Throwable =>
-      error(e.getMessage, e)
-      e.printStackTrace()
-      Stop
+
+  @scala.throws[Exception](classOf[Exception])
+  override def postRestart(reason: Throwable): Unit = {
+    error(reason.getMessage, reason)
+    context.system.shutdown()
   }
+
+  val decider: PartialFunction[Throwable, Directive] = {
+    case _: Throwable => Stop
+  }
+
+  override def supervisorStrategy =
+    new AllForOneStrategy(maxNrOfRetries = 0, withinTimeRange = 1 minute, decider)
 }

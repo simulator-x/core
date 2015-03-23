@@ -20,13 +20,16 @@
 
 package simx.core.svaractor.handlersupport
 
-import scala.util.continuations.cps
+import simx.core.svaractor.handlersupport.Types.CPSRet
+
+import scala.util.continuations.{cpsParam, cps}
 import scala.reflect.ClassTag
 
 object Types{
   private type hBase[T]    = PartialFunction[Any, T]
+  type CPSRet              = cpsParam[Any, Any]
   type handler_t           = hBase[Unit]
-  type handlerC_t          = hBase[Any]
+  type handlerC_t          = hBase[Any@CPSRet]
 //  type cpsHandler_t        = hBase[Any @HandlerContinuation]
   type HandlerOption       = Option[(handlerC_t, Class[_])]
   type HandlerContinuation = cps[HandlerOption]
@@ -57,7 +60,7 @@ trait HandlerSupport{
   trait Handler
 
   protected type IdType          = Long
-  protected type handlerType[T]  = Function[T, Any]
+  protected type handlerType[T]  = Function[T, Any@CPSRet]
   //protected type handlerTypeC[T] = Function[T, Any @HandlerContinuation]
 
   // returns the reference of the registered handler
@@ -75,11 +78,11 @@ trait HandlerSupport{
    * @return A handler to the registred handler.
    */
   protected def addHandler[T : ClassTag](handler: handlerType[T])
-  protected def addHandlerPF[T  : ClassTag]( pf: PartialFunction[T, Any] )
+  protected def addHandlerPF[T  : ClassTag]( pf: PartialFunction[T, Any@CPSRet] )
   //@deprecated( "Needs to become protected in future" )
-  protected def addSingleUseHandler[T : ClassTag]( f: Function[T, Any] )
+  protected def addSingleUseHandler[T : ClassTag]( f: handlerType[T] )
   //@deprecated( "Needs to become protected in future" )
-  protected def addSingleUseHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any] )
+  protected def addSingleUseHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any@CPSRet] )
 
   // removes a handler using the reference given by addHandler
   /**

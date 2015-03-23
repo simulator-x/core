@@ -27,10 +27,9 @@ import simx.core.entity.component.EntityCreationHandling
 import simx.core.entity.description.SVal.SValType
 import simx.core.entity.description.{SVal, SValSet}
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.ontology.EntitySVarDescription
+import simx.core.ontology.EntitySValDescription
 import simx.core.svaractor.unifiedaccess.StateParticleInfo
 import simx.core.svaractor.SVarActor
-import simx.core.worldinterface.CreationMessage
 
 import scala.collection.mutable
 
@@ -49,12 +48,13 @@ trait AutomaticLocalEntityRepresentation extends SVarActor with EntityCreationHa
   private val entityIdentifier = collection.mutable.Map[String, mutable.Set[UUID]]()
 
   //if relevantEntityTypes == empty -> all Entities will be fetched and stored locally in your component
-  protected val entityTypesForLocalRepresentation: AllOrNothing[List[EntitySVarDescription[_]]]
+  protected val entityTypesForLocalRepresentation: AllOrNothing[List[EntitySValDescription]]
   protected def particleTypesForLocalRepresentation: AllOrNothing[List[ConvertibleTrait[_]]] = All
 
-  registerForCreationOf(Nil)
-  addHandler[CreationMessage]{ msg => handleCreation(msg.e) }
-  handleRegisteredEntities(Nil){ _.map( e => handleCreation(e)) }
+//  registerForCreationOf(Nil)
+//  addHandler[CreationMessage]{ msg => handleCreation(msg.e) }
+  onEntityRegistration(Nil)(handleCreation)
+  requestRegisteredEntities(Nil){ _.map( e => handleCreation(e)) }
 
   private def handleCreation(e: Entity){
     e.addRemoveObserver(self)()

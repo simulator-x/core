@@ -136,7 +136,7 @@ class ProvideConversionInfo[T, O : ClassTag] private( val from : ConvertibleTrai
   def setInitialValue( value : T ) =
     new ProvideConversionInfo(from, to, const, annotations, Some(value), verters)
 
-  def addAnnotations( as : Set[GroundedSymbol] ) =
+  def addAnnotations( as : Set[Annotation] ) =
     new ProvideConversionInfo(from, to, const, annotations ++ as, initialValue, verters)
 
   /**

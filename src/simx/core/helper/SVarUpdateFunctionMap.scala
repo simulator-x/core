@@ -7,6 +7,7 @@ package simx.core.helper
 
 import simx.core.entity.typeconversion.TypeInfo._
 import simx.core.svaractor.TimedRingBuffer.Now
+import simx.core.svaractor.semantictrait.base.BaseValueDescription
 
 import scala.collection._
 import simx.core.entity.Entity
@@ -63,13 +64,13 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
 
     //Number of actual existing sVars in the entity that match toGet
     val targetSize = (for(ct <- toGet.toSeq) yield e.getSVars(ct).size).sum
-    val retrievedValues = mutable.Map[StateParticle[_], SVal[_,_]]()//new SValSet()
+    val retrievedValues = mutable.Map[StateParticle[_], SVal.SValType[_]]()//new SValSet()
 
     toGet.foreach((ct: ConvertibleTrait[_]) => {init(ct)})
 
     def init[T : ClassTag : DataTag](ct: ConvertibleTrait[T]) {
       e.getSVars(ct).foreach{
-        sVar => addSVarUpdateFunctions(sVar._2, Some((x : T) => valueArrived[T](ct, sVar._2)(x)), None, useGet = true)
+        sVar => addSVarUpdateFunctions(sVar._2, Some((x : T) => valueArrived[T](ct, sVar._2)(x)), None, useGet = true, Some(ct))
       }
     }
 
@@ -86,7 +87,7 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
 
     def valueArrived[T](ct: ConvertibleTrait[T], sVar: StateParticle[T])(value: T) {
       implicit val classTag = ct.classTag
-      retrievedValues.update(sVar, SVal(ct)(value))
+      retrievedValues.update(sVar, ct(value))
       if (retrievedValues.size == targetSize) done()
     }
 
@@ -112,13 +113,13 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
    * @see removeSVarUpdateFunctions
    */
   def addSVarUpdateFunctions[T : ClassTag : DataTag](svar: StateParticle[T], consumeSVar: Option[T => Unit],
-                                                     getValueForSVar: Option[() => T] = None, useGet: Boolean = false)  {
+                                                     getValueForSVar: Option[() => T] = None, useGet: Boolean = false, convertibleTrait: Option[ConvertibleTrait[T]] = None)  {
     if(!svar.isMutable && useGet) {
       get(Now, GetClosest, svar)( newValue => consumeSVar.collect{ case f => f(newValue._1) } )
       return
     }
     if(updateFunctionMap.contains(svar)) {
-      println("[warn][SVarUpdateFunctionMap] You tried to call addSVarUpdateFunctions passing a svar ("+svar+") that has already been registered before.")
+      println("[warn][SVarUpdateFunctionMap] You tried to call addSVarUpdateFunctions passing a svar ("+svar+") that has already been registered before for type " + convertibleTrait + ".")
       return
     }
     val changeableConsume = new ChangeableConsume(consumeSVar)

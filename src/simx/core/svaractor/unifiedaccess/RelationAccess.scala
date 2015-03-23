@@ -40,7 +40,7 @@ trait RelationAccess extends UnifiedAccess{
   final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]], bufferMode : BufferMode)
                (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
   {
-    desc.complete[SelfType](asSelfType,  (_ : SelfType ) => {}).publish(bufferMode)
+    desc.complete[SelfType](asSelfType).publish( (_ : SelfType ) => {}, bufferMode)
   }
 
   final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]],
@@ -54,7 +54,7 @@ trait RelationAccess extends UnifiedAccess{
                 handler : SelfType => Any, bufferMode : BufferMode)
                (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
   {
-    desc.complete[SelfType](asSelfType, handler).publish(bufferMode)
+    desc.complete[SelfType](asSelfType).publish(handler, bufferMode)
   }
 
   final def remove(desc : PartialRelation[SelfType , _ <: Entity , _ <: EntityBase[_]])
@@ -67,6 +67,6 @@ trait RelationAccess extends UnifiedAccess{
                    handler : SelfType => Any)
                   (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
   {
-    desc.complete[SelfType](asSelfType, handler).remove()
+    desc.complete[SelfType](asSelfType).remove(handler)
   }
 }

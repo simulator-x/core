@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<SimxConfig>
+	<Components>
+		<Component> 
+			<Path>../jvr</Path>
+		</Component> 
+		<Component> 
+			<Path>../../sound/lwjgl-sound</Path>
+		</Component> 
+		<Component> 
+			<Path>../../io/tuio</Path>
+		</Component> 
+	</Components>
+</SimxConfig>

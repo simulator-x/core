@@ -22,7 +22,8 @@ package simx.core.svaractor
 
 import java.util.UUID
 import simx.core.entity.description.SVal.SValType
-import simx.core.svaractor.TimedRingBuffer.{Time, BufferMode, ContentType}
+import simx.core.svaractor.TimedRingBuffer.{Time, BufferMode}
+import simx.core.svaractor.handlersupport.Types.CPSRet
 
 import scala.reflect.ClassTag
 import scala.util.continuations
@@ -59,8 +60,8 @@ trait SVBase[+T, B <: T] extends Observability[T] with Accessibility[T] with Mut
   def as[T2](cInfo : ConversionInfo[T2, B]) : StateParticle[T2]
   def isMutable : Boolean
   def getValue : Option[B] = None
-  def read(implicit actorContext : SVarActor) : T @continuations.cpsParam[Unit, Unit] =
-    continuations.shift { k : (T => Unit) => get(k) }
+  def read(implicit actorContext : SVarActor) : T@CPSRet =
+    continuations.shift{ k : (T => Any) => get{ x => k(x) } }
 }
 
 trait StateParticle[T] extends SVBase[T, T] with Serializable

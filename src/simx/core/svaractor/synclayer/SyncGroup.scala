@@ -20,10 +20,11 @@
 
 package simx.core.svaractor.synclayer
 
-import simx.core.ontology.SVarDescription
+import simx.core.ontology.SValDescription
 import java.util.UUID
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import simx.core.svaractor.SVarActor
+import simx.core.svaractor.semantictrait.base.{Thing, Base}
 
 /**
  * A sync group is used to synchronize state variables of different type along different entities to the world step,
@@ -35,7 +36,7 @@ import simx.core.svaractor.SVarActor
  * @param sVarDescriptions A set of sVar descriptions of state variables that are synced by this sync group.
  * @param uuid The UUID of the sync group.
  */
-case class SyncGroup private[synclayer]( leader : SVarActor.Ref, sVarDescriptions : Set[SVarDescription[_,_] ], uuid : UUID ) {
+case class SyncGroup private[synclayer]( leader : SVarActor.Ref, sVarDescriptions : Set[SValDescription[_,_,_ <: Base,_ <: Thing] ], uuid : UUID ) {
   override def equals( o : Any ) = {
     o match {
       case s : SyncGroup => s.uuid == uuid
@@ -73,7 +74,7 @@ object SyncGroup {
  * @param leader The leader of the sync group.
  * @param sVarDescriptions A set of description for state variables that are synced by this sync group.
  */
-case class SyncGroupDescription private[synclayer]( leader : SVarActor.Ref, sVarDescriptions : Set[SVarDescription[_,_] ] ) {
+case class SyncGroupDescription private[synclayer]( leader : SVarActor.Ref, sVarDescriptions : Set[SValDescription[_,_,_ <: Base,_ <: Thing] ] ) {
   require( leader != null, "The parameter 'leader' must not be 'null'!" )
   require( sVarDescriptions != null, "The parameter 'sVarDescriptions' must not be 'null'!" )
 
@@ -83,7 +84,7 @@ case class SyncGroupDescription private[synclayer]( leader : SVarActor.Ref, sVar
    * @param sVarDescription The state variable description.
    * @return The altered sync group description.
    */
-  def onSymbols( sVarDescription : SVarDescription[_,_] ) = SyncGroupDescription( leader, Set() + sVarDescription )
+  def onSymbols( sVarDescription : SValDescription[_,_,_ <: Base,_ <: Thing] ) = SyncGroupDescription( leader, Set() + sVarDescription )
 
   /**
    * This method adds a state variable description to the sync group.
@@ -91,6 +92,6 @@ case class SyncGroupDescription private[synclayer]( leader : SVarActor.Ref, sVar
    * @param sVarDescription The state variable description.
    * @return The altered sync group description.
    */
-  def and( sVarDescription : SVarDescription[_,_] ) = SyncGroupDescription( leader, sVarDescriptions + sVarDescription )
+  def and( sVarDescription : SValDescription[_,_,_ <: Base,_ <: Thing] ) = SyncGroupDescription( leader, sVarDescriptions + sVarDescription )
 
 }

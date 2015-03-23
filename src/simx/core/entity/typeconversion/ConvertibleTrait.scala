@@ -20,6 +20,7 @@
 
 package simx.core.entity.typeconversion
 
+import simx.core.svaractor.semantictrait.base._
 import simx.core.svaractor.unifiedaccess.Relation
 
 import scala.reflect.runtime.universe.TypeTag
@@ -47,9 +48,9 @@ trait TypeInfo[+T, dataType <: T] extends Serializable{
   //!
   val classTag           : ClassTag[dataType]
   //! the semantics of the represented type
-  val semantics          : GroundedSymbol
+  val semantics          : GroundedSymbolBase[_ <: Thing]
   //! the identifier which is used to inject and lookup svars into/from entities
-  def sVarIdentifier     : Symbol = semantics.value.toSymbol
+  def sVarIdentifier     : Symbol = semantics.toSymbol
   //! the class manifest of the represented type (should become a typetag some day)
   def typeTag            : TypeInfo.DataTag[dataType]
   //!
@@ -62,7 +63,7 @@ trait TypeInfo[+T, dataType <: T] extends Serializable{
   val ontoLink           : Option[String]
   //!
   val isCoreType =
-    getClass.getPackage == classOf[NullType].getPackage || getClass.getPackage == SVarDescription.getClass.getPackage ||
+    getClass.getPackage == classOf[NullType[_ <: Base, _ <: Thing]].getPackage || getClass.getPackage == SValDescription.getClass.getPackage ||
       getClass.getPackage == classOf[Relation].getPackage
   //!
   final def isSubtypeOf[U](that : TypeInfo.DataTag[U]) : Boolean =
@@ -89,10 +90,12 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
   //! The represented type.
   type dataType      = T1
   //! returns a copy of this convertible trait containing the old and additionally given annotations
-  def addAnnotations( additionalAnnotations : Annotation* ) : ConvertibleTrait[T1] =
-    setAnnotations(annotations.union(additionalAnnotations.toSet).toSeq :_*)
+  def addAnnotations( additionalAnnotations : Set[Annotation] ) : ConvertibleTrait[T1] =
+    setAnnotations(annotations.union(additionalAnnotations))
+  def addAnnotations( additionalAnnotations : GroundedSymbolFeatures* ) : ConvertibleTrait[T1] =
+    setAnnotations(annotations.union(additionalAnnotations.map(OntologySymbol(_)).toSet))
   //! returns a copy of this convertible trait containing the annotations
-  def setAnnotations( additionalAnnotations : Annotation* ) : ConvertibleTrait[T1]
+  def setAnnotations( additionalAnnotations : Set[Annotation] ) : ConvertibleTrait[T1]
   //! if this evaluates to true, provided as will create an sval instead of an svar
   def isSValDescription : Boolean
   //! returns a copy that will yield svals instead of svars
@@ -158,12 +161,11 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
    *
    * Augments the ConvertibleTrait with a value to create a complete CreateParam.
    */
-  def apply(value: T1) : SVal[T1,TypeInfo[T1,T1]] =
-    SVal.apply[T1,T1](this)(value)(classTag)
+  def apply(value: T1) : SVal.SValType[T1]
 
   //TODO: Keep in mind
-  def apply[TType >: this.type <: TypeInfo[T1,T1]](typeInfo: TType, value: T1) : SVal[T1,TType] =
-    SVal.applyAs[T1,T1,TType](typeInfo)(value)(classTag)
+//  def apply[TType >: this.type <: TypeInfo[T1,T1]](typeInfo: TType, value: T1) : SVal[T1,TType, _ , _ ] =
+//    SVal.applyAs(typeInfo)(value)(classTag)
 
   override def toString =
     sVarIdentifier.name + " (" + typeTag.toString() +

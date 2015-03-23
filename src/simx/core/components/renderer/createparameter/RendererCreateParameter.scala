@@ -91,7 +91,7 @@ abstract class RendererAspect( aspectType : GroundedSymbol, targets : List[Symbo
  * @param castShadow A flag that tells if this light casts a shadow. Default value if true.
  * @param shadowBias Default value is 0.25.
  */
-case class SpotLight( name: String,
+case class SpotLight( name: java.lang.String,
                       transformation : Either[ReadFromElseWhere,ConstMat4f] = Right( ConstMat4f( Mat3x4f.Identity ) ),
                       parentElement : Option[ Entity ] = None,
                       diffuseColor : Either[ReadFromElseWhere,Color] = Right( Color.WHITE ),
@@ -101,7 +101,7 @@ case class SpotLight( name: String,
                       quadraticAttenuation : Either[ReadFromElseWhere,Float] = Right( 0.0f ),
                       spotCutOff : Either[ReadFromElseWhere,Float] = Right( 30.0f ),
                       spotExponent : Either[ReadFromElseWhere,Float] = Right( 1.0f ),
-                      castShadow : Either[ReadFromElseWhere,Boolean] = Right( true ),
+                      castShadow : Either[ReadFromElseWhere,scala.Boolean] = Right( true ),
                       shadowBias : Either[ReadFromElseWhere,Float] = Right( 0.25f ) ) extends RendererAspect( Symbols.spotLight ) {
 
   require( name != null, "The parameter 'name' must not be 'null'!" )
@@ -191,7 +191,7 @@ case class SpotLight( name: String,
  * @param linearAttenuation The linear attenuation of the light. Default value is 0.0.
  * @param quadraticAttenuation The quadratic attenuation of the light. Default value is 0.0.
  */
-case class PointLight( name: String,
+case class PointLight( name: java.lang.String,
                        transformation : Either[ReadFromElseWhere,ConstMat4f] = Right( ConstMat4f( Mat3x4f.Identity ) ),
                        parentElement : Option[ Entity ] = None,
                        diffuseColor : Either[ReadFromElseWhere,Color] = Right( Color.WHITE ),
@@ -268,13 +268,13 @@ case class PointLight( name: String,
  * @param topTexture The texture of the top side of the sky box.
  * @param bottomTexture The texture of the bottom side of the sky box.
  */
-case class SkyBox( name: String,
-                   frontTexture : String,
-                   backTexture : String,
-                   leftTexture : String,
-                   rightTexture : String,
-                   topTexture : String,
-                   bottomTexture : String
+case class SkyBox( name: java.lang.String,
+                   frontTexture : java.lang.String,
+                   backTexture : java.lang.String,
+                   leftTexture : java.lang.String,
+                   rightTexture : java.lang.String,
+                   topTexture : java.lang.String,
+                   bottomTexture : java.lang.String
                   ) extends RendererAspect( Symbols.skyBox ) {
   require( name != null, "The parameter 'name' must not be 'null'!" )
   require( frontTexture != null, "The parameter 'frontTexture' must not be 'null'!" )
@@ -310,8 +310,8 @@ case class SkyBox( name: String,
  * @param transformation The transformation of the element for ReadFromElseWhere if another component provides this parameter. Default value is the identity matrix.
  * @param scale A scale factor for the element. Default value is no scale factor.
  */
-case class ShapeFromFile( file: String,
-                          subElement : Option[String] = None,
+case class ShapeFromFile( file: java.lang.String,
+                          subElement : Option[java.lang.String] = None,
                           parentElement : Option[Entity] = None,
                           transformation : Either[ReadFromElseWhere,ConstMat4f]  = Right( ConstMat4f( Mat3x4f.Identity ) ),
                           scale : ConstMat4f = ConstMat4f( Mat3x4f.Identity )
@@ -369,7 +369,7 @@ case class GroupNode(trafo : ConstMat4, scale : ConstVec3 = Vec3.One) extends Re
  * @param scale A scale factor for this element.
  */
 case class ExistingNode(
-                         subElement: String,
+                         subElement: java.lang.String,
                          scale : ConstMat4f = ConstMat4f( Mat3x4f.Identity )
                  ) extends RendererAspect( Symbols.existingNode ) {
 
@@ -425,8 +425,8 @@ case class VRUser(  viewPlatform : ConstMat4f = ConstMat4f( Mat3x4f.Identity ),
  * -------------------------------------------------------------------
  */
 
-case class Mirror( name: String,
-                   file : String,
+case class Mirror( name: java.lang.String,
+                   file : java.lang.String,
                    transformation : Either[ReadFromElseWhere,ConstMat4f] = Right( ConstMat4f( Mat3x4f.Identity ) )
                    ) extends RendererAspect( Symbols.mirror ) {
 
@@ -457,8 +457,8 @@ case class Mirror( name: String,
 
 }
 
-case class Water( name: String,
-                  file : String,
+case class Water( name: java.lang.String,
+                  file : java.lang.String,
                   transformation : Either[ReadFromElseWhere,ConstMat4f] = Right( ConstMat4f( Mat3x4f.Identity ) ),
                   waveScale : Either[ReadFromElseWhere,Float]
                   ) extends RendererAspect( Symbols.water ) {
@@ -503,8 +503,8 @@ case class Water( name: String,
  *
  * ------------------------------------
  */
-case class AnimatedObject( //name: String,
-                           subElement : Option[String] = None,
+case class AnimatedObject( //name: java.lang.String,
+                           subElement : Option[java.lang.String] = None,
                            parentElement : Option[Entity] = None,
                            transformation : ConstMat4f  =  ConstMat4f( Mat3x4f.Identity ) ,
                            scale : ConstMat4 = Mat4f.Identity//,

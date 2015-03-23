@@ -91,6 +91,7 @@ protected class JmDNSActor extends SVarActor{
     val info = msg.info
     val name = info.getName
     val newList = info.getInetAddresses.map( _ -> info.getPort ).toList
+    println("found service " + msg.info)
     observers.foreach{ _ ! makeRegMsg(name, info) }
     registeredServices = registeredServices.updated(name, newList :: registeredServices.getOrElse(name, Nil))
     openRequests.filter( kv => name.matches(kv._1) ).foreach{ _._2.apply(List(name -> newList)) }
@@ -159,7 +160,7 @@ private class Browser(outer : SVarActor.Ref, host : InetAddress = InetAddress.ge
   }
 
   protected def update(){
-    browser.list(JmDNSActor.serviceType, 1000)
+    browser.list(JmDNSActor.serviceType, 100)
     addJobIn(100)(update())
   }
 
@@ -180,7 +181,9 @@ private class Browser(outer : SVarActor.Ref, host : InetAddress = InetAddress.ge
   }
 
   addHandler[InnerRegister]{
-    msg => browser.registerService(msg.info)
+    msg =>
+      println("publishing service " + msg.info)
+      browser.registerService(msg.info)
   }
 
   addHandler[InnerUnRegister]{

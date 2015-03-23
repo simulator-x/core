@@ -26,10 +26,11 @@
  */
 package simx.core.ontology.types
 
-import simx.core.ontology.{SpecificDescription, Symbols, SVarDescription}
+import simx.core.ontology.{SValDescription, SpecificDescription, Symbols}
+import simx.core.svaractor.semantictrait.base.Base
 
 object TypeDefinitions {
-  type Enum = Enumeration#Value
+  type Enum = scala.Enumeration#Value
 }
 
 object Mappings{
@@ -77,9 +78,9 @@ object Mappings{
     90 -> Key_z )
 }
 
-case class SoundProperties(gain : Float = 0.5f, loop: Boolean = false, pitch: Float = 1.0f, max_distance : Float = Float.MaxValue, ref_distance : Float = 1.0f)
+case class SoundProperties(gain : scala.Float = 0.5f, loop: scala.Boolean = false, pitch: scala.Float = 1.0f, max_distance : scala.Float = Float.MaxValue, ref_distance : Float = 1.0f)
 
-object DefaultEnum extends Enumeration {val Foo = Value("Foo") : TypeDefinitions.Enum}
-object EntityDescription extends SVarDescription[SpecificDescription[_ <: simx.core.entity.Entity], SpecificDescription[_ <: simx.core.entity.Entity]](
-  NullType as Symbols.entityDescription withType classOf[simx.core.ontology.SpecificDescription[_ <: simx.core.entity.Entity]]
+object DefaultEnum extends scala.Enumeration {val Foo = Value("Foo") : TypeDefinitions.Enum}
+object EntityDescription extends SValDescription[SpecificDescription, SpecificDescription,Base, Symbols.entityDescription.SymbolType](
+  NullType as Symbols.entityDescription withType classOf[simx.core.ontology.SpecificDescription]
 )

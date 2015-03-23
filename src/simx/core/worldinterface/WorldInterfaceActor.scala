@@ -22,11 +22,12 @@ package simx.core.worldinterface
 
 import simx.core.svaractor._
 import simx.core.entity.Entity
+import simx.core.svaractor.semantictrait.base.{Thing, Base}
 import simx.core.worldinterface.eventhandling._
 import simx.core.component.remote.RemoteServiceSupport
 import simx.core.worldinterface.eventhandling.EventDescription
 import scala.collection.mutable
-import simx.core.ontology.{SVarDescription, GroundedSymbol, types, Symbols}
+import simx.core.ontology.{SValDescription, GroundedSymbol, types, Symbols}
 import simx.core.component.ComponentCreation
 import simx.core.svaractor.unifiedaccess._
 import simx.core.svaractor.BunchOfSimXMessagesMessages
@@ -193,14 +194,18 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
     getEntitiesBelow(msg.path).collect{ case set => set.foreach( t => msg.actor ! CreationMessage(t._2, t._1) ) }
   }
 
-  addHandler[OnNextRegistration]{
-    msg => getEntitiesBelow(msg.path) match {
-      case Some(set) if set.nonEmpty =>
-        set.head._1
+  addHandler[OnOneRegistration]{
+    msg => Match( getEntitiesBelow(msg.path)){
+      case Some(set) if set.nonEmpty => set.head._1
       case _ =>
         nextRegHandlers = nextRegHandlers.updated(msg.path, nextRegHandlers.getOrElse(msg.path, Set()) + provideAnswer[Entity])
         DelayedAnswer
     }
+  }
+
+  addHandler[OnNextRegistration]{ msg =>
+    nextRegHandlers = nextRegHandlers.updated(msg.path, nextRegHandlers.getOrElse(msg.path, Set()) + provideAnswer[Entity])
+    DelayedAnswer
   }
 
   addHandler[RegisterHandlerMessage]{ msg =>
@@ -221,7 +226,7 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
     val e = new Entity()
     e.set(types.EventDescription(new EventDescription(msg.name)))
     e.set(types.Actor(msg.provider))
-    registerEntity('eventProvider :: msg.name.value.toSymbol :: Nil, e)
+    registerEntity('eventProvider :: msg.name.toSymbol :: Nil, e)
     eventHandlers.get(msg.name) collect {
       case set => set.foreach{ _._1 ! EventProviderMessage(Set(msg.provider), msg.name, msg.event) }
     }
@@ -238,22 +243,22 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
   }
 
   addHandler[ForwardMessageRequest]{
-    msg => actors get msg.destination match{
+    msg => Match(actors get msg.destination){
       case Some(dst) => dst ! msg.msg
-      case None =>
+      case None => ()
     }
   }
 
-  protected var svarDescRegistry = Map[String, SVarDescription[_, _]]()
+  protected var svarDescRegistry = Map[String, SValDescription[_, _,_ <: Base,_ <: Thing]]()
   protected var svarDescObservers = Set[SVarActor.Ref]()
 
-  addHandler[RegisterSVarDescription[_, _]]{ msg =>
+  addHandler[RegisterSVarDescription[_, _,_ <: Base,_ <: Thing]]{ msg =>
     svarDescRegistry += msg.desc.ontoLink.getOrElse(msg.desc.sVarIdentifier.name) -> msg.desc
     svarDescObservers.foreach( _ ! msg)
   }
 
   addHandler[GetRegisteredSVarDescriptions]{
-    case msg => svarDescRegistry
+    msg => svarDescRegistry
   }
 
   addHandler[ObserveSVarDescRegistrations]{ msg =>
@@ -298,7 +303,7 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
   }
 
   addHandler[ComponentLookUpByType]{
-    msg => delayedReplyWith(handleComponentMap)(_.get(msg.componentType.value.toSymbol).map(_.toList).getOrElse(Nil))
+    msg => delayedReplyWith(handleComponentMap)(_.get(msg.componentType.toSymbol).map(_.toList).getOrElse(Nil))
   }
 
   addHandler[AllComponentsLookupRequest]{
@@ -306,7 +311,7 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
   }
 
   private def handleComponentMap( handler : Map[Symbol, Map[Symbol, SVarActor.Ref]] => Any) = {
-    getEntitiesBelow(List(Symbols.component.value.toSymbol)) match {
+    getEntitiesBelow(List(Symbols.component.Symbol.toSymbol)) match {
       case Some(set) if set.size > 0 =>
         var counter = 0
         var resultMap : Map[Symbol, Map[Symbol, SVarActor.Ref]] = Map()
@@ -344,8 +349,11 @@ protected class WorldInterfaceActor extends SVarActor with EventProvider with Re
     }
   }
 
-  addHandler[EntityGroupLookupRequest]{
-    msg => getEntitiesBelow(msg.name).collect{ case set => set.map(_._1) }.getOrElse(Set())
+  addHandler[EntityGroupLookupRequest]{ msg =>
+    Match(getEntitiesBelow(msg.name)){
+      case Some(set) => set.map(_._1)
+      case None => Set()
+    }
   }
 
 

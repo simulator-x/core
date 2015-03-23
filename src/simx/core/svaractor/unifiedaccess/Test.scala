@@ -22,7 +22,7 @@ package simx.anypackage
 
 import simx.core.entity.Entity
 import simx.core.ontology.entities.{Arm, User}
-import simx.core.ontology.{SVarDescription, EntityDescription, types, Symbols}
+import simx.core.ontology._
 import simx.core.svaractor.unifiedaccess._
 import simx.core.worldinterface.WorldInterfaceHandling
 import simx.core.svaractor.SVarActor
@@ -41,15 +41,13 @@ import simx.core.worldinterface.naming.NameIt
 
 
 
-
-object Son extends SVarDescription(types.Entity as Symbols.saturation){
+case class Son(e : Entity, a : SVarActor) extends Entity(e)(a)
+object Son extends EntitySValDescription(types.Entity.valueDescription as Symbols.bucket, new simx.core.ontology.entities.User(_, _), "http://www.hci.uni-wuerzburg.de/ontologies/simx/components/renderer/Gui/Gui.owl#Wait_A_Second_._I_Dont_Know_How_This_Cloud_Affect_..._Whaaaaaaaaat"){
   val myid = Random.nextInt()
   override def toString: String = "Son" + myid
 }
 
-class Father extends  SVarDescription(types.Entity as Symbols.factor) {
-
-}
+class Father extends EntitySValDescription(types.Entity.valueDescription as Symbols.manaPotion, new simx.core.ontology.entities.User(_, _), "http://www.hci.uni-wuerzburg.de/ontologies/simx/components/renderer/Gui/Gui.owl#Fatha")
 
 
 case object StartMSG
@@ -78,11 +76,11 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
     new EntityDescription(NameIt("test")).realize{
       e =>
         //        e.observe((e : Entity) => println(e))
-//        println("realized " + e)
-//        var k = 0f
-//        e.observe(types.Transformation withAnnotations(Symbols.left)).foreach {
-//          (a, v) => println(a , v)
-//        }
+        //        println("realized " + e)
+        //        var k = 0f
+        //        e.observe(types.Transformation withAnnotations(Symbols.left)).foreach {
+        //          (a, v) => println(a , v)
+        //        }
         //      x.observe{
         //        newEntity : Entity =>
         //          x = newEntity
@@ -100,25 +98,25 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
         //      }
 
 
-//        println("setting transformation")
-//        e.set(Transformation.withAnnotations(Symbols.left, Symbols.top).apply(Mat4f(2)))
-//        println("done setting transformation")
-//        e.set(Transformation.withAnnotations(Symbols.left, Symbols.bottom).apply(Mat4f(k)))
-//
-////        e.remove()
-//        e.get(Transformation.withAnnotations(Symbols.left, Symbols.top)) foreach {
-//          (a, y) => println(a, y)
-//        }
-//
-//        e.observe(Transformation.withAnnotations(Symbols.left, Symbols.top)) foreach {
-//          (a, y) => println(a, y)
-//        }
+        //        println("setting transformation")
+        //        e.set(Transformation.withAnnotations(Symbols.left, Symbols.top).apply(Mat4f(2)))
+        //        println("done setting transformation")
+        //        e.set(Transformation.withAnnotations(Symbols.left, Symbols.bottom).apply(Mat4f(k)))
+        //
+        ////        e.remove()
+        //        e.get(Transformation.withAnnotations(Symbols.left, Symbols.top)) foreach {
+        //          (a, y) => println(a, y)
+        //        }
+        //
+        //        e.observe(Transformation.withAnnotations(Symbols.left, Symbols.top)) foreach {
+        //          (a, y) => println(a, y)
+        //        }
 
         object GrandFather extends Father{
           override def toString: String = "GrandFather"
         }
 
-        object HasArm extends RelationDescription(types.Entity, Symbols.parentElement, types.Entity, "")
+        object HasArm extends RelationDescription(types.Entity, Symbols.parentElement, types.Entity, "", false)
 
 
         //      relations
@@ -127,9 +125,9 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
         val arm2 = new Entity
         val user = new User(new Entity, this)
 
-//        dad.observe{
-//          e : Entity => println(dad + ": " + e)
-//        }
+        //        dad.observe{
+        //          e : Entity => println(dad + ": " + e)
+        //        }
 
 
 
@@ -139,49 +137,49 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
           case Remove(_, value) => println("REMOVE: user.observe(HasArm -> ?).onChange", value)
         }
 
-//        dad.ignore(onChangeId)
-//
+        //        dad.ignore(onChangeId)
+        //
         HasArm.observe(user -> arm) head {
           relation => println("HasArm.observe(user -> arm)", relation)
         }
-//
+        //
         user.get(HasArm -> ?)
 
         user.observe(HasArm -> ?)(
           entity => println("user.observe(hasArm -> ?)", entity)
         )
-//
+        //
         user.observe(HasArm -> arm){
           relation => println("user.observe(HasArm -> arm)", relation)
         }
-//
-      ?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm).foreach{
-        x => println("?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm)", x)
-      }
-      ?.observe(HasArm -> arm).foreach{
-        (_, e) => println("?.observe(HasArm -> arm)", e)
-      }
+        //
+        ?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm).foreach{
+          x => println("?.get(HasArm.restrictTypes(types.User, types.Arm) -> arm)", x)
+        }
+        ? observe HasArm -> arm foreach{
+          (e, _) => println("?.observe(HasArm -> arm)", e)
+        }
 
-//        son.observe{
-//          e : Entity => println(son + ": " + e)
-//        }
+        //        son.observe{
+        //          e : Entity => println(son + ": " + e)
+        //        }
 
-//        dad.observe((e : Entity) => println(e) )
+        //        dad.observe((e : Entity) => println(e) )
 
 
         user.set(HasArm -> arm)
         user.set(HasArm -> arm2)
         user.set(HasArm -> arm)
 
-      //        dad.observe(fatherOf -> ? ).foreach{
-      //          (_, e)  => println("fatherOf.get(dad -> ?)", e)
-      //        }
+        //        dad.observe(fatherOf -> ? ).foreach{
+        //          (_, e)  => println("fatherOf.get(dad -> ?)", e)
+        //        }
 
 
-      //        ?.get(fatherOf -> son).foreach{
-//          (x, f) => println("?.get(fatherOf -> son)", f)
-//        }
-//
+        //        ?.get(fatherOf -> son).foreach{
+        //          (x, f) => println("?.get(fatherOf -> son)", f)
+        //        }
+        //
 
 
         HasArm.observe(? -> arm).foreach{
@@ -190,10 +188,10 @@ class TestActor(that : ActorRef) extends SVarActor with WorldInterfaceHandling w
 
 
         HasArm.get(user -> ?).foreach{
-          (_, e) => println("hasArm.get(user -> ?)", e)
+          ( e, _) => println("hasArm.get(user -> ?)", e)
         }
-//
-//        fatherOf.observe(? -> son)
+        //
+        //        fatherOf.observe(? -> son)
 
         HasArm.remove(user -> arm)
         user.set(HasArm -> arm)

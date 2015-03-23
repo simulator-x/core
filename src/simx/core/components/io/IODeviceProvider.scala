@@ -33,7 +33,7 @@ import simx.core.entity.typeconversion.TypeInfo
  */
 
 trait IODeviceProvider extends WorldInterfaceHandling{
-  final protected def publishDevice[T <: Entity]( device : SVal[T,TypeInfo[T,T]], path : List[Symbol] = Nil){
+  final protected def publishDevice[T <: Entity]( device : SVal[T,TypeInfo[T,T],_,_], path : List[Symbol] = Nil){
     registerEntity(device.typedSemantics.sVarIdentifier :: path, device.value)
   }
 }

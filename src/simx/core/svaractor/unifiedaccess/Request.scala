@@ -21,7 +21,7 @@
 package simx.core.svaractor.unifiedaccess
 
 import simx.core.entity.Entity
-import simx.core.ontology.types
+import simx.core.ontology.{Annotation, types}
 
 /**
  *
@@ -32,7 +32,7 @@ sealed abstract class Request[T <: Entity, V <: Entity] (desc : RelationDescript
   def getKnownValue : V
 
   val description : RelationDescription[_ ,_] =
-    desc.setAnnotations( if (isLeft) types.RelationObject(getKnownValue) else types.RelationSubject(getKnownValue))
+    desc setAnnotations Set[Annotation]( if (isLeft) types.RelationObject(getKnownValue) else types.RelationSubject(getKnownValue))
 }
 
 

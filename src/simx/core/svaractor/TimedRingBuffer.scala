@@ -26,10 +26,10 @@ import simx.core.svaractor.TimedRingBuffer._
  * Created by dwiebusch on 11.09.14
  */
 object TimedRingBuffer{
-  sealed abstract class BufferMode(val getMaxBufferTime : Long, val timestoring : Boolean)
+  sealed abstract class BufferMode(val getMaxBufferTime : Long, val timestoring : Boolean) extends Serializable
   sealed case class MaxTime(mSecs : Long) extends BufferMode(mSecs, timestoring = true)
-  case object UnbufferedTimeStoring extends BufferMode(0, timestoring = true)
-  case object Unbuffered extends BufferMode(0, timestoring = false)
+  case object UnbufferedTimeStoring extends BufferMode(0, timestoring = true) with Serializable
+  case object Unbuffered extends BufferMode(0, timestoring = false) with Serializable
 
   type ContentType[+T] = (T, Time)
 
@@ -37,7 +37,7 @@ object TimedRingBuffer{
     val GetClosest = Value("GetClosest")
   }
 
-  sealed abstract class Time {
+  sealed abstract class Time extends Serializable {
     def reify : Time
     protected[TimedRingBuffer] def timeInMillis : Long
 
@@ -107,7 +107,7 @@ abstract class TimedRingBuffer[T]{
   }
 }
 
-abstract class AccessMethod(){
+abstract class AccessMethod extends Serializable{
   protected def inc(toInc : Int)(implicit dataSize : Int) : Int =
     if (toInc < dataSize) toInc + 1 else 0
 
@@ -118,7 +118,7 @@ abstract class AccessMethod(){
               (implicit size : Int) : ContentType[T]
 }
 
-object GetClosest extends AccessMethod{
+object GetClosest extends AccessMethod with Serializable{
   override def apply[T](time : Time, data: Array[ContentType[T]], head : Int, tail : Int)(implicit size : Int) = {
     var pos = head
     while (pos != tail && data(pos)._2 > time)

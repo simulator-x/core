@@ -20,15 +20,14 @@
 
 package simx.core.svaractor.test
 
-import actors.AbstractActor
 import simx.core.svaractor._
 
-case class StartTest( sender : AbstractActor )
-case class TestFinished( sender : AbstractActor, successful : Boolean )
-case class OwnerChangeRetry[T]( sender: AbstractActor, count: Int, sVar: SVar[T], a: AbstractActor )
-case class CheckValue[T]( sender: AbstractActor, sVar: SVar[T] )
-case class ValueChangeRetry[T]( sender: AbstractActor, count: Int, sVar: SVar[T] )
-case class IgnoreWait( sender: AbstractActor, sVarIgnoreWaitCount: Int )
+case class StartTest(  )
+case class TestFinished( sender : SVarActor.Ref, successful : Boolean )
+case class OwnerChangeRetry[T]( sender: SVarActor.Ref, count: Int, sVar: SVar[T], a: SVarActor.Ref )
+case class CheckValue[T]( sender: SVarActor.Ref, sVar: SVar[T] )
+case class ValueChangeRetry[T]( sender: SVarActor.Ref, count: Int, sVar: SVar[T] )
+case class IgnoreWait( sender: SVarActor.Ref, sVarIgnoreWaitCount: Int )
 
 /*class SVarSpec extends Spec with ShouldMatchers {
 

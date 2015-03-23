@@ -37,7 +37,7 @@ object SValSet {
    *
    * Creates a new SValSet
    */
-  def apply(params: SVal[_,_]*) = new SValSet(params:_*)
+  def apply(params: SVal.SValType[_]*) = new SValSet(params:_*)
 
   /**
    *
@@ -48,7 +48,7 @@ object SValSet {
 
 
 
-class SValSet(params: SVal[_,_]*) extends TypedSValSet[Any](params :_*){
+class SValSet(params: SVal.SValType[_]*) extends TypedSValSet[Any](params :_*){
   def this(that: SValSet) = this(that.toSValSeq:_*)
 
 }
@@ -59,7 +59,7 @@ class SValSet(params: SVal[_,_]*) extends TypedSValSet[Any](params :_*){
  * @see EntityAspect
  */
 //TODO: make constructors package private to force companion object usage
-class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, List[SValBase[U, _]]] {
+class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symbol, List[SValBase[U, _ <: U]]] {
   params.foreach(p => add(p))
 
   /**
@@ -77,11 +77,16 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
     this
   }
 
-  def add(SVal : SValBase[U, _]) {
-    update(SVal.typedSemantics.sVarIdentifier, SVal :: getOrElse(SVal.typedSemantics.sVarIdentifier, Nil))
+  def add(SVal : SValBase[U, _ <: U]) {
+    try {
+      update(SVal.typedSemantics.sVarIdentifier, SVal :: getOrElse(SVal.typedSemantics.sVarIdentifier, Nil))
+    } catch {
+      case npe: NullPointerException =>
+        println(SVal, SVal.typedSemantics.getClass, SVal.typedSemantics.semantics)
+    }
   }
 
-  def +=[T <: U](SVal : SValBase[U, _]) : this.type = {
+  def +=[T <: U](SVal : SValBase[U, _ <: U]) : this.type = {
     add(SVal)
     this
   }
@@ -95,7 +100,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
    *
    * Returns a List of all included SVals that are of a sepcific OntologyMember type.
    */
-  def getAllSValsFor[T <: U](typedSemantics: TypeInfo[T, T]): List[SVal[T,TypeInfo[T, T]]] =
+  def getAllSValsFor[T <: U](typedSemantics: TypeInfo[T, T]): List[SVal.SValType[T]] =
     //TODO: Implement annotations check more efficient
     getOrElse(typedSemantics.sVarIdentifier, Nil).filter(sVal => {
       typedSemantics.annotations.diff(sVal.typedSemantics.annotations).isEmpty
@@ -107,7 +112,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
    * Returns an Option on the SVal of a specific OntologyMember type.
    * Returns the first SVal in the order of this SValSet if more than one is present.
    */
-  def getFirstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): Option[SVal[T,TypeInfo[T, T]]] =
+  def getFirstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): Option[SVal.SValType[T]] =
     getAllSValsFor(typedSemantics).headOption
 
   /**
@@ -116,7 +121,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
    * If the requested SVal is not found a SValNotFound is thrown.
    * If more than one valid SVal is present, the first SVal in the order of this SValSet is returned.
    */
-  def firstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): SVal[T,TypeInfo[T, T]] =
+  def firstSValFor[T <: U](typedSemantics: TypeInfo[T, T]): SVal.SValType[T] =
     getFirstSValFor(typedSemantics).getOrElse( throw SValNotFound(typedSemantics.sVarIdentifier) )
 
   /**
@@ -130,7 +135,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
    *  Adds the given SVal if no other SVal of its OntologyMember type
    *        was contained before.
    */
-  def addIfNew(sVal: SValBase[U, _]) {
+  def addIfNew(sVal: SValBase[U, _ <: U]) {
     if (!contains(sVal.typedSemantics)) add(sVal)
   }
 
@@ -139,14 +144,14 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
     add(sVal)
   }
 
-  def update[SValT<: U](sVal : SVal[SValT,TypeInfo[SValT,SValT]]){
+  def update[SValT <: U](sVal : SVal.SValType[SValT]){
     val newEntry = sVal :: get(sVal.typedSemantics.sVarIdentifier).collect{
       case list => list.filter(_.typedSemantics.annotations.diff(sVal.typedSemantics.annotations).nonEmpty)
     }.getOrElse(Nil)
     update(sVal.typedSemantics.sVarIdentifier, newEntry)
   }
 
-  def remove[SValT<: U](sVal : SVal[SValT,TypeInfo[SValT,SValT]]){
+  def remove[SValT <: U](sVal : SVal.SValType[SValT]){
     update(sVal.typedSemantics.sVarIdentifier, get(sVal.typedSemantics.sVarIdentifier).collect{
       case list => list.filter(_.typedSemantics.annotations.diff(sVal.typedSemantics.annotations).nonEmpty)
     }.getOrElse(Nil))
@@ -217,7 +222,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
    * @param c the ConvertibleTrait to be combined with a value
    * @return an option containing the created cvar, or None if no matching value was found
    */
-  def combineWithValue[T <: U](c : ConvertibleTrait[T]) : List[SVal[T,TypeInfo[T,T]]] =
+  def combineWithValue[T <: U](c : ConvertibleTrait[T]) : List[SVal[T,TypeInfo[T,T],_,_]] =
     getAllValuesFor(c) map { value => c(value) }
 
   /**
@@ -247,7 +252,7 @@ class TypedSValSet[U](params: SValBase[U, _ ]*) extends mutable.HashMap[Symbol, 
  *
  * @see EntityAspect, SValSet
  */
-final case class NamedSValSet(semantics: GroundedSymbol, ps: SVal[_,_]*) extends SValSet(ps: _*) {
+final case class NamedSValSet(semantics: GroundedSymbol, ps: SVal.SValType[_]*) extends SValSet(ps: _*) {
   def this(that: NamedSValSet) = this(that.semantics, that.toSValSeq:_*)
   def this(aspectType: GroundedSymbol, cps: SValSet) = this(aspectType, cps.toSValSeq:_*)
 

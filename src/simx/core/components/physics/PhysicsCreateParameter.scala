@@ -20,7 +20,9 @@
 
 package simx.core.components.physics
 
+import simplex3d.math.float.ConstMat4
 import simplex3d.math.floatx.{ConstVec3f, ConstMat4f, Mat4x3f}
+import simx.core.components.renderer.createparameter.ReadFromElseWhere
 import simx.core.entity.description.SVal.SValType
 import simx.core.ontology.{types => gt, Symbols, GroundedSymbol}
 import simx.core.entity.description.{SValSeq, EntityAspect}
@@ -51,6 +53,8 @@ object ImplicitEitherConversion {
   import scala.language.implicitConversions
   implicit def left2Either[A,B](a:A):Either[A,B] = Left(a)
   implicit def right2Either[A,B](b:B):Either[A,B] = Right(b)
+  implicit def matToConstMat4(m : simplex3d.math.types.AnyMat[_]) : ConstMat4 = ConstMat4(m)
+  implicit def matToConstMat4Right(m : simplex3d.math.types.AnyMat[_]) : Either[ReadFromElseWhere, ConstMat4] = Right(ConstMat4(m))
 }
 
 /**

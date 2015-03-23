@@ -30,23 +30,28 @@ import scala.reflect.ClassTag
  * Created by dennis on 12.09.14.
  */
 sealed trait PartialRelation[-X <: EntityRelationAccess, S <: Entity, O <: Entity]{
-  def complete[X2 <: X : DataTag](missingPart : X2) : TypedRelation[S, O, X2] = complete(missingPart, (x  : X2#SelfType) => {})
-  def complete[X2 <: X : DataTag](missingPart : X2, handler : X2#SelfType => Any) : TypedRelation[S, O, X2]
+  def complete[X2 <: X : DataTag](missingPart : X2) : TypedRelation[S, O, X2]
 }
 
 case class LeftRelationPart[S <: Entity : ClassTag, O <: Entity : ClassTag ] private[unifiedaccess]
 (description : RelationDescription[S, O], subj : S) extends PartialRelation[O, S, O] with PartialRequest[O]
 {
-  def complete[O2 <: O : DataTag](obj: O2, handler : O2#SelfType => Any) =
-    description.asRelation[S, O, O2](subj, obj, x => x(obj)(handler))
-  def asRequest: Request[O, S] = RightRequest(description, subj)
+  def complete[O2 <: O : DataTag](obj: O2) =
+    description.asRelation[S, O, O2](subj, obj, obj)
+
+  def asRequest: Request[O, S] =
+    RightRequest(description, subj)
 }
 
 case class RightRelationPart[S <: Entity : ClassTag, O <: Entity : ClassTag] private[unifiedaccess]
 (description : RelationDescription[S, O], obj : O) extends PartialRelation[S, S, O] with PartialRequest[S]
 {
-  def complete[S2 <: S : DataTag](subj: S2, handler : S2#SelfType => Any) =
-    description.asRelation[S, O, S2](subj, obj, x => x(subj).apply(handler))
-  def asRequest: Request[S, O] = LeftRequest(description, obj)
+  def complete[S2 <: S : DataTag](subj: S2) =
+    description.asRelation[S, O, S2](subj, obj, subj)
+
+  def asRequest: Request[S, O] =
+    LeftRequest(description, obj)
+
+
 }
 

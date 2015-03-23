@@ -21,7 +21,7 @@
 package simx.core.component
 
 import simx.core.entity.component.{FinalizeComponentConfigMsg, GetInitialConfigValuesMsg, EntityConfigLayer}
-import simx.core.entity.description.{EntityAspect, SVal, SValSet}
+import simx.core.entity.description.{EntityAspect, SValSet}
 import simx.core.svaractor.{SimXMessage, SVarActor}
 import simx.core.worldinterface.WorldInterfaceHandling
 import simx.core.ontology.{GroundedSymbol, types}
@@ -103,21 +103,6 @@ abstract class Component(val componentName : Symbol, val componentType : Grounde
 
   override def toString =
     "Component named " + componentName.name
-}
-
-/**
- *
- *  Used to create ConfigureComponentMessages
- */
-object ConfigureComponent {
-  /**
-   *  Creates a ConfigureComponentMessage using Actor.self as sender
-   */
-  def apply(createParams: SValSet)(implicit actorContext : SVarActor.Ref) = new ConfigureComponentMessage( createParams )
-  /**
-   *  Creates a ConfigureComponentMessage using Actor.self as sender and params to create a new SValSet
-   */
-  def apply(params: SVal[_,_]*)(implicit actorContext : SVarActor.Ref) = new ConfigureComponentMessage( new SValSet(params:_*))
 }
 
 /**

@@ -25,9 +25,10 @@ import simx.core.entity.description.SVal
 import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
 import simx.core.entity.typeconversion.TypeInfo.DataTag
 import simx.core.ontology.types.OntologySymbol
-import simx.core.ontology.{types, SVarDescription, Annotation, GroundedSymbol}
+import simx.core.ontology.{types, SValDescription, Annotation}
 import simx.core.svaractor.SVarActor
 import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
+import simx.core.svaractor.semantictrait.base._
 import simx.core.worldinterface.WorldInterfaceHandling
 
 import scala.reflect.ClassTag
@@ -37,25 +38,30 @@ import scala.reflect.ClassTag
  * Created by dennis on 12.09.14.
  */
 class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : ClassTag  : DataTag](val leftDesc : ConvertibleTrait[S],
-                                                                                                relationName : GroundedSymbol,
+                                                                                                val relationName : GroundedSymbolFeatures,
                                                                                                 val rightDesc : ConvertibleTrait[O],
                                                                                                 owlLink : String,
-                                                                                                annotations : Annotation*)
-  extends SVarDescription(types.Relation.asConst as relationName definedAt owlLink setAnnotations(annotations :_*))
+                                                                                                val isSymmetric : Boolean,
+                                                                                                annotations : Set[Annotation] = Set())
+  extends SValDescription(types.Relation.asConst as relationName definedAt owlLink setAnnotations annotations)
 {
   private type updateFunc[X <: Entity] = (X => ((X#SelfType => Any) => Unit))
 
-  protected def this(leftDesc : ConvertibleTrait[S], r : RelationDescription[_ >: S, _ >: O], rightDesc : ConvertibleTrait[O]) =
-    this(leftDesc, r.semantics, rightDesc, r.ontoLink.get, r.annotations.toSeq :_*)
+  protected def this(leftDesc : ConvertibleTrait[S], r : RelationDescription[_ >: S, _ >: O], rightDesc : ConvertibleTrait[O],
+                     owlLink : String, isSymmetric: Boolean) =
+    this(leftDesc, r.relationName, rightDesc, r.ontoLink.get, isSymmetric, r.annotations)
 
-  override def setAnnotations(annotations : Annotation*) =
-    new RelationDescription[S, O](leftDesc, relationName, rightDesc, owlLink, annotations :_*)
+  override def setAnnotations(annotations : Set[Annotation]) =
+    new RelationDescription[S, O](leftDesc, relationName, rightDesc, owlLink, isSymmetric, annotations)
 
-  def asRelation[S2 <: S, O2 <: O, X <: Entity : DataTag](s: S2, o : O2, handle : (X => ((X#SelfType => Any) => Unit)) => Unit  ) =
-    new TypedRelation[S, O, X](s, setAnnotations(types.RelationSubject(s), types.RelationObject(o)), o, handle)
+  override def setAnnotations(annotations : GroundedSymbolFeatures*) =
+    new RelationDescription[S, O](leftDesc, relationName, rightDesc, owlLink, isSymmetric, annotations.map(OntologySymbol(_)).toSet)
+
+  def asRelation[S2 <: S, O2 <: O, X <: Entity : DataTag](s: S2, o : O2, x : X ) =
+    new TypedRelation[S, O, X](s, setAnnotations(Set[Annotation](types.RelationSubject(s), types.RelationObject(o))), o, x)
 
   def restrictTypes[NewS <: S , NewO <: O](newLeft : ConvertibleTrait[NewS], newRight : ConvertibleTrait[NewO]) =
-    new RelationDescription[NewS, NewO](newLeft, this, newRight)(newLeft.typeTag, newLeft.classTag, newRight.classTag, newRight.typeTag)
+    new RelationDescription[NewS, NewO](newLeft, this, newRight, owlLink, isSymmetric)(newLeft.typeTag, newLeft.classTag, newRight.classTag, newRight.typeTag)
 
   def restrictSubjectType[SpecialS <: S](specialLeftType : ConvertibleTrait[SpecialS]) =
     restrictTypes(specialLeftType, rightDesc)
@@ -70,7 +76,7 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
     left.getValue.get(RightRequest[S, O](this, left.getValue))
 
   def get(tuple : (S, O)) =
-    tuple._1.get(asRelation(tuple._1, tuple._2, (x : updateFunc[S]) => x(tuple._1)(_ =>{})).description)
+    tuple._1.get(asRelation(tuple._1, tuple._2, null).description)
 
   def observe(right : (Unknown, O), ignoredWriters : Set[SVarActor.Ref]) =
     right._2.observe(LeftRequest[S, O](this, right._2), ignoredWriters)
@@ -88,10 +94,10 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
     right.getValue.observe(LeftRequest(this, right.getValue), ignoredWriters)
 
   def observe(tuple : (S, O)) =
-    tuple._1.observe(asRelation(tuple._1, tuple._2,  (x : updateFunc[S]) => x(tuple._1)(_ => {})).description)
+    tuple._1.observe(asRelation(tuple._1, tuple._2, null).description)
 
   def set(subj : S, obj : O, bufferMode : BufferMode = Unbuffered)(implicit actor : WorldInterfaceHandling with EntityUpdateHandling) : Unit =
-    asRelation(subj, obj, (x : updateFunc[S]) => x(subj)(_ => {})).publish(bufferMode)
+    asRelation(subj, obj, subj).publish(_ => {}, bufferMode)
 
   def set(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
     set(tuple, Unbuffered)
@@ -100,7 +106,7 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
     set(tuple._1, tuple._2, bufferMode)
 
   def remove(subj : S, obj : O)(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    asRelation(subj, obj, (x : updateFunc[S]) => x(subj)(_ => {})).remove()
+    asRelation(subj, obj, subj).remove(_ => {})
 
   def remove(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
     remove(tuple._1, tuple._2)
@@ -114,17 +120,16 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
   def ->(x : O) =
     RightRelationPart[S, O](this, x)
 
-   def apply[X <: StateParticleAccess](in : TypedRelation[S, O, X])
-                                      (implicit ct : ClassTag[TypedRelation[S, O, X]], dt : DataTag[TypedRelation[S, O, X]]) =
-     SVal(withType(classOf[TypedRelation[S, O, X]]))(in)
+  def apply[X <: StateParticleAccess](in : TypedRelation[S, O, X])(implicit ct : ClassTag[TypedRelation[S, O, X]], dt : DataTag[TypedRelation[S, O, X]]) =
+    SVal(withType(classOf[TypedRelation[S, O, X]]), valueDescription)(in)
 
   override def toString: String =
     sVarIdentifier.name + " (" + typeTag.toString() + annotationsString + ")"
 
   private def annotationsString: String = if (annotations.isEmpty) ""
-    else " (with annotations " + annotations.map { annotation =>
-      createPrefixStringFrom(annotation) + createSuffixStringFrom(annotation)
-    }.mkString(" and ")
+  else " (with annotations " + annotations.map { annotation =>
+    createPrefixStringFrom(annotation) + createSuffixStringFrom(annotation)
+  }.mkString(" and ")
 
   private val relationRoles: Set[TypeInfo[_,_]] = Set(types.RelationSubject,types.RelationObject)
 

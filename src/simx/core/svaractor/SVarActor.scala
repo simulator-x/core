@@ -25,11 +25,12 @@ import akka.remote.RemoteScope
 import akka.remote.DisassociatedEvent
 import com.typesafe.config.{Config, ConfigFactory}
 import simx.core.entity.description.SVal.SValType
-import simx.core.helper.{GarbageCollectionObserver, JVMTools, Loggable}
-import simx.core.entity.typeconversion.{TypeInfo, ConvertedSVar}
+import simx.core.helper.{JVMTools, Loggable}
+import simx.core.entity.typeconversion.ConvertedSVar
 import simx.core.clustering.ClusterSubSystem
 import simx.core.entity.description.SVal
 import simx.core.svaractor.TimedRingBuffer._
+import simx.core.svaractor.handlersupport.Types.CPSRet
 import scala.collection.mutable
 import scala.ref.WeakReference
 import scala.reflect.ClassTag
@@ -139,7 +140,7 @@ object SVarActor {
     if( name.isDefined )
       sys.actorOf(props, name.get )
     else
-      sys.actorOf(props, props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID())
+      sys.actorOf(props, props.actorClass().getCanonicalName + "-" + java.util.UUID.randomUUID())
   }
 
   def createActor[ T <: SVarActor : ClassTag ](ctor : => T, name : Option[String] = None ) : Ref =
@@ -185,12 +186,12 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
                                 ( errorHandler :  Exception => Unit = defaultErrorHandler ) = {
     val actor =
       if( targetNode.isEmpty || !ClusterSubSystem.getKnown.contains( targetNode.get ) ) {
-        context.actorOf(props, props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID())
+        context.actorOf(props, props.actorClass().getCanonicalName + "-" + java.util.UUID.randomUUID())
       } else {
-        val (interface, port) = ClusterSubSystem.getKnown( targetNode.get )
-        context.actorOf(
-          props.withDeploy( Deploy( scope = RemoteScope( Address( "akka", SVarActor.systemName, interface, port ) ) ) ),
-          props.actorClass().getSimpleName + "-" + java.util.UUID.randomUUID()
+      val (interface, port) = ClusterSubSystem.getKnown( targetNode.get )
+      context.actorOf(
+        props.withDeploy( Deploy( scope = RemoteScope( Address( "akka", SVarActor.systemName, interface, port ) ) ) ),
+        props.actorClass().getCanonicalName + "-" + java.util.UUID.randomUUID()
         )
       }
     try {
@@ -293,7 +294,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
           owner( sVar ) ! ReadSVarMessage( sVar, at, accessMethod )
           addSingleUseHandler[ValueOfSVarMessage[T]]( {
             case ValueOfSVarMessage( svar, value) if svar == sVar => consume(value)
-          } : PartialFunction[ValueOfSVarMessage[T], Unit])
+          } : PartialFunction[ValueOfSVarMessage[T], Unit@CPSRet])
         }
     }
   }
@@ -434,7 +435,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   //
   //
 
-  private val data = mutable.WeakHashMap[SVar[_],SVarDataImpl[_]]()
+  private val data = mutable.HashMap[SVar[_],SVarDataImpl[_]]()
 
   //! the map which holds queues for each svar that is beeing transferred
   private val heldMessages = mutable.WeakHashMap[SVar[_], ChangeOwnerStatus]()
@@ -484,7 +485,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   private[svaractor] def changeOwner[T](sender     : SVarActor.Ref,
                                         svar       : SVar[T],
                                         newOwner   : SVarActor.Ref,
-                                        value      : Option[(SVal[T,TypeInfo[T,T]], Time)] = None,
+                                        value      : Option[(SVal.SValType[T], Time)] = None,
                                         bufferMode : BufferMode = Unbuffered ) : Boolean = {
     if (self == newOwner){
       if (!this.isOwnerOf(svar)) value match {
@@ -536,7 +537,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
    * The weak reference that is stored with the data is used detrmine, if
    * the data is not needed any more.
    */
-  protected[svaractor] def createSVar[T]( value: SVal[T,TypeInfo[T,T]], timeStamp : Time, bufferMode : BufferMode ) = {
+  protected[svaractor] def createSVar[T]( value: SVal.SValType[T], timeStamp : Time, bufferMode : BufferMode ) = {
     val retVal = new SVarImpl(self, value.typedSemantics.classTag, value.typedSemantics.typeTag)
     insertSVar(retVal, value, timeStamp, bufferMode)
     retVal
@@ -545,7 +546,6 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   private def insertSVar[T]( sVar: SVar[T], value: SValType[T], timeStamp : Time, bufferSetting : BufferMode ) {
     if (sVar.isMutable){
       val dataSVar = new SVarDataImpl( value, timeStamp, new WeakReference( sVar ), bufferSetting )
-      GarbageCollectionObserver.observe(dataSVar)
       data += sVar -> dataSVar
       addSVarOwner(sVar, self)
     }
@@ -563,7 +563,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     heldMessages.get(sVar) match {
       case Some(changeOwnerStatus) => changeOwnerStatus.pushMessage( WriteSVarMessage( writer, sVar, value, at, forceUpdate) )
       case None =>
-        if( forceUpdate  || !read( sVar, at, GetClosest ).equals( value )  )
+        if( forceUpdate  || !read( sVar, at, GetClosest )._1.equals( value )  )
           data( sVar ).write( writer, value, at )
     }
   }
@@ -682,7 +682,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   addHandler[AcknowledgeMessage]{ msg =>
-    msg.refMessage match {
+    Match(msg.refMessage){
       case SVarOwnerChangeInProgressMessage( svar, newOwner) => heldMessages.get(svar) match {
         case Some(changeOwnerStatus) => changeOwnerStatus.acknowledgeBy( msg.sender )
         case None =>
@@ -730,19 +730,19 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   addHandler[ReadSVarMessage[_]]{
-    handleOwnerDependentMsg( msg => msg.sender ! createValueOfSVarMsg( msg.sVar, msg.at, msg.accessMethod ) )
+    handleOwnerDependentMsg( (msg : ReadSVarMessage[_]) => msg.sender ! createValueOfSVarMsg( msg.sVar, msg.at, msg.accessMethod ) )
   }
 
   addHandler[WriteSVarMessage[Any]]{
-    handleOwnerDependentMsg( msg => write( msg.writer, msg.sVar, msg.value, msg.at, msg.forceUpdate ) )
+    handleOwnerDependentMsg( (msg : WriteSVarMessage[Any]) => write( msg.writer, msg.sVar, msg.value, msg.at, msg.forceUpdate ) )
   }
 
   addHandler[ObserveSVarMessage[_]]{
-    handleOwnerDependentMsg( msg => addObserver(msg.sVar, msg.observer, msg.ignoredWriters) )
+    handleOwnerDependentMsg( (msg : ObserveSVarMessage[_]) => addObserver(msg.sVar, msg.observer, msg.ignoredWriters) )
   }
 
   addHandler[IgnoreSVarMessage[_]]{
-    handleOwnerDependentMsg( msg => removeObserver(msg.sVar, msg.observer) )
+    handleOwnerDependentMsg( (msg : IgnoreSVarMessage[_]) => removeObserver(msg.sVar, msg.observer) )
   }
 
   addHandler[NotifyWriteSVarMessage[_]] {

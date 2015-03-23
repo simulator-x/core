@@ -20,16 +20,19 @@
 
 package simx.core.svaractor.handlersupport
 
+import simx.core.svaractor.handlersupport.Types.CPSRet
+
 import scala.collection.mutable
 import java.util.UUID
 import scala.reflect.{classTag, ClassTag}
+import scala.util.continuations._
 
 /* author: dwiebusch
  * date: 19.09.2010
  */
 
 trait HandlerSupportImpl extends HandlerSupport{
-  private type IdHandlerPair   = (IdType, handlerType[Any])
+  private type IdHandlerPair   = (IdType, Function[Any, Any])
   private type handlerList     = List[IdHandlerPair]
 
   private var lastId : IdType  = 0
@@ -47,18 +50,30 @@ trait HandlerSupportImpl extends HandlerSupport{
     def isDefinedAt(x: Any) = true
   }
 
-  protected def addHandler[T : ClassTag](handler: Function[T, Any]){
+  protected def addHandler[T : ClassTag](handler: Function[T, Any@CPSRet]){
     handler match{
-      case pf : PartialFunction[_, _] => updateHandlers( classTag[T].runtimeClass, (generateId(), handler.asInstanceOf[PartialFunction[Any, Any]] ) )
-      case f => updateHandlers( classTag[T].runtimeClass, (generateId(), (msg : Any) => handler(msg.asInstanceOf[T]) ) )
+      case pf : tmpType @unchecked => updateHandlers( classTag[T].runtimeClass, (generateId(),
+        new PartialFunction[Any, Any] {
+          override def isDefinedAt(x: Any): Boolean = pf.isDefinedAt(x)
+          override def apply(a: Any): Any = reset[Any, Any] {
+            val ret = handler(a.asInstanceOf[T])
+            shift { (x: Unit => Any) => ret }
+          }
+        }))
+      case f => updateHandlers( classTag[T].runtimeClass, (generateId(), {
+        (msg : Any) => reset[Any, Any]{
+          val ret = handler(msg.asInstanceOf[T])
+          shift{(x : Unit => Any) => ret }
+        }
+      }))
     }
   }
 
-  protected def addHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any] ){
+  protected def addHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any@CPSRet] ){
     addHandler[T](pf)
   }
 
-  protected def removeHandler( id: Long, manifest : Class[_]) {
+  protected def removeHandler( id: Long, manifest : Class[_])  {
     handlers.update(manifest, handlers.getOrElse(manifest, Nil).filterNot( _._1 == id ) )
   }
 
@@ -66,8 +81,13 @@ trait HandlerSupportImpl extends HandlerSupport{
     addSingleUseHandler(wrap(f), classTag[T].runtimeClass)
   }
 
-  protected def addSingleUseHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any] ) {
-    addSingleUseHandler(pf.asInstanceOf[PartialFunction[Any, Any]], classTag[T].runtimeClass)
+  protected def addSingleUseHandlerPF[T : ClassTag]( pf: PartialFunction[T, Any@CPSRet] ) {
+    addSingleUseHandler(pf.asInstanceOf[PartialFunction[Any, Any@CPSRet]], classTag[T].runtimeClass)
+  }
+
+  protected def addSingleUseHandlerPF2[T : ClassTag](id : java.util.UUID, msg: Any, pf: PartialFunction[T, Any@CPSRet] ) {
+    print(this + " registering " + id + " for msg " + msg)
+    addSingleUseHandler(pf.asInstanceOf[PartialFunction[Any, Any@CPSRet]], classTag[T].runtimeClass)
   }
 
 
@@ -87,22 +107,33 @@ trait HandlerSupportImpl extends HandlerSupport{
   //  hOpt collect { case (handler, manifest) => addSingleUseHandler(handler, manifest) }
   //}
 
-  private def addSingleUseHandler[T](pf: handlerC_t, manifest : Class[_]) {
+  protected[svaractor] def addSingleUseHandler[T](pf: handlerC_t, manifest : Class[_]) {
     updateHandlers(manifest, toRemovableTuple(pf, manifest, generateId() ), append = true )
   }
 
-  private def toRemovableTuple( pf : handlerC_t, manifest : Class[_], id : IdType ) =
-    id -> pf.andThen{ _ => removeHandler(id, manifest) }
+  //  private def toRemovableTuple( pf : handlerC_t, manifest : Class[_], id : IdType ) =
+  //    id -> pf.andThen{ _ => removeHandler(id, manifest) }
 
-  private def generateId() : IdType =
+  private[svaractor] def toRemovableTuple(pf : handlerC_t, manifest : Class[_], id : IdType) = id -> new PartialFunction[Any, Any] {
+    override def isDefinedAt(x: Any) = pf.isDefinedAt(x)
+    override def apply(v1: Any) = {
+      reset[Any, Any] {
+        val ret = pf(v1)
+        removeHandler(id, manifest)
+        shift { (x: Unit => Any) => ret }
+      }
+    }
+  }
+
+  private[svaractor] def generateId() : IdType =
     (lastId +=1, lastId)._2
 
-  private def updateHandlers( manifest : Class[_], toAdd : IdHandlerPair, append : Boolean = false ) {
+  private[svaractor] def updateHandlers( manifest : Class[_], toAdd : IdHandlerPair, append : Boolean = false ) {
     handlers.update(manifest, if (append) handlers.getOrElse(manifest, Nil) :+ toAdd else toAdd :: handlers.getOrElse(manifest, Nil) )
   }
 
-//  private[svaractor] def continueWith[A, T]( f : Function[A, T])(implicit manifest : ClassTag[A]) : T @HandlerContinuation =
-//    shift { (fun : T => HandlerOption) => Some( wrap(f) andThen fun andThen storeContinuation, manifest ) }
+  //  private[svaractor] def continueWith[A, T]( f : Function[A, T])(implicit manifest : ClassTag[A]) : T @HandlerContinuation =
+  //    shift { (fun : T => HandlerOption) => Some( wrap(f) andThen fun andThen storeContinuation, manifest ) }
 
   private type tmpType = PartialFunction[Any, _]
 
@@ -114,7 +145,7 @@ trait HandlerSupportImpl extends HandlerSupport{
     }
   }
 
-  private def wrap[T, U](f : Function[T, U])(implicit manifest : ClassTag[T]) = new PartialFunction[Any, U]{
+  private def wrap[T, U](f : Function[T, U@CPSRet])(implicit manifest : ClassTag[T]) = new PartialFunction[Any, U@CPSRet]{
     def isDefinedAt( x : Any ) =
       if (manifest.runtimeClass isAssignableFrom x.getClass) definedAt( x.asInstanceOf[T] ) else false
     def apply(v1: Any) = f.apply(v1.asInstanceOf[T])
@@ -123,4 +154,49 @@ trait HandlerSupportImpl extends HandlerSupport{
       case _ => ( x : Any ) => true
     }
   }
+
+  // CPS helpers:
+
+  protected def msgMatch[T](partialFunction: Function[T, Any])(msg : T) : Any@CPSRet =
+    partialFunction(msg)
+
+  protected def Match[T](msg : T)(partialFunction: PartialFunction[T, Any]) : Any@CPSRet  =
+    partialFunction(msg)
+
+  def If(condition: => scala.Boolean@CPSRet): If@CPSRet =
+    new If(condition)
+}
+
+protected class If (condition : => scala.Boolean@CPSRet){
+  protected abstract class Else[+T]{self =>
+    protected def createHalt[U >: T](func: U) : Else[U]@CPSRet
+    def ElseIf(condition : => scala.Boolean@CPSRet) : Then@CPSRet
+    def Else[U >: T](func : => U@CPSRet) : U@CPSRet
+
+    protected object Halt extends Then{
+      def Then[U >: T](func: => U@CPSRet) = createHalt(func)
+    }
+
+    sealed trait Then{
+      def Then[U >: T]( func : => U@CPSRet) : Else[U]@CPSRet
+    }
+  }
+
+  private class ElseC[+T] extends Else[T]{ self =>
+    protected def createHalt[U >: T](prevVal : U) = new Else[U]{
+      protected def createHalt[V >: U](func: V) = this
+      def ElseIf(eval : => scala.Boolean@CPSRet) = Halt
+      def Else[V >: U](func : => V@CPSRet) = prevVal
+    }
+
+    private object Continue extends Then {
+      def Then[U >: T]( func : => U@CPSRet ) = self
+    }
+
+    def ElseIf(condition : => scala.Boolean@CPSRet) = if (condition) Halt else Continue
+    def Else[U >: T](func : => U@CPSRet) = func
+  }
+
+  def Then[T]( func : => T@CPSRet) : Else[T]@CPSRet =
+    new ElseC[T] ElseIf condition Then func
 }

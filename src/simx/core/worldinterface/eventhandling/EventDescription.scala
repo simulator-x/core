@@ -54,19 +54,25 @@ class EventDescription(
   def matches( e : Event ) : Boolean =
     if (e.name equals name) restriction.collect{ case f => f(e) }.getOrElse(true) else false
 
-  def createEvent(affectedEntities : Set[Entity], values : SVal[_,_]* ) : Event = {
+  def createEvent(affectedEntities : Set[Entity], values : SVal.SValType[_]* ) : Event = {
     //TODO Check Values
     new Event(name, new SValSet(values:_*), affectedEntities)
   }
 
-  def createEvent( values : SVal[_,_]* ) =
+  def createEvent(affectedEntity : Entity, values : SVal.SValType[_]*) =
+    apply(Set(affectedEntity), values :_*)
+
+  def createEvent( values : SVal.SValType[_]* ) =
     apply(values :_*)
 
-  def apply(values : SVal[_,_]* ) : Event =
+  def apply(values : SVal.SValType[_]* ) : Event =
     apply(Set[Entity](), values:_*)
 
-  def apply( affectedEntities : Set[Entity], values : SVal[_,_]* ) : Event =
+  def apply( affectedEntities : Set[Entity], values : SVal.SValType[_]* ) : Event =
     createEvent(affectedEntities, values:_*)
+
+  def apply( affectedEntity : Entity, values : SVal.SValType[_]* ) : Event =
+    createEvent(Set(affectedEntity), values:_*)
 
   def restrictedBy(_restriction: PartialFunction[Event, Boolean]) : EventDescription =
     new EventDescription(name, hasToContain, Some(_restriction))
@@ -87,11 +93,16 @@ class EventDescription(
     emit(SValSet(), affectedEntities )
   }
 
-  def emit(values : SVal[_,_]*)(implicit provider : EventProvider){
+  def emit(values : SVal.SValType[_]*)(implicit provider : EventProvider){
     emit(SValSet(values :_*), Set[Entity]())
   }
-  def emit(affectedEntitites : Set[Entity], values : SVal[_,_]*)(implicit provider : EventProvider){
+  
+  def emit(affectedEntitites : Set[Entity], values : SVal.SValType[_]*)(implicit provider : EventProvider){
     emit(SValSet(values :_*), affectedEntitites)
+  }
+
+  def emit(affectedEntity : Entity, values : SVal.SValType[_]*)(implicit provider : EventProvider){
+    emit(SValSet(values :_*), Set(affectedEntity))
   }
 
   def observe(handler : Event => Any)(implicit eventHandler : EventHandler){

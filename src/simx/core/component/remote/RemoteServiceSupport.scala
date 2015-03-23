@@ -22,6 +22,7 @@ package simx.core.component.remote
 
 import simx.core.svaractor.SVarActor
 import akka.actor.{Identify, ActorIdentity}
+import simx.core.svaractor.handlersupport.Types.CPSRet
 
 /**
  * User: dwiebusch
@@ -44,10 +45,12 @@ trait RemoteServiceSupport extends SVarActor{
     msg => context.actorSelection(msg.path) ! Identify(ServiceName(msg.name))
   }
 
-  addHandler[ActorIdentity]{
-    case ActorIdentity(ServiceName(name), Some(ref)) => publishHandlers.get(name).foreach(_ apply ref)
-    case ActorIdentity(ServiceName(name), None) => println("remote actor "+ name +
-      " sadly died before we got to know him better...")
+  addHandler[ActorIdentity] {
+    msgMatch{
+      case ActorIdentity(ServiceName(name), Some(ref)) => publishHandlers.get(name).foreach(_ apply ref)
+      case ActorIdentity(ServiceName(name), None) => println("remote actor " + name +
+        " sadly died before we got to know him better...")
+    }
   }
 }
 

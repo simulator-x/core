@@ -22,6 +22,7 @@ package simx.core.worldinterface
 
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
+import simx.core.svaractor.semantictrait.base.{Base, Thing}
 import simx.core.worldinterface.eventhandling.{EventDescription, Event}
 import simx.core.entity.description.{SValBase, SVal, SValSet}
 import simx.core.svaractor.{SimXMessage, SVarActor, SVar}
@@ -30,6 +31,7 @@ import simx.core.ontology
 import simx.core.svaractor.unifiedaccess.{EntityBase, Relation, Request}
 import simx.core.svaractor.unifiedaccess.Relation
 
+import scala.annotation.meta.param
 import scala.reflect.ClassTag
 
 /* author: dwiebusch
@@ -45,7 +47,7 @@ import scala.reflect.ClassTag
 case class WorldInterfaceEvent( specificName : Symbol, value : Any)
   extends Event( Symbols.event, new SValSet())
 
-case class CreationMessage( path : List[Symbol], e : Entity )
+private[core] case class CreationMessage ( path : List[Symbol], e : Entity )
 
 /**
  * Message sent to the WorldInterface Actor, to register a new handler for the given event
@@ -116,7 +118,7 @@ private case class EntityCreateRequest(name: List[Symbol])
  * @param name the name under which the entity will be accessible after being registered
  * @param e the entity to be registered
  */
-private case class EntityRegisterRequest(name : List[Symbol], e : Entity)(implicit val sentBy : SVarActor.Ref)
+private case class EntityRegisterRequest(name : List[Symbol], e : Entity)(@(transient @param) implicit val sentBy : SVarActor.Ref)
   extends SimXMessage with ForwardableMessage{ protected def copy = EntityRegisterRequest(name, e)(sentBy) }
 
 private case class EntityUnregisterRequest(e : Entity)(implicit val sentBy : SVarActor.Ref)
@@ -222,9 +224,10 @@ private case class HandleRelationRequest[S <: Entity, O <: Entity](r : Request[S
 
 private case class ListenForRegistrationsMessage( actor : SVarActor.Ref, path : List[Symbol] )
 
+private case class OnOneRegistration( path : List[Symbol])
 private case class OnNextRegistration( path : List[Symbol])
 
-private[core] case class RegisterSVarDescription[T, B](desc : SVarDescription[T, B])
+private[core] case class RegisterSVarDescription[T, B, X <: Base, S <: Thing](desc : SValDescription[T, B, X, S])
 private case class ObserveSVarDescRegistrations(sender : SVarActor.Ref)
 private case class GetRegisteredSVarDescriptions()
 

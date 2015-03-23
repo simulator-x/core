@@ -22,7 +22,6 @@ package simx.core.component
 
 import simx.core.svaractor.SVar
 import simx.core.entity.Entity
-import simx.core.entity.description.Semantics
 import simx.core.ontology.GroundedSymbol
 import simx.core.entity.description.NamedSValSet
 
@@ -55,7 +54,7 @@ trait FeatureAdding extends Component{
     featureMap = featureMap + (f.name -> f)
   }
 
-  def removeFeature( name : Semantics ) {
+  def removeFeature( name : GroundedSymbol ) {
     featureMap = featureMap.filterNot( _._1 == name )
   }
 }

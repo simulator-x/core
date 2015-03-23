@@ -20,12 +20,12 @@
 
 package simx.core.ontology
 
-import simx.core.entity.description.{Semantics, EntityAspect, GeneralEntityDescription}
+import simx.core.entity.description.{EntityAspect, GeneralEntityDescription}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.Entity
 import simx.core.ontology.entities.Subelement
-import simx.core.ontology.types.OntologySymbol
 import simx.core.svaractor.SVarActor
+import simx.core.svaractor.semantictrait.base.BaseValueDescription
 
 /**
  * @author dwiebusch
@@ -37,42 +37,44 @@ class EntityDescription(aspects : List[EntityAspect],
                         name : Symbol = Symbol("unnamed-entity"),
                         path : List[Symbol] = Nil,
                         annotations: Set[Annotation] = Set())
-  extends SpecificEntityDescription[Entity](
-    if(annotations.isEmpty) PlainEntity else PlainEntity.setAnnotations(annotations.toSeq:_*), aspects.toList, name, path)
+  extends SpecificEntityDescription(
+    if(annotations.isEmpty) PlainEntity else PlainEntity.setAnnotations(annotations), aspects.toList, name, path)
   with Serializable {
   def this(name : String, aspects : EntityAspect*) = this(aspects.toList, Symbol(name))
   def this(aspects : EntityAspect*) = this(aspects.toList)
 }
 
-class SpecificEntityDescription[Type <: Entity](entityDesc : EntitySVarDescription[Type],
-                                                val aspects    : List[EntityAspect],
-                                                name       : Symbol,
-                                                path       : List[Symbol] = Nil,
-                                                features   : Seq[ConvertibleTrait[_]] = Seq())
-  extends Subelement[Type](new SpecificDescription[Type](entityDesc, aspects, name, path, features)) with Serializable
+class SpecificEntityDescription(entityDesc : EntitySValDescription,
+                                val aspects    : List[EntityAspect],
+                                name       : Symbol,
+                                path       : List[Symbol] = Nil,
+                                features   : Seq[ConvertibleTrait[_]] = Seq())
+  extends Subelement(new SpecificDescription(entityDesc, aspects, name, path, features)) with Serializable
 {
-  def this(entityDesc : EntitySVarDescription[Type], aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
+  def this(entityDesc : EntitySValDescription, aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
     this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)
 }
 
 
-protected[core] class SpecificDescription[T <: Entity]( entityDesc : EntitySVarDescription[T],
-                                                        aspects    : List[EntityAspect],
-                                                        name       : Symbol,
-                                                        path       : List[Symbol] = Nil,
-                                                        features   : Seq[ConvertibleTrait[_]] = Seq() )
+protected[core] class SpecificDescription( entityDesc : EntitySValDescription,
+                                           aspects    : List[EntityAspect],
+                                           name       : Symbol,
+                                           path       : List[Symbol] = Nil,
+                                           features   : Seq[ConvertibleTrait[_]] = Seq() )
 
-  extends GeneralEntityDescription[T, T](entityDesc, entityDesc.ctor, None, path :+ name,
+  extends GeneralEntityDescription(entityDesc, entityDesc.ctor, None, path :+ name,
     if (features.nonEmpty) FeatureDefinition(features.toSet) :: aspects else aspects)
 {
-  def this(entityDesc : EntitySVarDescription[T], aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
+  def this(entityDesc : EntitySValDescription, aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
     this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)
 }
 
 
-object PlainEntity extends EntitySVarDescription[Entity](
-  Semantics('plainEntity).asGroundedSymbol(OntologySymbol),
-  (entity: Entity, svarActor: SVarActor) => new Entity(entity)(svarActor), types.Entity.ontoLink.get)
+object _PlainEntity extends simx.core.svaractor.semantictrait.base.BasicGroundedSymbol
+
+object PlainEntity extends EntitySValDescription(
+  BaseValueDescription(_PlainEntity),
+  (entity: Entity, svarActor: SVarActor) => new Entity(entity)(svarActor), types.Entity.ontoLink.get) with Serializable
 
 private case class FeatureDefinition(getFeatures : Set[ConvertibleTrait[_]])
   extends EntityAspect(Symbols.nullType, Symbols.nullType, Nil)

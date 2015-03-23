@@ -24,7 +24,6 @@ import collection.mutable
 import scala.language.existentials
 import simx.core.entity.component._
 import simx.core.entity.typeconversion._
-import java.lang.Exception
 import simx.core.entity.Entity
 import simx.core.svaractor.SVarActor
 
@@ -35,22 +34,22 @@ import simx.core.svaractor.SVarActor
  * Time: 09:32
  */
 
-class GeneralEntityDescription[+Type <: Entity, B <: Type] protected (val typeDef     : TypeInfo[Type, B],
-                                                           val createType  : (Entity, SVarActor)  => Type,
-                                                           theHandler      : Option[Type  => Any],
-                                                           val path        : List[Symbol],
-                                                           val aspects     : Seq[EntityAspect]) extends Serializable {
+class GeneralEntityDescription protected (val typeDef     : TypeInfo[Entity, Entity],
+                                          val createType  : (Entity, SVarActor)  => Entity,
+                                          theHandler      : Option[Entity  => Any],
+                                          val path        : List[Symbol],
+                                          val aspects     : Seq[EntityAspect]) extends Serializable {
   //initially check validity of this description
   initialCheck(aspects)
 
-  def realize(handler : Type => Any = _ => () )( implicit entityCreationContext : EntityCreationHandling ){
+  def realize(handler : Entity => Any = _ => () )( implicit entityCreationContext : EntityCreationHandling ){
     entityCreationContext.realize(this)(handler)
   }
 
   def copy(newAspects : Seq[EntityAspect] = aspects) =
-    new GeneralEntityDescription[Type,  B](typeDef, createType, theHandler, path, newAspects)
+    new GeneralEntityDescription(typeDef, createType, theHandler, path, newAspects)
 
-  def createSVal(that : B) = typeDef.asConvertibleTrait.apply(that)
+  def createSVal(that : Entity) = typeDef.asConvertibleTrait.apply(that)
 
   /**
    *  checks the description fort validity. Throws an InvalidEntityDescriptionException if it's not
@@ -140,7 +139,7 @@ case class ResolveRequirementsException( aspects : List[EntityAspect] )
 case class DoubleDefinitionException( doubles : String )
   extends Exception("The following SVars are at least defined twice:\n\t" + doubles)
 
-case class InvalidEntityDescriptionException[T <: Entity]( ed : GeneralEntityDescription[T, _ <: T], reason : String )
+case class InvalidEntityDescriptionException( ed : GeneralEntityDescription, reason : String )
   extends Exception("Invalid EntityDescription " + ed + ":\n" + reason)
 
 case class NoInitialValuesException(m : Seq[TypeInfo[_, _]], ownerMap : collection.mutable.Map[Symbol, SVarActor.Ref], as : Seq[EntityAspect])
