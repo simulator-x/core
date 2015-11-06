@@ -30,6 +30,7 @@ object TimedRingBuffer{
   sealed case class MaxTime(mSecs : Long) extends BufferMode(mSecs, timestoring = true)
   case object UnbufferedTimeStoring extends BufferMode(0, timestoring = true) with Serializable
   case object Unbuffered extends BufferMode(0, timestoring = false) with Serializable
+  val defaultMode = UnbufferedTimeStoring
 
   type ContentType[+T] = (T, Time)
 
@@ -39,7 +40,7 @@ object TimedRingBuffer{
 
   sealed abstract class Time extends Serializable {
     def reify : Time
-    protected[TimedRingBuffer] def timeInMillis : Long
+    def timeInMillis : Long
 
     def <(that : Long) : Boolean = timeInMillis < that
     def >(that : Long) : Boolean = timeInMillis > that
@@ -56,12 +57,12 @@ object TimedRingBuffer{
   }
 
   object Now extends Time {
-    protected[TimedRingBuffer] def timeInMillis = System.currentTimeMillis()
+    def timeInMillis = System.currentTimeMillis()
     override def reify: Time = At(timeInMillis)
   }
 
   object UndefinedTime extends Time{
-    protected[TimedRingBuffer] def timeInMillis = 0L
+    def timeInMillis = 0L
     override def reify: Time = this
 
     override def >(that: Time): Boolean = that match {
@@ -73,7 +74,7 @@ object TimedRingBuffer{
   }
 
   def apply[T](content : T, at : Time, mode : BufferMode) : TimedRingBuffer[T] =
-    if (mode != Unbuffered)
+    if ((mode != Unbuffered) && (mode != UnbufferedTimeStoring))
       new RealTimedRingBuffer[T](Array(content -> at), mode)
     else
       new PseudoTimedRingBuffer[T](content, at, mode)
@@ -160,8 +161,10 @@ protected class RealTimedRingBuffer[T] (private var content : Array[TimedRingBuf
 
   def put[X <: T](value : X, at : Time){
     val reifiedTime = at.reify
-    if (content(head)._2 > reifiedTime)
-      throw new Exception("[ERROR]: Inserting old values is not supported, yet")
+    if (content(head)._2 > reifiedTime) {
+      println(new Exception("[warn]: Inserting old values is not supported, yet").getMessage)
+      //return
+    }
     updateTail(System.currentTimeMillis())
     if (isFull)
       increaseSize()

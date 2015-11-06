@@ -1,0 +1,2577 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE Ontology [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl"
+     versionIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl">
+    <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Import>http://localhost:8080/core/ontologies/SimxCoreOntology.owl</Import>
+    <Declaration>
+        <Class IRI="#Actor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Ai"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Alignment"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AnalogInput"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Angle"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AngularFactor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Animation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AnimationObject"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Ankle"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AnyList"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Application"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Arm"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AttractorAttractionFactor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AttractorStrength"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#AudioFile"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Barrel"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Begin"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BodyPart"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Boolean"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BoundingBox"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Box"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Bridge"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Bucket"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Button"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Button_Center"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Button_Left"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Button_Right"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Byte"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Bytes"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Capsule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Chirality"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Collada"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ColladaFile"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ColladaObjectId"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ComponentName"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ComponentType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ComputerScience"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Configuration"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Container"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Cylinder"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Damage"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Data"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DataFormat"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DataType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Debug"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Device"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Direction"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DiscretePosition2D"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Edge"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Editor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Elbow"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Enabled"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#End"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Enemy"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#EntityCreation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#EntityDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#EntityType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Enumeration"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Event"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#EventDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Explosion"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Factor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Failure"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#File"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#FileFormat"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Fireball"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Fish"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Fish_Ai"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Fishtank"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Font"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Foot"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Fps"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#GameLogic"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#GamePlay"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Geomety"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Gesture"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Ghost"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Graph"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#GraphicalAspect"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Graphics"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#GraphicsComponent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#GraphicsRenderer"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#HalfExtends"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Hand"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Head"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Health"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Height"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Hip"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#IO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#IRI"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Iceball"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Identifier"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Identifiers"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Image"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Initialize"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Input"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#InputDevice"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Integer"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Integers"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Intensity"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Interactions"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Interval"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Ip"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#JavaType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Joint"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_0"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_1"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_2"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_3"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_4"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_5"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_6"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_7"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_8"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_9"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Down"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Home"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Left"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Minus"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Plus"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Right"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Space"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_Up"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_a"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_b"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_c"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_d"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_e"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_f"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_g"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_h"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_i"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_j"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_k"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_l"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_m"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_n"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_o"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_p"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_q"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_r"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_s"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_t"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_u"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_v"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_w"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_x"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_y"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Key_z"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Keyboard"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Knee"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Length"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Live"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Lives"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Local"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Location"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Long"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Mana"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ManaPotion"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Material"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Math"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Matrix"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MaxAccMag"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MaxAttractors"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MaxNeighbors"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Measurement"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MeshComponent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MinAttractorDistance"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MinDistanceToNeighbors"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MinDistanceToPredators"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Mirror"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Mouse"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Name"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#NamedContainer"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Neighbor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#NeighborhoodAttractionFactor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#NetProduce"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Network"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Node"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Normal"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Number"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Offset"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Orientation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Origin"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ParentElement"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#PhysicalObject"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Plane"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Pointing"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Port"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Position"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Position2D"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Probability"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Radius"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Real"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Reals"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Record"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Relationship"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Relative"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Remote"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Rendering_FileFormats"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Reset"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Resolution"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Root"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ScalaType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Scale"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Shape"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ShapeFromFile"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Shapes"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Shield"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Simplex3dType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SimulationSpeed"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SimxConcept"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SirisType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SoundRenderer"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SoundType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Spell"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sphere"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Spine"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#State"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#State_Changed"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Strength"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#String"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Structure"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SubElement"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Success"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TangibleSurface"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Threshold"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Time"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TimeInSeconds"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Token"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Torso"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TrackingTarget"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TrackingTargetId"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Transformation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Tuio"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioCursorAdded"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioCursorRemoved"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioCursorUpdated"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioCursors"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioObjectAdded"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioObjectRemoved"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioObjectUpdated"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TuioObjects"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Typ"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#URL"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#UpVector"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#User"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Value"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector2"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector2List"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector3"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector4"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vector4List"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vrpn"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Water"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Well"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#WiiMote"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Wrist"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#bottom"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#center"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#left"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#right"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#top"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasPart"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#partOf"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasTypeString"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#java.awt.Color"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#java.awt.Font"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#java.awt.image.BufferedImage"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#java.lang.Integer"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#java.lang.String"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Boolean"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Byte"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.ByteArray"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.ConstVec4List"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Float"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.FloatArray"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Int"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.IntArray"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Long"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Symbol"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.SymbolList"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.Vec2List"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.collection.immutable.NothingList"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolConstVec2HashMap"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolTupleConstVec2FloatMap"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.ConstVec2i"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstMat4f"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstQuat4f"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec2f"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec3f"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec4f"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.entity.Entity"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.entity.description.NamedSValSet"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.entity.description.SValSet"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.entity.description.Semantics"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.ontology.GroundedSymbol"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.ontology.types.TypeDefinitions.Enum"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.svaractor.SVarActor.Ref"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.worldinterface.eventhandling.EventDescription"/>
+    </Declaration>
+    <SubClassOf>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Aspect"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Actor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Actor"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ai"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Alignment"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Alignment"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AnalogInput"/>
+        <Class IRI="#Input"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Angle"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Angle"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AngularFactor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AngularFactor"/>
+        <Class IRI="#Factor"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Animation"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AnimationObject"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ankle"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AnyList"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AnyList"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Application"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Application"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Arm"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Arm"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AttractorAttractionFactor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AttractorAttractionFactor"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AttractorStrength"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AttractorStrength"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AudioFile"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#AudioFile"/>
+        <Class IRI="#File"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Barrel"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Barrel"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Begin"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BodyPart"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Boolean"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BoundingBox"/>
+        <Class IRI="#Box"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Box"/>
+        <Class IRI="#Container"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Bridge"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Bucket"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Bucket"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Button"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Button"/>
+        <Class IRI="#Mouse"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Button_Center"/>
+        <Class IRI="#Button"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Button_Left"/>
+        <Class IRI="#Button"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Button_Right"/>
+        <Class IRI="#Button"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Byte"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Byte"/>
+        <Class IRI="#DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Bytes"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Bytes"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Capsule"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Chirality"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Collada"/>
+        <Class IRI="#Rendering_FileFormats"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ColladaFile"/>
+        <Class IRI="#File"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ColladaObjectId"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ColladaObjectId"/>
+        <Class IRI="#Identifier"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ComponentName"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ComponentType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ComponentType"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ComputerScience"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Configuration"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Configuration"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Container"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Container"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Cylinder"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Damage"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Damage"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Data"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DataFormat"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DataType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DataType"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Debug"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DeprecatedSimxConcept"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DeprecatedSimxConcept"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Device"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Direction"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Direction"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DiscretePosition2D"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Edge"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Editor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Elbow"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Enabled"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Enabled"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#End"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Enemy"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EntityCreation"/>
+        <Class IRI="#SimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EntityDescription"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EntityDescription"/>
+        <Class IRI="#SimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EntityType"/>
+        <Class IRI="#SimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Enumeration"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Enumeration"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Event"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EventDescription"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EventDescription"/>
+        <Class IRI="#SimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Explosion"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Factor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Factor"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Failure"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#File"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#File"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#FileFormat"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Finger"/>
+        <Class IRI="#Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Fireball"/>
+        <Class IRI="#Spell"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Fish"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Fish_Ai"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Fishtank"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Font"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Foot"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Fps"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#GameLogic"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#GamePlay"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Geomety"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Gesture"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ghost"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ghost"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Graph"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#GraphicalAspect"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Aspect"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Graphics"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#GraphicsComponent"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#GraphicsRenderer"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#HalfExtends"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#HalfExtends"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Hand"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Hand"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Head"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Head"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Health"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Health"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Height"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Height"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Hip"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#IO"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#IRI"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Iceball"/>
+        <Class IRI="#Spell"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Identifier"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Identifier"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Identifiers"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Image"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#IndexFinger"/>
+        <Class IRI="#Finger"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Information"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Initialize"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Initialize"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Input"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#InputDevice"/>
+        <Class IRI="#Device"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Integer"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Integer"/>
+        <Class IRI="#DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Integers"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Intensity"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Intensity"/>
+        <Class IRI="#Measurement"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Interactions"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Interactions"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Interval"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ip"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ip"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#JavaType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Joint"/>
+        <Class IRI="#Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_0"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_1"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_2"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_3"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_4"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_5"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_6"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_7"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_8"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_9"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Down"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Home"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Left"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Minus"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Plus"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Right"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Space"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_Up"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_a"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_b"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_c"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_d"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_e"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_f"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_g"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_h"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_i"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_j"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_k"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_l"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_m"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_n"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_o"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_p"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_q"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_r"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_s"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_t"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_u"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_v"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_w"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_x"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_y"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Key_z"/>
+        <Class IRI="#Key"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Keyboard"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Keyboard"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Knee"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Leapmotion"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Length"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Length"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#LittleFinger"/>
+        <Class IRI="#Finger"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Live"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Lives"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Lives"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Local"/>
+        <Class IRI="#Location"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Location"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Long"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Long"/>
+        <Class IRI="#DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Mana"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Mana"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ManaPotion"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ManaPotion"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Material"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Math"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Matrix"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Matrix"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxAccMag"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxAccMag"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxAttractors"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxAttractors"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxNeighbors"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MaxNeighbors"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Measurement"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MeshComponent"/>
+        <Class IRI="#GraphicsComponent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MiddleFinger"/>
+        <Class IRI="#Finger"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Milliseconds"/>
+        <Class IRI="#Time"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MinAttractorDistance"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MinAttractorDistance"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MinDistanceToNeighbors"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MinDistanceToNeighbors"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#MinDistanceToPredators"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Mirror"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Mouse"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Mouse"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Name"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Name"/>
+        <Class IRI="#Identifier"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#NamedContainer"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#NamedContainer"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Neighbor"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Neighbor"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#NeighborhoodAttractionFactor"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#NetProduce"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Network"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Node"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Normal"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Normal"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Number"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Offset"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Orientation"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Orientation"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Origin"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Origin"/>
+        <Class IRI="#Location"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ParentElement"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ParentElement"/>
+        <Class IRI="#Relationship"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#PhysicalObject"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Plane"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Pointing"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Port"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Port"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Position"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Position"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Position2D"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Position2D"/>
+        <Class IRI="#Position"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Probability"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Probability"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Radius"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Radius"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Ray"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Real"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Real"/>
+        <Class IRI="#DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Reals"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Record"/>
+        <Class IRI="#ComputerScience"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Relationship"/>
+        <Class IRI="#SimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Relative"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#RelativeTo"/>
+        <Class IRI="#Location"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Remote"/>
+        <Class IRI="#Location"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Rendering_FileFormats"/>
+        <Class IRI="#FileFormat"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Reset"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Resolution"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#RingFinger"/>
+        <Class IRI="#Finger"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Root"/>
+        <Class IRI="#Node"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ScalaType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Scale"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Scale"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Seconds"/>
+        <Class IRI="#Time"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Shape"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ShapeFromFile"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Aspect"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ShapeFromFile"/>
+        <Class IRI="#GraphicalAspect"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Shapes"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Shield"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Shoulder"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Simplex3dType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SimulationSpeed"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SimulationSpeed"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SimxConcept"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SirisType"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SoundRenderer"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SoundType"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Spell"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sphere"/>
+        <Class IRI="#Geomety"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Spine"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#State"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#State"/>
+        <Class IRI="#GamePlay"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#State_Changed"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Strength"/>
+        <Class IRI="#Measurement"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#String"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#String"/>
+        <Class IRI="#DataType"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Structure"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SubElement"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SubElement"/>
+        <Class IRI="#Relationship"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Success"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TangibleSurface"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TangibleSurface"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TangibleSurface"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Threshold"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Threshold"/>
+        <Class IRI="#Measurement"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Thumb"/>
+        <Class IRI="#Finger"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Time"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Time"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TimeInSeconds"/>
+        <Class IRI="#Time"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Token"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Torso"/>
+        <Class IRI="#Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TrackingTarget"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TrackingTargetId"/>
+        <Class IRI="#Identifier"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Transformation"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Transformation"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Tuio"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioCursorAdded"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioCursorRemoved"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioCursorUpdated"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioCursors"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioCursors"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioObjectAdded"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioObjectRemoved"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioObjectUpdated"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioObjects"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TuioObjects"/>
+        <Class IRI="#DeprecatedSimxConcept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Typ"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#URL"/>
+        <Class IRI="#Data"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#UpVector"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#UpVector"/>
+        <Class IRI="#Vector"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#User"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#User"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Value"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector"/>
+        <Class IRI="#Math"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector2"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector2"/>
+        <Class IRI="#Vector"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector2List"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector3"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector3"/>
+        <Class IRI="#Vector"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector4"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector4"/>
+        <Class IRI="#Vector"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vector4List"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vrpn"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Water"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Well"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Well"/>
+        <Class IRI="#PhysicalObject"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#WiiMote"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Wrist"/>
+        <Class IRI="#BodyPart"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#bottom"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#center"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#left"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#right"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#top"/>
+        <Class IRI="#Alignment"/>
+    </SubClassOf>
+    <ClassAssertion>
+        <Class IRI="#JavaType"/>
+        <NamedIndividual IRI="#java.awt.Color"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#JavaType"/>
+        <NamedIndividual IRI="#java.lang.Integer"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#JavaType"/>
+        <NamedIndividual IRI="#java.lang.String"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Boolean"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Byte"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.ByteArray"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Float"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Int"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Long"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.Symbol"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#ScalaType"/>
+        <NamedIndividual IRI="#scala.collection.immutable.NothingList"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolConstVec2HashMap"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolTupleConstVec2FloatMap"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#Simplex3dType"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstMat4f"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#Simplex3dType"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec2f"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#Simplex3dType"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec3f"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#Simplex3dType"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec4f"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#simx.core.entity.Entity"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#simx.core.entity.description.NamedSValSet"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#simx.core.entity.description.SValSet"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#simx.core.ontology.types.TypeDefinitions.Enum"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#SirisType"/>
+        <NamedIndividual IRI="#simx.core.worldinterface.eventhandling.EventDescription"/>
+    </ClassAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#inPackage"/>
+        <NamedIndividual IRI="#java.lang.String"/>
+        <Literal datatypeIRI="&rdf;PlainLiteral">java.lang</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.ByteArray"/>
+        <Literal datatypeIRI="&xsd;string">scala.Array[scala.Byte]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.ConstVec4List"/>
+        <Literal datatypeIRI="&xsd;string">scala.List[simplex3d.math.float.ConstVec4]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#inPackage"/>
+        <NamedIndividual IRI="#scala.Float"/>
+        <Literal datatypeIRI="&xsd;string">scala</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.FloatArray"/>
+        <Literal datatypeIRI="&xsd;string">scala.Array[scala.Float]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.IntArray"/>
+        <Literal datatypeIRI="&xsd;string">scala.Array[scala.Int]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.SymbolList"/>
+        <Literal datatypeIRI="&xsd;string">scala.List[scala.Symbol]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.Vec2List"/>
+        <Literal datatypeIRI="&xsd;string">scala.List[simplex3d.math.float.Vec2]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.collection.immutable.NothingList"/>
+        <Literal datatypeIRI="&xsd;string">scala.collection.immutable.List[Nothing]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolConstVec2HashMap"/>
+        <Literal datatypeIRI="&xsd;string">scala.collection.immutable.HashMap[Symbol,simplex3d.math.float.ConstVec2]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#hasTypeString"/>
+        <NamedIndividual IRI="#scala.collection.immutable.SymbolTupleConstVec2FloatMap"/>
+        <Literal datatypeIRI="&xsd;string">scala.collection.immutable.Map[Symbol,(simplex3d.math.float.ConstVec2,Float)]</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#inPackage"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstMat4f"/>
+        <Literal datatypeIRI="&xsd;string">simplex3d.math.floatx</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#inPackage"/>
+        <NamedIndividual IRI="#simplex3d.math.floatx.ConstVec3f"/>
+        <Literal datatypeIRI="&xsd;string">simplex3d.math.floatx</Literal>
+    </DataPropertyAssertion>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasPart"/>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SimX_BinaryRelation"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#partOf"/>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SimX_BinaryRelation"/>
+    </SubObjectPropertyOf>
+    <DataPropertyRange>
+        <DataProperty IRI="#hasTypeString"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 3.5.0) http://owlapi.sourceforge.net -->
+

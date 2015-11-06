@@ -23,10 +23,11 @@ package simx.core.entity.typeconversion
 import simx.core.svaractor.semantictrait.base._
 import simx.core.svaractor.unifiedaccess.Relation
 
+import scala.collection.immutable.HashSet
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
 import simx.core.svaractor.StateParticle
-import simx.core.entity.description.SVal
+import simx.core.entity.description.{HistoryStorage, SVal}
 import simx.core.ontology._
 import simx.core.ontology.types.{OntologySymbol, NullType}
 import scala.language.existentials
@@ -79,6 +80,19 @@ trait TypeInfo[+T, dataType <: T] extends Serializable{
   def >@(moreSpecialTypeInfo: TypeInfo[_,_]): Boolean =
     semantics == moreSpecialTypeInfo.semantics &&
       (annotations.isEmpty || annotations.forall(moreSpecialTypeInfo.annotations.contains))
+}
+
+object SemanticTypeSet {
+  implicit def toSemanticTypeSet(property: ConvertibleTrait[_]): SemanticTypeSet =
+    new SemanticTypeSet(Set(property))
+}
+
+//inheritance from class HashSet in package immutable is deprecated: The implementation details of immutable hash sets make inheriting from them unwise.
+class SemanticTypeSet(properties: Set[ConvertibleTrait[_]]) /*extends HashSet[ConvertibleTrait[_]]*/ {
+  def isEmpty = properties.isEmpty
+  def exists(p: ConvertibleTrait[_] => Boolean) = {properties.exists(p)}
+  def and(property: ConvertibleTrait[_]) = new SemanticTypeSet(properties + property)
+  def size = properties.size
 }
 
 /**
@@ -162,6 +176,18 @@ trait ConvertibleTrait[T1] extends Serializable with TypeInfo[T1, T1] {
    * Augments the ConvertibleTrait with a value to create a complete CreateParam.
    */
   def apply(value: T1) : SVal.SValType[T1]
+
+  /**
+   *
+   * Augments the ConvertibleTrait with a value to create a complete CreateParam.
+   */
+  def apply(value: T1, timestamp: Long) : SVal.SValType[T1]
+
+  /**
+   *
+   * Augments the ConvertibleTrait with a value to create a complete CreateParam.
+   */
+  def apply(value: T1, timestamp: Long, history: HistoryStorage.HistoryType[T1]) : SVal.SValType[T1]
 
   //TODO: Keep in mind
 //  def apply[TType >: this.type <: TypeInfo[T1,T1]](typeInfo: TType, value: T1) : SVal[T1,TType, _ , _ ] =

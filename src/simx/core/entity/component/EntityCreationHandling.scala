@@ -22,11 +22,10 @@ package simx.core.entity.component
 
 import simx.core.entity.Entity
 import simx.core.entity.description._
-import simx.core.svaractor.SVarActor
+import simx.core.svaractor.{TimedRingBuffer, SVarActor}
 import simx.core.entity.typeconversion._
 import simx.core.ontology._
-import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode, Now}
-import simx.core.svaractor.semantictrait.base.{ValueDescription, BaseValueDescription}
+import simx.core.svaractor.TimedRingBuffer.{BufferMode, Now}
 import simx.core.worldinterface.{WorldInterfaceActor, WorldInterfaceHandling}
 import simx.core.worldinterface.naming.NamingAspect
 import scala.reflect.ClassTag
@@ -422,7 +421,7 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
         val typeInfo = value.typedSemantics
         val owner = status.ownerMap(typeInfo.sVarIdentifier)
         val list = map.getOrElse(owner, List[(ProvideConversionInfo[_, _], BufferMode)]())
-        val bufferMode = status.bufferModeMap.getOrElse(value.asProvide.wrapped.to, Unbuffered)
+        val bufferMode = status.bufferModeMap.getOrElse(value.asProvide.wrapped.to, TimedRingBuffer.defaultMode)
         map.updated(owner, value.asProvide.wrapped -> bufferMode :: list)
     }.toList :+ (self -> Nil) match {
       case (`self`, Nil) :: Nil  => finalizeCreation(status.id, status.theEntity)
@@ -438,7 +437,7 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
    */
   private def checkValidity( status : CreationStatus, requirings : Iterable[TypeInfo[_, _]],
                              providings : Iterable[TypeInfo[_, _]] ) {
-    val missing = requirings.filter( p => providings.find( _.sVarIdentifier == p.sVarIdentifier ).isEmpty )
+    val missing = requirings.filter( p => !providings.exists(_.sVarIdentifier == p.sVarIdentifier) )
     if (missing.nonEmpty) throw NoInitialValuesException(missing.toSeq, status.ownerMap, status.entityAspects)
   }
 
@@ -481,9 +480,26 @@ trait EntityCreationHandling extends SVarActor with WorldInterfaceHandling with 
       })
     }
 
+//    status.description.additionalProperties.foreach(_._2.foreach{sVal =>
+//      def toConst[T, B <: T](semanticValue: SValBase[T,B]) =
+//        semanticValue.typedSemantics.asConvertibleTrait.asConst.apply(semanticValue.value.asInstanceOf[B])
+//      e.set(toConst(sVal))
+//    })
+
     val subElements = status.subElements
     var injectFunc = subElements.map{ _.asProvide.wrapped }.foldRight(handler _){
-      (toAdd, hnd) => toAdd.injectSVar(_, Now, Unbuffered)(hnd)
+      (toAdd, hnd) => toAdd.injectSVar(_, Now, TimedRingBuffer.defaultMode)(hnd)
+    }
+
+    def toConst[T, B <: T](semanticValue: SValBase[T,B]) =
+      semanticValue.typedSemantics.asConvertibleTrait.asConst.apply(semanticValue.value.asInstanceOf[B])
+
+    val additionalProperties = status.description.additionalProperties.flatMap(_._2).toSeq
+
+    injectFunc = additionalProperties.foldRight(injectFunc){
+      (addProp, hnd) => e : Entity  => {
+        e.set(toConst(addProp), hnd)
+      }
     }
 
     injectFunc = subElements.foldRight(injectFunc){ (a, b) =>

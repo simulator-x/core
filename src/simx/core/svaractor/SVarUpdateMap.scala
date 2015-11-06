@@ -44,7 +44,7 @@ trait SVarUpdateMap extends SVarActor with EntityUpdateHandling {
   }
 
   def execHandlerFor[T](sVar : SVar[T]){
-    updateFuncs.get(sVar).collect{ case handler : (T => Any) => getValue(sVar).collect{ case value => handler(value) } }
+    updateFuncs.get(sVar).collect{ case handler : (T => Any)@unchecked => getValue(sVar).collect{ case value => handler(value) } }
   }
 
   def setHandlerFor[T](svar : SVar[T])(handler : T => Any){

@@ -52,6 +52,8 @@ object Test{
 
 
   def main(args: Array[java.lang.String]) {
+    SetLocationAction
+//    SetRadiusAction
     SVarActor.createActor(new SVarActor with EntityUpdateHandling {
 
 
@@ -68,21 +70,24 @@ object Test{
 
         val wheels = for (i <- 1 to 4) yield SemanticEntity(new Entity())
 
-        case class CPS[T](i : Iterable[T]) {
-          def foreach[U](handler: T => U@CPSRet): Unit@CPSRet = {
-            if (i.nonEmpty) {
-              handler(i.head)
-              CPS(i.tail).foreach(handler)
-            }
+        object Iterate{
+          def over[T](i : Iterable[T]) = Iterate(i)
+        }
+
+        case class Iterate[T](i : Iterable[T]) {
+          def foreach[U](handler: T => U@CPSRet): Unit@CPSRet = if (i.nonEmpty) {
+            handler(i.head)
+            Iterate(i.tail).foreach(handler)
           }
         }
 
-
-        CPS(wheels) foreach {
-          wheel =>
-            wheel modify has(Shape("round")) set Position set Scale apply()
-            e set has(wheel)
+        Iterate over wheels foreach { wheel =>
+          wheel modify has(Shape("round")) set Position set Scale apply()
+          e set has(wheel)
         }
+
+
+
 
         val carEntity = e modify
           has(SteeringBehavior) set
@@ -92,6 +97,8 @@ object Test{
           Position2D set
           affectedBy(Gravity(Vec3f.Zero)) set
           Container(SValSet()) set
+
+        println(Vehicle(carEntity) attain has(Radius(1)))
 
         println("x " +  Integer.valueDescription.groundedSymbol)
 
@@ -106,15 +113,16 @@ object Test{
         testMe2(gr)
 
 
-
+        implicit def toSemanticEntity(in : Semantic.Entity[_ <: Thing]): Object {def isA(a: SpecificSemanticTrait[_ <: Thing]): scala.Boolean@CPSRet } = new {
+          def isA(a : SpecificSemanticTrait[_ <: Thing]) : scala.Boolean@CPSRet = a.tryApply(in).isDefined
+        }
 
 
         //      e as Movable moveTo Destination("London")
-
-        println("!!" + Vehicle.tryApply(carEntity))
+        println(carEntity isA Vehicle)
         testMe(traits.Vehicle(carEntity))
 
-        If (Vehicle.tryApply(carEntity).isDefined) Then {
+        If (Vehicle tryApply carEntity isDefined) Then {
           Move(Movable.tryApply(carEntity).get, Location("Honolulu"))
 
 
@@ -128,6 +136,15 @@ object Test{
         }
 
         has(Number)
+
+        def test(v : Radius): Unit ={
+          println(v)
+        }
+
+        val x = Radius(1)
+        val y = Angle(1)
+//        test(y)
+
 
         val list = Container(SValSet())
         //    list set has(Number(1))

@@ -21,6 +21,7 @@
 package simx.core.entity
 
 import description._
+import simx.core.ontology
 import simx.core.ontology._
 import simx.core.svaractor.TimedRingBuffer.{Now, ContentType, Time, BufferMode}
 import simx.core.svaractor._
@@ -76,14 +77,34 @@ class Entity private(val description : GeneralEntityDescription,
 
   //svar access
   override protected def access[T](c: ConvertibleTrait[T], actorContext : EntityUpdateHandling, filter : StateParticle[T] => Boolean = (_ : StateParticle[T]) => true) =
-    ( f : AnnotatedMap[T] => Any) => accessMostRecent(actorContext) {
+    ( f : AnnotatedMap[T] => Any) => accessMostRecent {
       e => f apply filterSVars(c, e.sVars.getOrElse(c.sVarIdentifier, Nil)).map(_.as(c).toAnnotatedMapEntry ).filter(x => filter(x._2)).toMap
-    }
+    }(actorContext)
 
+  def directSet[T](value : SVal.SValType[T], at : Time = TimedRingBuffer.Now)(implicit context : SVarActor) : Boolean = {
+    val info = value.typedSemantics.asConvertibleTrait
+    filterSVars(info, sVars.getOrElse(info.sVarIdentifier, Nil)) match {
+      case (container : SVarContainer[_]) :: tail => container.as(info).svar.set(value.value, at)
+      case _ => false
+    }
+  }
+
+  def directGet[T](info : ConvertibleTrait[T])(handler : T => Unit)(implicit context : SVarActor) = {
+    filterSVars(info, sVars.getOrElse(info.sVarIdentifier, Nil)) match {
+      case (container : SVarContainer[_]) :: tail => container.as(info).svar.get(handler)
+      case _ =>
+    }
+  }
 
   override protected def handleNewValue[T](c: SValBase[T, _ ], timeStamp : Time, handler : SelfType => Any, bufferMode : BufferMode)
                                           (implicit actor: EntityUpdateHandling){
-    doIfSelf( update(addOrUpdate(_, c, timeStamp, actor, bufferMode), handler, actor))({ HandleEntityUpdate(this, c.asSVal)}, handler)
+    getSVars(c.typedSemantics.asConvertibleTrait) match {
+      case (_, spart : StateParticle[T@unchecked]) :: Nil =>
+        spart.set(c.value, timeStamp)
+        handler(this)
+      case _ =>
+        doIfSelf( update(addOrUpdate(_, c, timeStamp, actor, bufferMode), handler, actor) )({ HandleEntityUpdate(this, c.asSVal, timeStamp, bufferMode)}, handler)
+    }
   }
 
   def remove[T](c : ConvertibleTrait[T], handler : SelfType => Any = _ => {})(implicit actor : EntityUpdateHandling){
@@ -124,7 +145,7 @@ class Entity private(val description : GeneralEntityDescription,
       tuple => tuple._2.map(x => x.asParticleInfo(tuple._1))
     }
 
-  def getSVars[T](out : ConvertibleTrait[T])(implicit context : EntityUpdateHandling) =
+  def getSVars[T](out : ConvertibleTrait[T])(implicit context : EntityUpdateHandling) : List[(Set[ontology.Annotation], StateParticle[T])] =
     filterSVars(out, getMostRecent(context).sVars.getOrElse(out.sVarIdentifier, Nil)).map( x => x.annotations -> x.as(out).svar )
 
   def addRemoveObservers(observers : Set[SVarActor.Ref], handler : Entity => Any = _ => {})(implicit actorContext : SVarActor){
@@ -194,7 +215,7 @@ class Entity private(val description : GeneralEntityDescription,
 
   private def addOrUpdate[T, B <: T](in : Map[Symbol, List[SVarContainer[_]]], c : SValBase[T, B], timeStamp : Time, actor : SVarActor, bufferMode : BufferMode) =
     in.getOrElse(c.typedSemantics.sVarIdentifier, Nil).find( _.annotations equals c.typedSemantics.annotations) match {
-      case Some(thing : SVarContainer[T]) =>
+      case Some(thing : SVarContainer[T@unchecked]) =>
         thing.svar.set(c.value, timeStamp)(actor)
         false -> in
       case Some(thing) =>
@@ -244,7 +265,7 @@ class Entity private(val description : GeneralEntityDescription,
 
   protected def update(createSVars : Map[Symbol, List[SVarContainer[_]]] => (Boolean, Map[Symbol, List[SVarContainer[_]]]),
                        handler : SelfType => Any, actor : EntityUpdateHandling)(oldVal : Entity){
-    accessMostRecent(actor){ e =>
+    accessMostRecent{ e =>
         val (updated, newSVars) = createSVars(e.sVars)
         if (updated) {
           val newVal = setSelf(Some(e.setSVars(newSVars)), Now)(actor)
@@ -252,7 +273,7 @@ class Entity private(val description : GeneralEntityDescription,
           handler(newVal.getOrElse(asSelfType))
         } else
           handler(e)
-      }
+      }(actor)
   }
 
   override def hashCode(): Int = id.hashCode()

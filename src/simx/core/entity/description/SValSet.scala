@@ -20,9 +20,12 @@
 
 package simx.core.entity.description
 
+import simx.core.svaractor.semantictrait.base.{Thing, Base}
+import simx.core.worldinterface.entity.filter.{SValEquals, EntityFilter}
+
 import scala.collection.mutable
 import simx.core.ontology.GroundedSymbol
-import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
+import simx.core.entity.typeconversion.{Reverter, TypeInfo, ConvertibleTrait}
 
 /**
  * @author dwiebusch
@@ -44,18 +47,13 @@ object SValSet {
    * Creates a new SValSet that is a duplicate of that
    */
   def apply(that: SValSet) = new SValSet(that)
-}
 
-
-
-class SValSet(params: SVal.SValType[_]*) extends TypedSValSet[Any](params :_*){
-  def this(that: SValSet) = this(that.toSValSeq:_*)
+  implicit def toSValSet(sval: SVal.SValType[_]): SValSet = SValSet(sval)
 
 }
+
 /**
- *
- * Groups several SVals.
- *
+ * Groups several [[SVal]]s.
  * @see EntityAspect
  */
 //TODO: make constructors package private to force companion object usage
@@ -67,6 +65,15 @@ class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symb
    * Creates a new SValSet that is a duplicate of that
    */
   def this(that: TypedSValSet[_ <: U]) = this(that.values.flatten.toSeq :_*)
+
+  /**
+   * Returns a *new* [[TypedSValSet]] that contains all [[SVal]]s of 'this' [[TypedSValSet]] set as well as the [[SVal]] 'anotherSVal'
+   */
+  def and(anotherSVal: SValBase[U, _ <: U]) = {
+    val res = new TypedSValSet(anotherSVal)
+    values.flatten.foreach(res.add)
+    res
+  }
 
   /**
    *
@@ -98,16 +105,45 @@ class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symb
 
   /**
    *
-   * Returns a List of all included SVals that are of a sepcific OntologyMember type.
+   * Returns a List of all included SVals that are of a specific OntologyMember type.
    */
-  def getAllSValsFor[T <: U](typedSemantics: TypeInfo[T, T]): List[SVal.SValType[T]] =
+  def getAllSValsFor[T <: U](typedSemantics: TypeInfo[T, T]): List[SVal.SValType[T]] = {
     //TODO: Implement annotations check more efficient
-    getOrElse(typedSemantics.sVarIdentifier, Nil).filter(sVal => {
+    val res = getOrElse(typedSemantics.sVarIdentifier, Nil).filter(sVal => {
       typedSemantics.annotations.diff(sVal.typedSemantics.annotations).isEmpty
-    }).map{value => typedSemantics.asConvertibleTrait(value as typedSemantics.asConvertibleTrait)}
+    })
+    val res2 = res.map {
+      case sVal: SVal[_,_,_,_] if sVal.typedSemantics.typeTag.tpe <:< typedSemantics.typeTag.tpe =>
+        val value: T = sVal as typedSemantics.asConvertibleTrait
+        val timestamp: Long = sVal.getTimeStamp
+        val typedSVal: SVal.SValType[T] = sVal.asInstanceOf[SVal.SValType[T]]
+        typedSemantics.asConvertibleTrait.apply(value, timestamp, typedSVal.getHistory)
+      case sVal =>
+        typedSemantics.asConvertibleTrait(sVal as typedSemantics.asConvertibleTrait)
+    }
+    res2
+  }
 
+//  case sVal: HistoryStorage[_] =>
+//  val value: T = sVal as typedSemantics.asConvertibleTrait
+//  val timestamp: Long = sVal.getTimeStamp
+//
+//  val convertedHistory: List[(T, Long)] = sVal.getHistory.flatMap { tuple =>
+//    tuple._1 match {
+//      case v if typedSemantics.classTag.runtimeClass == v.getClass => Some(v.asInstanceOf[T], tuple._2)
+//      case _ =>
+//        println("[warn][TypedSValSet] ...")
+//        None
+//    }
+//  }
+//  typedSemantics.asConvertibleTrait.apply(value, timestamp, convertedHistory)
+//  case sVal =>
+//    typedSemantics.asConvertibleTrait(sVal as typedSemantics.asConvertibleTrait)
+//  case (v: T, t: Long) => (v, t)
+//  case (v: sVal.containedValueManifest, t: Long) => (Reverter(typedSemantics.asConvertibleTrait, sVal.typedSemantics.getBase).revert(v), t)
+//  case _ => throw new Exception("[TypedSValSet] ...")
 
-  /**
+/**
    *
    * Returns an Option on the SVal of a specific OntologyMember type.
    * Returns the first SVal in the order of this SValSet if more than one is present.
@@ -240,8 +276,52 @@ class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symb
         }
     }
 
-  override def toString(): String =
-    "SValSet\n\t" + mkString("\n\t")
+  /**
+   * Returns an [[EntityFilter]] that matches entities
+   * which possess properties that equal all [[SVal]]s in this set (using [[SValEquals]]).
+   */
+  def toFilter: EntityFilter =
+    combineFilters(values.flatten.map(_.asSVal).map{sVal => SValEquals(sVal)}.toList)
+
+  private def combineFilters(filters: List[EntityFilter]): EntityFilter = filters match {
+    case head :: Nil => head
+    case head :: tail => head and combineFilters(tail)
+    case _ => throw new Exception("[error][SValSet] Cannot create filter from empty SValSet")
+  }
+
+  def toString(indent: Int, heading: String = "SValSet"): String = {
+    var indentString = ""
+    for(i <- 0 until indent) indentString += "\t"
+    indentString + heading  + mkString("\n"+indentString+"\t", "\n"+indentString+"\t", "")
+  }
+
+  def toShortString =
+    values.flatten.map{_.value.toString}.mkString("[",",","]")
+
+  override def toString(): String = toString(0)
+
+  override def equals(other: Any): Boolean =
+    other match {
+      case that: TypedSValSet[U] =>
+        (that canEqual this) &&
+          keySet == that.keySet &&
+          keySet.forall{ k =>
+            val thisValue = this(k)
+            val thatValue = that(k)
+            if(thisValue.size == thatValue.size)
+              thisValue.forall{v =>
+                thisValue.count(_ == v) == thatValue.count(_ == v)
+              }
+            else false
+          }
+      case _ => false
+    }
+
+  override def canEqual(other: Any): Boolean =
+    other.isInstanceOf[TypedSValSet[U]]
+
+  override def hashCode(): Int =
+    keySet.foldRight(41 + keySet.hashCode()){(k, hashSoFar) => 41 * hashSoFar + apply(k).hashCode()}
 
 }
 
@@ -255,6 +335,7 @@ class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symb
 final case class NamedSValSet(semantics: GroundedSymbol, ps: SVal.SValType[_]*) extends SValSet(ps: _*) {
   def this(that: NamedSValSet) = this(that.semantics, that.toSValSeq:_*)
   def this(aspectType: GroundedSymbol, cps: SValSet) = this(aspectType, cps.toSValSeq:_*)
+
 
   override def toString(): String =
     "NamedSValList (" + semantics + ")\n\t" + mkString("\n\t")

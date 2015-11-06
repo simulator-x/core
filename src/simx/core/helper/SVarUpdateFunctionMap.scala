@@ -280,7 +280,7 @@ trait SVarUpdateFunctionMap extends SVarActor with EntityUpdateHandling {
   }
 
   protected def getMultiObserve[T]( svar : StateParticle[T]) : MultiObserve[T] = multiobservers.find(_.svar equals svar) match {
-    case Some(m : MultiObserve[T]) => m
+    case Some(m : MultiObserve[T@unchecked]) => m
     case _ =>
       val retVal = MultiObserve(svar)
       multiobservers = multiobservers + retVal

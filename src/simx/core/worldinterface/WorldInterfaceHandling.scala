@@ -24,23 +24,13 @@ import simx.core.component.{DisableAspect, EnableAspect}
 import simx.core.entity.Entity
 import simx.core.entity.description.{EntityAspect, SValBase}
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.entity.typeconversion.TypeInfo._
-import simx.core.ontology.{GroundedSymbol, SValDescription, Symbols}
-import simx.core.svaractor.semantictrait.base.{Thing, Base}
+import simx.core.ontology.{GroundedSymbol, SValDescription}
+import simx.core.svaractor.SVarActor
+import simx.core.svaractor.semantictrait.base.{Base, Thing}
 import simx.core.svaractor.unifiedaccess._
-import simx.core.svaractor.{SVar, SVarActor}
+import simx.core.worldinterface.base.WorldInterfaceHandlingBase
+import simx.core.worldinterface.entity.{NewEntityRegistrationHandling, EntityRegistrationHandling, NewEntityRegistrationHandling$}
 import simx.core.worldinterface.eventhandling.{Event, EventDescription}
-
-import scala.reflect.ClassTag
-
-
-/**
- * Created by IntelliJ IDEA.
- * User: stephan_rehfeld
- * Date: 27.11.11
- * Time: 21:14
- * To change this template use File | Settings | File Templates.
- */
 
 /**
  * The World Interface. This object shall be used to provide to state value known to the entire programm, as well as
@@ -50,12 +40,14 @@ import scala.reflect.ClassTag
  * For now, one has to ensure that the id's of registered components/entities/state values/actors are unique, later
  * this shall be done automatically
  *
- *
- * @author dwiebusch
  * @author Stephan Rehfeld
+ * @author Dennis Wiebusch
+ * @author Martin Fischbach
  * date: 02.07.2010
  */
-trait WorldInterfaceHandling extends SVarActor{
+trait WorldInterfaceHandling extends WorldInterfaceHandlingBase
+  with EntityRegistrationHandling with NewEntityRegistrationHandling {
+
   final def setRelation(relSVal : SValBase[Relation, _ <: Relation])(implicit context : EntityUpdateHandling){
     WorldInterfaceActor ! AddRelation(relSVal)
   }
@@ -88,10 +80,6 @@ trait WorldInterfaceHandling extends SVarActor{
    */
   final protected def registerActor(name: Symbol, actor: SVarActor.Ref) {
     WorldInterfaceActor ! ActorRegisterRequest(name, actor)
-  }
-
-  final protected def registerComponentEntity( entity : Entity, cName : Symbol, cType : GroundedSymbol ) {
-    registerEntity(Symbols.component.value.toSymbol :: cType.value.toSymbol :: cName :: Nil, entity)
   }
 
   /**
@@ -140,35 +128,37 @@ trait WorldInterfaceHandling extends SVarActor{
     WorldInterfaceActor ! StateValueCreateRequest(desc, value, entityName)
   }
 
-  /**
-   * adds a new WorldInterfaceEvent to be triggered, when the given (external) state value changes
-   *
-   * @param stateValue the state value to be observed
-   * @param container the name of the entity containing the svar
-   * @param trigger the WorldInterfaceEvents name being triggered on the state value change
-   */
-  final protected def addValueChangeTrigger[T](stateValue : SVar[T], container : Symbol, trigger : Symbol) {
-    WorldInterfaceActor ! ExternalStateValueObserveRequest(stateValue, container :: Nil, trigger)
-  }
+  //Commented due to non-usage by martin, 20-04-2015
+//  /**
+//   * adds a new WorldInterfaceEvent to be triggered, when the given (external) state value changes
+//   *
+//   * @param stateValue the state value to be observed
+//   * @param container the name of the entity containing the svar
+//   * @param trigger the WorldInterfaceEvents name being triggered on the state value change
+//   */
+//  final protected def addValueChangeTrigger[T](stateValue : SVar[T], container : Symbol, trigger : Symbol) {
+//    WorldInterfaceActor ! ExternalStateValueObserveRequest(stateValue, container :: Nil, trigger)
+//  }
+//
+//  final protected def addValueChangeTrigger[T](stateValue : SVar[T], container : List[Symbol], trigger : Symbol) {
+//    WorldInterfaceActor ! ExternalStateValueObserveRequest(stateValue, container, trigger)
+//  }
 
-  final protected def addValueChangeTrigger[T](stateValue : SVar[T], container : List[Symbol], trigger : Symbol) {
-    WorldInterfaceActor ! ExternalStateValueObserveRequest(stateValue, container, trigger)
-  }
-
-  /**
-   * adds a new WorldInterfaceEvent to be triggered, when the given (internal) state value changes
-   *
-   * @param c information on the state value to be observed (has to be known by the WorldInterfaceActor)
-   * @param entityName the name of the entity containing the specified state value
-   * @param trigger the WorldInterfaceEvents name being triggered on the state value change
-   */
-  final protected def addValueChangeTrigger[T]( c : ConvertibleTrait[T], entityName : Symbol, trigger : Symbol) {
-    WorldInterfaceActor ! InternalStateValueObserveRequest(c, entityName :: Nil, trigger)
-  }
-
-  final protected def addValueChangeTrigger[T]( c : ConvertibleTrait[T], entityName : List[Symbol], trigger : Symbol) {
-    WorldInterfaceActor ! InternalStateValueObserveRequest(c, entityName, trigger)
-  }
+  //Commented due to non-usage by martin, 20-04-2015
+//  /**
+//   * adds a new WorldInterfaceEvent to be triggered, when the given (internal) state value changes
+//   *
+//   * @param c information on the state value to be observed (has to be known by the WorldInterfaceActor)
+//   * @param entityName the name of the entity containing the specified state value
+//   * @param trigger the WorldInterfaceEvents name being triggered on the state value change
+//   */
+//  final protected def addValueChangeTrigger[T]( c : ConvertibleTrait[T], entityName : Symbol, trigger : Symbol) {
+//    WorldInterfaceActor ! InternalStateValueObserveRequest(c, entityName :: Nil, trigger)
+//  }
+//
+//  final protected def addValueChangeTrigger[T]( c : ConvertibleTrait[T], entityName : List[Symbol], trigger : Symbol) {
+//    WorldInterfaceActor ! InternalStateValueObserveRequest(c, entityName, trigger)
+//  }
 
   final protected def handleActorList(handler : List[Symbol] => Unit) {
     nonBlockingHandler[List[Symbol]]( ActorEnumerateRequest(), handler )
@@ -176,10 +166,6 @@ trait WorldInterfaceHandling extends SVarActor{
 
   final protected def handleActor( name : Symbol )( handler : Option[SVarActor.Ref] => Unit ) {
     nonBlockingHandler[Option[SVarActor.Ref]](ActorLookupRequest(name), handler)
-  }
-
-  final protected def handleEntity( name : Symbol )( handler : Option[Entity] => Any ) {
-    nonBlockingHandler[Option[Entity]]( EntityLookupRequest( name :: Nil ), handler )
   }
 
   final protected def handleComponent(name : Symbol)( handler : Option[SVarActor.Ref] => Any ) {
@@ -194,101 +180,11 @@ trait WorldInterfaceHandling extends SVarActor{
     nonBlockingHandler[Map[Symbol, SVarActor.Ref]](AllComponentsLookupRequest(), handler)
   }
 
-  final protected def registerForCreationOf( path : Path ) {
-    WorldInterfaceActor ! ListenForRegistrationsMessage( self, path )
-  }
-
-  private type CreationMessageHandler = (Entity) => Any
-  type Path = List[Symbol]
-  private[core] var creationMessageHandlers = Map[Path, CreationMessageHandler]()
-
-  override def preStart(): Unit = {
-    super.preStart()
-    addHandler[CreationMessage]{msg =>
-      creationMessageHandlers.filter(h => msg.path.startsWith(h._1)).foreach(_._2.apply(msg.e))
-    }
-  }
-
-  /**
-   * Registers an entity using the given name as path.
-   */
-  final protected def registerEntity(name : Symbol, e : Entity) {
-    registerEntity(name :: Nil, e)
-  }
-
-  /**
-   * Registers an entity below the given path.
-   */
-  final protected  def registerEntity(path : Path, e : Entity) {
-    WorldInterfaceActor ! EntityRegisterRequest(path, e)
-  }
-
-  final protected def unregisterEntity(e : Entity) {
-    WorldInterfaceActor ! EntityUnregisterRequest(e)
-  }
-
-  /**
-   *  Applies the passed handler for the next entity that will be registered below the given path.
-   */
-  final protected def onNextEntityRegistration(path : Path)(f : Entity => Any) {
-    nonBlockingHandler[Entity](OnNextRegistration(path), f)
-  }
-
-  /**
-   *  Applies the passed handler for all entities that will be registered below the given path.
-   */
-  final protected def onEntityRegistration(path : Path)(f : Entity => Any) {
-    registerForCreationOf(path)
-    creationMessageHandlers = creationMessageHandlers.updated(path, f)
-  }
-
-  /**
-   *  Applies the passed handler for all entities that have been registered below the given path so far.
-   */
-  final protected def requestRegisteredEntities( path : Path )( handler : Set[Entity] => Any ) {
-    nonBlockingHandler[Set[Entity]](EntityGroupLookupRequest(path), handler)
-  }
-
-  /**
-   *  Applies the passed handler for the last entity that has been registered below the given path so far.
-   *  If no entity has been registers that way so far,
-   *  the passed handler is applied once for the next entity that will be registered below the given path.
-   */
-  final protected def handleOrWaitForEntityRegistration( path : Path )( f : Entity => Any ) {
-    nonBlockingHandler[Entity](OnOneRegistration(path), f)
-  }
-  
-  /**
-   *  Applies the passed handler for all entities that have been registered below the given path so far.
-   *  In addition, the passed handler is applied for all entities that will be registered below the given path.
-   */
-  final protected def handleEntityRegistration(path : Path)(f : Entity => Any){
-    requestRegisteredEntities(path){_.foreach(f)}
-    onEntityRegistration(path)(f)
-  }
-
   final protected def handleRegisteredSVarDescriptions(handler : Map[String, SValDescription[_, _,_ <: Base,_ <: Thing]] => Unit) =
     nonBlockingHandler[Map[String, SValDescription[_, _,_ <: Base,_ <: Thing]]](GetRegisteredSVarDescriptions(), handler)
 
   final protected def onSVarDescRegistration(handler : SValDescription[_, _,_ <: Base,_ <: Thing] => Unit){
     addHandler[RegisterSVarDescription[_, _,_ <: Base,_ <: Thing]](msg => handler(msg.desc))
     WorldInterfaceActor ! ObserveSVarDescRegistrations(self)
-  }
-
-  /**
-   *
-   * this one is a bit advanced, so here is what happens:
-   * the function takes two parameters, one function that instanciates the message to be send and the handler which
-   * shall be executed when an answer to that message is sent.
-   * Initially an ID is generated and stored to identify the message which is sent. Then a single-use-handler is
-   * installed, which uses that generated id. The installed handler simply calls the function "handler" which is
-   * provided as a parameter, applying the value returned by the worldInterfaceActor.
-   * Finally a message is sent to the worldInterfaceActor, which contains an handler (executed by the
-   * worldInterfaceActor), that sends the id, value tuple back, causing the invocation of the installed handler
-   *
-   */
-  protected def nonBlockingHandler[T](msg : Any, handler : T => Any)
-                                     (implicit actorContext : SVarActor, m : ClassTag[T], t : DataTag[T]) {
-    actorContext.ask[T](WorldInterfaceActor.self, msg)(handler(_) : Unit)
   }
 }

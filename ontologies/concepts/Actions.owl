@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE Ontology [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl"
+     versionIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions20150213.owl">
+    <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Import>http://localhost:8080/core/ontologies/SimxCoreOntology.owl</Import>
+    <Declaration>
+        <Class IRI="#Function"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasEffect"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasObject"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasOperatorType"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter1"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter2"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter3"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter4"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasParameter5"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasPrecondition"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasPredicate"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasReturnValue"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasRole"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasSubject"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasName"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#implementedBy"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#InfixOperatorType"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#Parameter1"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#Parameter2"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#Parameter3"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#Parameter4"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#Parameter5"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#PrefixOperatorType"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#hasParameterPosition"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#hasRole"/>
+    </Declaration>
+    <SubClassOf>
+        <Class IRI="#Function"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_Concept"/>
+    </SubClassOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasObject"/>
+        <ObjectProperty IRI="#hasParameter2"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasParameter1"/>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasParameter2"/>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasParameter3"/>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasParameter4"/>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasParameter5"/>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#hasSubject"/>
+        <ObjectProperty IRI="#hasParameter1"/>
+    </SubObjectPropertyOf>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#hasEffect"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Action"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#hasParameter"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Action"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#hasPrecondition"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Action"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#hasPredicate"/>
+        <Class IRI="#Function"/>
+    </ObjectPropertyDomain>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#hasEffect"/>
+            <ObjectProperty IRI="#hasObject"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#hasEffect"/>
+            <ObjectProperty IRI="#hasReturnValue"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#hasReturnValue"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#hasEffect"/>
+            <ObjectProperty IRI="#hasSubject"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#hasPrecondition"/>
+            <ObjectProperty IRI="#hasObject"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#hasPrecondition"/>
+            <ObjectProperty IRI="#hasSubject"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#hasParameter"/>
+    </SubObjectPropertyOf>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 3.5.0) http://owlapi.sourceforge.net -->
+

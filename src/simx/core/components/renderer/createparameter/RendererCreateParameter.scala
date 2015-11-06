@@ -26,7 +26,7 @@ import simx.core.ontology.types._
 import java.awt.Color
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.ConvertibleTrait
-import simx.core.entity.description.{NamedSValSet, EntityAspect, SValSeq}
+import simx.core.entity.description.{NamedSValSet, EntityAspect, SValSet}
 import simplex3d.math.float._
 
 /**
@@ -129,19 +129,19 @@ case class SpotLight( name: java.lang.String,
   require( (shadowBias.isLeft && shadowBias.left.get != null) || shadowBias.isRight, "Neither left or right value of parameter 'shadowBias' must not be 'null'!" )
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-    cVars = cVars and Name( name )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
-    if( constantAttenuation.isRight ) cVars = cVars and ConstantAttenuation( constantAttenuation.right.get )
-    if( linearAttenuation.isRight ) cVars = cVars and LinearAttenuation( linearAttenuation.right.get )
-    if( quadraticAttenuation.isRight ) cVars = cVars and QuadraticAttenuation( quadraticAttenuation.right.get )
-    if( spotCutOff.isRight ) cVars = cVars and SpotCutOff( spotCutOff.right.get )
-    if( spotExponent.isRight ) cVars = cVars and SpotExponent( spotExponent.right.get )
-    if( castShadow.isRight ) cVars = cVars and CastShadow( castShadow.right.get )
-    if( shadowBias.isRight ) cVars = cVars and ShadowBias( shadowBias.right.get )
-    if( diffuseColor.isRight ) cVars = cVars and DiffuseColor( diffuseColor.right.get )
-    if( specularColor.isRight ) cVars = cVars and SpecularColor( specularColor.right.get )
-    if( parentElement.isDefined ) cVars = cVars and ParentElement( parentElement.get )
+    var cVars = new SValSet
+    cVars += Name( name )
+    if( transformation.isRight ) cVars += Transformation( transformation.right.get )
+    if( constantAttenuation.isRight ) cVars += ConstantAttenuation( constantAttenuation.right.get )
+    if( linearAttenuation.isRight ) cVars += LinearAttenuation( linearAttenuation.right.get )
+    if( quadraticAttenuation.isRight ) cVars += QuadraticAttenuation( quadraticAttenuation.right.get )
+    if( spotCutOff.isRight ) cVars += SpotCutOff( spotCutOff.right.get )
+    if( spotExponent.isRight ) cVars += SpotExponent( spotExponent.right.get )
+    if( castShadow.isRight ) cVars += CastShadow( castShadow.right.get )
+    if( shadowBias.isRight ) cVars += ShadowBias( shadowBias.right.get )
+    if( diffuseColor.isRight ) cVars += DiffuseColor( diffuseColor.right.get )
+    if( specularColor.isRight ) cVars += SpecularColor( specularColor.right.get )
+    if( parentElement.isDefined ) cVars += ParentElement( parentElement.get )
     addCVars( cVars )
   }
 
@@ -219,15 +219,15 @@ case class PointLight( name: java.lang.String,
 
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-    cVars = cVars and Name( name )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
-    if( constantAttenuation.isRight ) cVars = cVars and ConstantAttenuation( constantAttenuation.right.get )
-    if( linearAttenuation.isRight ) cVars = cVars and LinearAttenuation( linearAttenuation.right.get )
-    if( quadraticAttenuation.isRight ) cVars = cVars and QuadraticAttenuation( quadraticAttenuation.right.get )
-    if( diffuseColor.isRight ) cVars = cVars and DiffuseColor( diffuseColor.right.get )
-    if( specularColor.isRight ) cVars = cVars and SpecularColor( specularColor.right.get )
-    if( parentElement.isDefined ) cVars = cVars and ParentElement( parentElement.get )
+    var cVars = new SValSet
+    cVars += Name( name )
+    if( transformation.isRight ) cVars += Transformation( transformation.right.get )
+    if( constantAttenuation.isRight ) cVars += ConstantAttenuation( constantAttenuation.right.get )
+    if( linearAttenuation.isRight ) cVars += LinearAttenuation( linearAttenuation.right.get )
+    if( quadraticAttenuation.isRight ) cVars += QuadraticAttenuation( quadraticAttenuation.right.get )
+    if( diffuseColor.isRight ) cVars += DiffuseColor( diffuseColor.right.get )
+    if( specularColor.isRight ) cVars += SpecularColor( specularColor.right.get )
+    if( parentElement.isDefined ) cVars += ParentElement( parentElement.get )
     addCVars( cVars )
   }
 
@@ -314,31 +314,33 @@ case class ShapeFromFile( file: java.lang.String,
                           subElement : Option[java.lang.String] = None,
                           parentElement : Option[Entity] = None,
                           transformation : Either[ReadFromElseWhere,ConstMat4f]  = Right( ConstMat4f( Mat3x4f.Identity ) ),
-                          scale : ConstMat4f = ConstMat4f( Mat3x4f.Identity )
+                          scale : ConstMat4f = ConstMat4f( Mat3x4f.Identity ),
+                          provideTexture: scala.Boolean = true
                         ) extends RendererAspect( Symbols.shapeFromFile ) {
 
   require( file != null, "The parameter 'file' must not be 'null'!" )
   require( subElement != null, "The parameter ' subElement' must not be 'null'!")
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-    cVars = cVars and ColladaFile( file )
-    if( subElement.isDefined ) cVars = cVars and SubElement( subElement.get )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
-    cVars = cVars and Scale( scale )
+    var cVars = new SValSet
+    cVars += ColladaFile( file )
+    if( subElement.isDefined ) cVars += SubElement( subElement.get )
+    if( transformation.isRight ) cVars += Transformation( transformation.right.get )
+    cVars += Scale( scale )
     addCVars( cVars )
   }
 
   override def getFeatures : Set[ConvertibleTrait[_]] = {
     var features = Set[ConvertibleTrait[_]]()
-    features = features +  Transformation
+    features = features +  Transformation + Texture + Scale
     features
   }
 
   override def getProvidings : Set[ConvertibleTrait[_]] = {
     var providings = Set[ConvertibleTrait[_]]()
     if( transformation.isRight ) providings = providings +  Transformation
-    providings
+    if( provideTexture ) providings = providings +  Texture
+    providings + Scale
   }
 
 }
@@ -436,10 +438,10 @@ case class Mirror( name: java.lang.String,
   require( (transformation.isLeft && transformation.left.get != null) || (transformation.isRight && transformation.right.get != null), "Neither left or right value of parameter 'transformation' must not be 'null'!" )
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-    cVars = cVars and Name( name )
-    cVars = cVars and File( file )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
+    var cVars = new SValSet
+    cVars += Name( name )
+    cVars += File( file )
+    if( transformation.isRight ) cVars += Transformation( transformation.right.get )
     addCVars( cVars )
   }
 
@@ -472,11 +474,11 @@ case class Water( name: java.lang.String,
 
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-    cVars = cVars and Name( name )
-    cVars = cVars and File( file )
-    if( transformation.isRight ) cVars = cVars and Transformation( transformation.right.get )
-    if( waveScale.isRight ) cVars = cVars and WaveScale( waveScale.right.get )
+    var cVars = new SValSet
+    cVars += Name( name )
+    cVars += File( file )
+    if( transformation.isRight ) cVars += Transformation( transformation.right.get )
+    if( waveScale.isRight ) cVars += WaveScale( waveScale.right.get )
     addCVars( cVars )
   }
 
@@ -517,13 +519,13 @@ case class AnimatedObject( //name: java.lang.String,
   require( transformation != null, "The parameter ' subElement' must not be 'null'!")
 
   override def getCreateParams = {
-    var cVars = new SValSeq
-//    cVars = cVars and Name( name )
-    if( subElement.isDefined ) cVars = cVars and SubElement( subElement.get )
-    if( parentElement.isDefined ) cVars = cVars and ParentElement( parentElement.get )
-    cVars = cVars and Transformation( transformation )
-    cVars = cVars and Scale( scale )
-//    cVars = cVars and Texture(texture)
+    var cVars = new SValSet
+//    cVars += Name( name )
+    if( subElement.isDefined ) cVars += SubElement( subElement.get )
+    if( parentElement.isDefined ) cVars += ParentElement( parentElement.get )
+    cVars += Transformation( transformation )
+    cVars += Scale( scale )
+//    cVars += Texture(texture)
     addCVars( cVars )
   }
 

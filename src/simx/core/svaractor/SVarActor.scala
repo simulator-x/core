@@ -21,20 +21,19 @@
 package simx.core.svaractor
 
 import akka.actor._
-import akka.remote.RemoteScope
-import akka.remote.DisassociatedEvent
+import akka.remote.{DisassociatedEvent, RemoteScope}
 import com.typesafe.config.{Config, ConfigFactory}
-import simx.core.entity.description.SVal.SValType
-import simx.core.helper.{JVMTools, Loggable}
-import simx.core.entity.typeconversion.ConvertedSVar
 import simx.core.clustering.ClusterSubSystem
 import simx.core.entity.description.SVal
+import simx.core.entity.description.SVal.SValType
+import simx.core.entity.typeconversion.ConvertedSVar
+import simx.core.helper.{JVMTools, Loggable}
 import simx.core.svaractor.TimedRingBuffer._
 import simx.core.svaractor.handlersupport.Types.CPSRet
+
 import scala.collection.mutable
 import scala.ref.WeakReference
 import scala.reflect.ClassTag
-
 
 /**
  * This is the companion object of the SVarActor, an actor that can handle
@@ -53,12 +52,16 @@ object SVarActor {
   private var config : Option[Config] = None
   private var profiling = false
 
+  //From http://doc.akka.io/docs/akka/2.3.11/general/configuration.html
+  //If you are scheduling a lot of tasks you should consider increasing the ticks per wheel.
+  //e.g. 'scheduler.ticks-per-wheel = 2048'
   private def configString =
     if(isRemotingEnabled)
       """
       akka {
         scheduler {
           tick-duration = """ + JVMTools.minTickDuration + """
+          implementation = simx.core.helper.JustDoItScheduler
         }
         actor {
           provider = "akka.remote.RemoteActorRefProvider"
@@ -74,12 +77,15 @@ object SVarActor {
                                  """
     else {
       if( profiling ) {
-        "akka.scheduler.tick-duration=" + JVMTools.minTickDuration + "\n" + "akka.actor.provider = \"akka.actor.profiling.LocalProfilingActorRefProvider\""
+        "akka.scheduler.tick-duration=" + JVMTools.minTickDuration + "\n" +
+        "akka.actor.provider = \"akka.actor.profiling.LocalProfilingActorRefProvider\"" + "\n" +
+        "akka.scheduler.implementation = simx.core.helper.JustDoItScheduler"
       } else
         """
         akka {
           log-dead-letters = 1
           scheduler.tick-duration=""" + JVMTools.minTickDuration + """
+          scheduler.implementation = simx.core.helper.JustDoItScheduler
         }
                                                                    """
     }
@@ -292,9 +298,11 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
           consume ( read( sVar, at, accessMethod ) )
         else {
           owner( sVar ) ! ReadSVarMessage( sVar, at, accessMethod )
-          addSingleUseHandler[ValueOfSVarMessage[T]]( {
-            case ValueOfSVarMessage( svar, value) if svar == sVar => consume(value)
-          } : PartialFunction[ValueOfSVarMessage[T], Unit@CPSRet])
+          addSingleUseHandlerPF(new PartialFunction[ValueOfSVarMessage[T], Any@CPSRet] {
+            override def toString(): String = "ValueOfSVarMessage handler, looking for sVar with id " + sVar.id
+            override def isDefinedAt(x: ValueOfSVarMessage[T]): Boolean = x.sVar.id == sVar.id
+            override def apply(v1: ValueOfSVarMessage[T]): Any@CPSRet = consume(v1.value)
+          })
         }
     }
   }
@@ -486,7 +494,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
                                         svar       : SVar[T],
                                         newOwner   : SVarActor.Ref,
                                         value      : Option[(SVal.SValType[T], Time)] = None,
-                                        bufferMode : BufferMode = Unbuffered ) : Boolean = {
+                                        bufferMode : BufferMode = TimedRingBuffer.defaultMode ) : Boolean = {
     if (self == newOwner){
       if (!this.isOwnerOf(svar)) value match {
         case Some((_data, timeStamp)) => insertSVar(svar, _data, timeStamp, bufferMode)
@@ -568,8 +576,9 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
     }
   }
 
-  private[svaractor] def read[T]( sVar: SVar[T], at : Time, accessMethod : AccessMethod ) : ContentType[T] =
+  private[svaractor] def read[T]( sVar: SVar[T], at : Time, accessMethod : AccessMethod ) : ContentType[T] = {
     data( sVar ).read(at, accessMethod).asInstanceOf[ContentType[T]]
+  }
 
   private[svaractor] final def addObserver( sVar: SVar[_], a: SVarActor.Ref, ignoredWriters: Set[SVarActor.Ref] ) {
     heldMessages.get(sVar) match {
@@ -648,7 +657,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   final protected def handleMessage : PartialFunction[Any, Any] =
-    handlersAsPF orElse {case _ => () }
+    handlersAsPF orElse { case msg => handlersupport.UnhandledMessage(msg, "no matching handler found") }
   //------------------------------------//
   //                                    //
   //    handler definition section      //
@@ -730,7 +739,7 @@ trait SVarActor extends SVarActorBase with SVarFunctions with Loggable{
   }
 
   addHandler[ReadSVarMessage[_]]{
-    handleOwnerDependentMsg( (msg : ReadSVarMessage[_]) => msg.sender ! createValueOfSVarMsg( msg.sVar, msg.at, msg.accessMethod ) )
+    handleOwnerDependentMsg{ msg : ReadSVarMessage[_] => msg.sender ! createValueOfSVarMsg( msg.sVar, msg.at, msg.accessMethod ) }
   }
 
   addHandler[WriteSVarMessage[Any]]{

@@ -22,6 +22,7 @@ package simx.core.svaractor.unifiedaccess
 
 import java.util.UUID
 
+import simx.core.svaractor.TimedRingBuffer.{BufferMode, Time}
 import simx.core.svaractor.{RemoveEntityMessage, SVar, SVarActor}
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.SValBase
@@ -37,7 +38,7 @@ trait EntityUpdateHandling extends SVarActor{
     RightUnknownTuple(tuple._1)
 
   addHandler[HandleEntityUpdate[_]]{
-    msg => delayedReplyWith[Entity](msg.e.set(msg.sval, _))()
+    msg => delayedReplyWith[Entity](msg.e.set(msg.sval, msg.timeStamp, msg.bufferMode))()
   }
 
   addHandler[HandleEntityRemove[_]]{
@@ -118,6 +119,6 @@ trait EntityUpdateHandling extends SVarActor{
 }
 
 protected[core] case class HandleRemoveEntity(e : Entity)
-protected[core] case class HandleEntityUpdate[T](e : Entity, sval : SValBase[T, _ <: T])
+protected[core] case class HandleEntityUpdate[T](e : Entity, sval : SValBase[T, _ <: T], timeStamp : Time, bufferMode : BufferMode)
 protected[core] case class HandleEntityRemove[T](e : Entity, sval : ConvertibleTrait[T])
 protected[core] case class HandleObserverUpdate(e : Entity, newObservers : Set[SVarActor.Ref])

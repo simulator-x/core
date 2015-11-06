@@ -25,7 +25,7 @@ import simplex3d.math.floatx.{ConstVec3f, ConstMat4f, Mat4x3f}
 import simx.core.components.renderer.createparameter.ReadFromElseWhere
 import simx.core.entity.description.SVal.SValType
 import simx.core.ontology.{types => gt, Symbols, GroundedSymbol}
-import simx.core.entity.description.{SValSeq, EntityAspect}
+import simx.core.entity.description.{SValSet, EntityAspect}
 import simx.core.entity.typeconversion.ConvertibleTrait
 
 //Global Types
@@ -94,18 +94,18 @@ case class PhysBaseProps (transform: Either[ConstMat4f, ConstVec3f] = null,
 
   def and(that: SValType[_]) = {
 
-    var result = new SValSeq()
+    var result = new SValSet()
 
-    if (transform != null) result = result and {transform match {
+    if (transform != null) result += {transform match {
       case Left(p) => gt.Transformation(p)
       case Right(p) => gt.Transformation(ConstMat4f(Mat4x3f.translate(p)))
     }}
-    if(mass != null && mass.isLeft) result = result and gt.Mass(mass.left.get)
-    if(gravity != null ) result = result and gt.Gravity(gravity)
-    if(restitution != null && restitution.isLeft) result = result and gt.Restitution(restitution.left.get)
-    if(linDamping != null && linDamping.isLeft) result = result and gt.LinearDamping(linDamping.left.get)
-    if(anDamping != null && anDamping.isLeft) result = result and gt.AngularDamping(anDamping.left.get)
-    if(anFactor != null && anFactor.isLeft) result = result and gt.AngularFactor(anFactor.left.get)
+    if(mass != null && mass.isLeft) result += gt.Mass(mass.left.get)
+    if(gravity != null ) result += gt.Gravity(gravity)
+    if(restitution != null && restitution.isLeft) result += gt.Restitution(restitution.left.get)
+    if(linDamping != null && linDamping.isLeft) result += gt.LinearDamping(linDamping.left.get)
+    if(anDamping != null && anDamping.isLeft) result += gt.AngularDamping(anDamping.left.get)
+    if(anFactor != null && anFactor.isLeft) result += gt.AngularFactor(anFactor.left.get)
 
     result and that
   }
@@ -349,16 +349,16 @@ case class PhysParticle(  transform: Either[ConstMat4f, ConstVec3f] = null, mass
 
   def getCreateParams =
     addCVars{
-      var result = new SValSeq()
+      var result = new SValSet()
 
-      if (transform != null) result = result and {
+      if (transform != null) result += {
         transform match {
           case Left(p) => gt.Transformation(p)
           case Right(p) => gt.Transformation(ConstMat4f(Mat4x3f.translate(p)))
         }
       }
-      if (mass != null && mass.isLeft) result = result and gt.Mass(mass.left.get)
-      if (linDamping != null && linDamping.isLeft) result = result and gt.LinearDamping(linDamping.left.get)
+      if (mass != null && mass.isLeft) result += gt.Mass(mass.left.get)
+      if (linDamping != null && linDamping.isLeft) result += gt.LinearDamping(linDamping.left.get)
       result
     }
 

@@ -32,7 +32,7 @@ protected class SVarDataImpl[T](private val data : TimedRingBuffer[T], val svar 
   protected var observers = Map[SVarActor.Ref, Set[SVarActor.Ref]]()
 
   def this(data : T, timeStamp : Time, svar : WeakReference[SVar[T]], typeInfo : ConvertibleTrait[T],
-           bufferLength : BufferMode = TimedRingBuffer.Unbuffered ) =
+           bufferLength : BufferMode = TimedRingBuffer.defaultMode ) =
     this(TimedRingBuffer(data, timeStamp, bufferLength), svar, typeInfo)
 
   def this(sval : SValType[T], timeStamp : Time, svar : WeakReference[SVar[T]]) =
@@ -42,7 +42,7 @@ protected class SVarDataImpl[T](private val data : TimedRingBuffer[T], val svar 
     this(sval.value, timeStamp, svar, sval.typedSemantics.asConvertibleTrait, bufferLength)
 
   def getBufferSetting : BufferMode =
-    if (data.getMaxTime > 0 ) MaxTime(data.getMaxTime) else Unbuffered
+    if (data.getMaxTime > 0 ) MaxTime(data.getMaxTime) else TimedRingBuffer.defaultMode
 
   def write[V]( writer: SVarActor.Ref, value : V, at : Time )(implicit actor : SVarActor) {
     data.put(value.asInstanceOf[T], at)

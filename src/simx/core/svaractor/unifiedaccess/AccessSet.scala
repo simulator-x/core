@@ -161,6 +161,9 @@ sealed class AccessSet[T, U] protected[unifiedaccess]( accessValues : EntityUpda
   final def head(handler : U => Any)(implicit svarActor : EntityUpdateHandling) =
     _head[Identity](x => handler(x._1), _._2, svarActor)
 
+  final def headOption(handler : Option[U] => Any)(implicit svarActor : EntityUpdateHandling) =
+    ifEmpty(handler(None)).head{x  => handler(Some(x))}
+
   private def _foreach[M[_]](handler : M[U] => Any, f : TupleWithValue[U] => M[U], svarActor : EntityUpdateHandling) =
     _access((map, access) => map.foreach(access), handler, f, svarActor)
 

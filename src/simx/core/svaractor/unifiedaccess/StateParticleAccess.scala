@@ -20,8 +20,9 @@
 
 package simx.core.svaractor.unifiedaccess
 
+import simx.core.ontology
 import simx.core.ontology.Annotation
-import simx.core.svaractor.TimedRingBuffer.{Unbuffered, Now, Time, BufferMode}
+import simx.core.svaractor.TimedRingBuffer.{Now, Time, BufferMode}
 import simx.core.svaractor._
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.description.SValBase
@@ -37,7 +38,13 @@ import simx.core.entity.description.SValBase
  * @param typeInfo a convertible trait describing the state particle. This may not contain annotations and probably refers to its base type
  * @tparam T the state particles type
  */
-case class StateParticleInfo[T](identifier : Symbol, annotations : Set[Annotation], svar : StateParticle[T], typeInfo : ConvertibleTrait[T])
+case class StateParticleInfo[T](identifier : Symbol, annotations : Set[Annotation], svar : StateParticle[T], typeInfo : ConvertibleTrait[T]) {
+  def matches[U](c: ConvertibleTrait[U]): Boolean = {
+    c.getBase == typeInfo.getBase &&
+    c.sVarIdentifier == identifier &&
+    c.annotations == annotations
+  }
+}
 
 trait StateParticleAccess extends UnifiedAccess{
   /**
@@ -50,6 +57,9 @@ trait StateParticleAccess extends UnifiedAccess{
    */
   protected def access[T](c : ConvertibleTrait[T], actorContext : EntityUpdateHandling,
                           filter : StateParticle[T] => Boolean = (_ : StateParticle[T]) => true ) : (AnnotatedMap[T] => Any) => Unit
+
+
+  protected def getSVars[T](out : ConvertibleTrait[T])(implicit context : EntityUpdateHandling) : List[(Set[ontology.Annotation], StateParticle[T])]
 
   /**
    *
@@ -136,12 +146,17 @@ trait StateParticleAccess extends UnifiedAccess{
   final def set[T](c : SValBase[T, _ <: T], timeStamp : Time, bufferMode : BufferMode)
                   (handler : SelfType => Any)
                   (implicit actorContext : EntityUpdateHandling) {
-    access(c.typedSemantics.asConvertibleTrait, actorContext ){ toSet =>
-      toSet.filter(_._1 equals AnnotationSet(c.typedSemantics.annotations.toSeq :_*)) match{
-        case set if set.size < 2 =>
-          handleNewValue(c, timeStamp, handler, bufferMode)
-        case set =>
-          throw AmbiguousSelectionException(set, c)
+    getSVars(c.typedSemantics.asConvertibleTrait) match {
+      case (_, stateparticle : StateParticle[T@unchecked]) :: Nil =>
+        stateparticle.set(c.value, timeStamp)
+        handler(asSelfType)
+      case _ => access(c.typedSemantics.asConvertibleTrait, actorContext ) { toSet =>
+        toSet.filter(_._1 equals AnnotationSet(c.typedSemantics.annotations.toSeq: _*)) match {
+          case set if set.size < 2 =>
+            handleNewValue(c, timeStamp, handler, bufferMode)
+          case set =>
+            throw AmbiguousSelectionException(set, c)
+        }
       }
     }
   }
@@ -155,7 +170,7 @@ trait StateParticleAccess extends UnifiedAccess{
   }
 
   final def set[T](c : SValBase[T, _ <: T], handler : SelfType => Any = (_ : SelfType) => {})(implicit actorContext : EntityUpdateHandling) {
-    set(c, Now, Unbuffered)(handler)
+    set(c, Now, TimedRingBuffer.defaultMode)(handler)
   }
 }
 

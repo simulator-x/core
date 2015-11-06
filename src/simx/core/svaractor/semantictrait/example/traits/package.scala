@@ -33,7 +33,7 @@ import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
  * Created by dennis on 23.01.15.
  */
 package object traits {
-  object Movable extends SpecificSemanticTrait(Gravity and Anything){
+  object Movable extends SpecificSemanticTrait(Gravity :: Anything){
     final type SpecificEntityType = SemanticEntity{ def moveTo(s : Location.ValueType)(implicit creator : EntityUpdateHandling)  }
 
     override protected def createEntity(e: SemanticEntity.ValueType)(implicit creator : SVarActor) = new SemanticEntity(e) {
@@ -43,16 +43,16 @@ package object traits {
     }
   }
 
-  object Vehicle extends SpecificSemanticTrait( Position2D and Scale, has(SteeringBehavior), has(4 < _, Wheel) ){
+  object Vehicle extends SpecificSemanticTrait( Position2D :: Scale, has(SteeringBehavior), has(4 < _, Wheel) ){
     final type SpecificEntityType = SemanticEntity{ def moveTo(s : Location.ValueType)(implicit creator : EntityUpdateHandling) : Unit@CPSRet  }
 
     protected def createEntity(e: SemanticEntity.ValueType)(implicit creator : SVarActor) = new SemanticEntity(e) {
       def moveTo(s : Location.ValueType)(implicit creator : EntityUpdateHandling) : Unit@CPSRet ={
-        entity modify s
+        (entity modify s).apply
         println("entity " + entity + " is now in/at " + (entity get s))
       }
     }
   }
 
-  object Wheel extends SemanticTrait(Position and Scale, has(Shape("round")))
+  object Wheel extends SemanticTrait(Position :: Scale, has(Shape("round")))
 }

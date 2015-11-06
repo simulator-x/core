@@ -20,17 +20,23 @@
 
 package simx.core.ontology.functions
 
+import simplex3d.math.float._
 import simx.core.ontology.types._
 
 /**
- * Created by martin on 27/02/15.
+ * By martin
+ * on February 2015.
  */
+trait DefaultSemanticFunctions extends Functions {
+  implicit val functions = this
 
+  def relativeTo(p: Position, rt: Transformation): Position = {
+    Position((simplex3d.math.float.functions.inverse(rt.value) * Vec4(p.value,1)).xyz)
+  }
 
-
-object DefaultImplementations {
-
-  //implicit object defaultImplementations extends Functions
+  def positionOf(t: Transformation): Position = {
+    Position(t.value(3).xyz)
+  }
 
   def positionOf(param1: Entity): Position = ???
 
@@ -50,11 +56,14 @@ object DefaultImplementations {
   def equals(p1: Time, p2: Time): Boolean =
     Boolean(p1.value == p2.value)
 
+  def -(minuend: Position, subtrahend: Position): Vector3 =
+    Vector3(minuend.value - subtrahend.value)
+
   /**
    * Calculates the angle between two vectors.
    */
   def angleBetween(p1: Vector3, p2: Vector3): Angle =
-    Angle(math.acos(simplex3d.math.float.functions.dot(p1.value, p2.value)).toFloat)
+    Angle(math.acos(simplex3d.math.float.functions.dot(simplex3d.math.float.functions.normalize(p1.value), simplex3d.math.float.functions.normalize(p2.value))).toFloat)
 
   def -(p1: Length, p2: Length): Length =
     Length(p1.value - p2.value)

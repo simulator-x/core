@@ -71,7 +71,7 @@ protected[core] abstract class PartiallyConvertedSVar[O, T](wrappedSVar : SVar[O
     wrappedSVar.ignore()(actorContext)
   }
   //! redicrect id lookups to wrapped svar
-  final def id = wrappedSVar.id
+  final override def id = wrappedSVar.id
 
   val initialOwner = wrappedSVar.initialOwner
 }

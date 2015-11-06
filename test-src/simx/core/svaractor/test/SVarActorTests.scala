@@ -90,7 +90,7 @@ class TestActorInst extends TestActor with EntityUpdateHandling{
       override protected def removeFromLocalRep(e: Entity){}
 
       addHandler[SVarEquals]{
-        msg => delayedReply[String](e.get(types.String).head)
+        msg => delayedReply[String](x => e.get(types.String).head(x))
       }
     }
 

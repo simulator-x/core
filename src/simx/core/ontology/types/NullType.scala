@@ -20,11 +20,12 @@
 
 package simx.core.ontology.types
 
+import simx.core.entity.description.SVal.SValType
 import simx.core.entity.typeconversion.TypeInfo._
 
 import simx.core.ontology._
 import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
-import simx.core.entity.description.SVal
+import simx.core.entity.description.{HistoryStorage, SVal}
 import simx.core.svaractor.semantictrait.base._
 import scala.reflect.{classTag, ClassTag}
 
@@ -35,10 +36,20 @@ import scala.reflect.{classTag, ClassTag}
  */
 
 abstract class OntologySymbol(s : Symbol) extends simx.core.svaractor.semantictrait.base.BasicGroundedSymbol with Serializable{
+  OntologySymbol.register(this)
   def asOntoSym = OntologySymbol(this)
 }
 
 object OntologySymbol extends SValDescription[GroundedSymbolBase[Thing], GroundedSymbolBase[Thing], Base, OntologySymbolBase.SymbolType](NullType(OSymBase)) with Serializable{
+  private var registeredOntologySymbols = Map[Symbol, OntologySymbol]()
+  private def register(os: OntologySymbol) {
+    registeredOntologySymbols = registeredOntologySymbols.updated(os.toSymbol, os)
+  }
+  def lookup(s: Symbol) = {
+    val res = registeredOntologySymbols.get(s)
+    if(res.isEmpty) println("[warn][OntologySymbol] Lookup on non existing symbol '" + s.name + "'")
+    res
+  }
   def apply(s : GroundedSymbol) : SVal.SValType[GroundedSymbolBase[_ <: Thing]] =
     SVal.apply(this, BaseValueDescription(OntologySymbolBase))(s.Symbol)
 }
@@ -61,8 +72,15 @@ private abstract class CBase[U : ClassTag : DataTag, S <: Thing](name : Grounded
   def getBase     = this
   type baseType   = U
 
-  override def apply(value: U): SVal[U, TypeInfo[U, U], _ <: Base, _ <: Thing] =
+  override def apply(value: U): SVal.SValType[U] =
     SVal(this, valueDescription)(value)(classTag)
+
+  def apply(value: U, timestamp: scala.Long): SVal.SValType[U] =
+    SVal(this, valueDescription, timestamp)(value)(classTag)
+
+  override def apply(value: U, timestamp: scala.Long, history: HistoryStorage.HistoryType[U]): SValType[U] =
+    SVal(this, valueDescription, timestamp, history)(value)(classTag)
+
 }
 
 object OntologySymbolBase extends BasicGroundedSymbol with Serializable

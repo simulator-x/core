@@ -28,13 +28,13 @@ import scala.reflect.ClassTag
 
 
 object SVarImpl extends SVarObjectInterface {
-  def apply[T](value: SVal.SValType[T], timeStamp : Time, bufferLength : BufferMode = TimedRingBuffer.Unbuffered)
+  def apply[T](value: SVal.SValType[T], timeStamp : Time, bufferLength : BufferMode = TimedRingBuffer.defaultMode)
               (implicit actorContext : SVarActor) : SVar[T] =
     actorContext.createSVar(value, timeStamp, bufferLength)
 }
 
 class SVarImpl[T] private(val initialOwner: SVarActor.Ref,
-                          val id: UUID,
+                          override val id: UUID,
                           implicit val containedValueManifest: ClassTag[T],
                           implicit val typeTag : TypeInfo.DataTag[T] ) extends SVar[T] with Serializable
 {

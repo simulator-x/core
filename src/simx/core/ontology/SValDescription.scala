@@ -21,7 +21,7 @@
 package simx.core.ontology
 
 import simx.core.entity.description.SVal.SValType
-import simx.core.entity.description.{SVal, GeneralEntityDescription, EntityAspect}
+import simx.core.entity.description._
 import simx.core.entity.typeconversion.TypeInfo.DataTag
 import simx.core.entity.typeconversion._
 import simx.core.entity.Entity
@@ -51,10 +51,26 @@ class SValDescription[T : ClassTag : DataTag, B, X <: Base, S <: Thing] private[
                                                                                            doRegister : Boolean = false)
   extends SemanticType[T, X, S](classType, vd, doRegister) with ConvertibleTrait[T] with Serializable
 {
-  type baseType = B
 
-  override def apply(value: T): SVal[T, TypeInfo[T, T], X, S] =
-    SVal(this, valueDescription.setAnnotations(annotations))(value)(classTag)
+  //simx.core.entity.description.SVal[
+  // String,
+  // simx.core.entity.typeconversion.TypeInfo[String,String],
+  // simx.core.svaractor.semantictrait.base.ValueDescription[simx.core.svaractor.semantictrait.base.Base,simx.core.ontology.Symbols.string.SymbolType],
+  // simx.core.ontology.Symbols.material.SymbolType];
+
+  type baseType = B
+  type SemanticSValType <: SVal[T, TypeInfo[T, T], X, S]
+
+  override def apply(value: T): SemanticSValType =
+    apply(value, -1L)
+
+  def apply(value: T, timestamp : Long) : SemanticSValType = {
+    apply(value, timestamp, Nil)
+  }
+
+  def apply(value: T, timestamp : Long, history: HistoryStorage.HistoryType[T]) : SemanticSValType with SValHistory[DataType, S, SemanticSValType]= {
+    SVal(this, valueDescription.setAnnotations(annotations), timestamp, history)(value)(classTag).asInstanceOf[SemanticSValType with SValHistory[DataType, S, SemanticSValType]]
+  }
 
   override val semantics: GroundedSymbolBase[S] = vd.groundedSymbol
 
@@ -77,7 +93,17 @@ class SValDescription[T : ClassTag : DataTag, B, X <: Base, S <: Thing] private[
   def withAnnotations(additionalAnnotations: Set[Annotation]) =
     addAnnotations(additionalAnnotations)
 
+  //TODO fix the following 'type clutter'
+  //def withAnnotations(additionalAnnotations: simx.core.ontology.Annotation*): simx.core.entity.typeconversion.ConvertibleTrait[T] at line 96 and
+  //def withAnnotations(additionalAnnotations: simx.core.svaractor.semantictrait.base.GroundedSymbolFeatures*): simx.core.entity.typeconversion.ConvertibleTrait[T] at line 99
+  //have same type after erasure: (additionalAnnotations: Seq)simx.core.entity.typeconversion.ConvertibleTrait
+  def withAnnotations(additionalAnnotation: Annotation, additionalAnnotations: Annotation*) =
+    addAnnotations(additionalAnnotations.toSet + additionalAnnotation)
+
   def withAnnotations(additionalAnnotations: GroundedSymbolFeatures*) =
+    addAnnotations(additionalAnnotations :_*)
+
+  def +@(additionalAnnotations: GroundedSymbolFeatures*) =
     addAnnotations(additionalAnnotations :_*)
 
   def withType[U : ClassTag : DataTag](c : Class[U]) : SValDescription[U, B, X, S] =
@@ -95,7 +121,7 @@ class SValDescription[T : ClassTag : DataTag, B, X <: Base, S <: Thing] private[
   def asConst =
     new SValDescription[T, B, X, S](classType, valueDescription, getBase, true, annotations, ontoLink)
 
-  def from[O](that : SVal.SValType[O]) : SValType[T] =
+  def convertedFrom[O](that : SVal.SValType[O]) : SValType[T] =
     apply(that as this)
 
   override def isProvided : Provide[T, B] =

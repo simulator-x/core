@@ -20,6 +20,7 @@
 
 package simx.core.svaractor.semantictrait.base
 
+import simx.core.entity.Entity
 import simx.core.svaractor.handlersupport.Types.CPSRet
 import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 
@@ -29,12 +30,19 @@ import scala.util.continuations
 /**
  * Created by dwiebusch on 30.11.14
  */
+case class FinalSemanticValue[+T, +B <: Thing](valueDescription :  ValueDescription[_ <: Base, B], value : T) extends SemanticValue[T, B]
+
 trait SemanticValue[+T, +B <: Thing] extends Attain with Serializable{
   val valueDescription :  ValueDescription[_ <: Base, B]
   val value : T
 
-  override def toString: String =
-    valueDescription  + "(" + value + ")"
+  override def toString: String = {
+    val valueString = value match{
+      case e: Entity => e.getSimpleName
+      case _ => value.toString
+    }
+    valueDescription + "(" + valueString + ")"
+  }
 
   def set(r : Seq[Semantic.Value[Any]])(implicit context: EntityUpdateHandling) : Unit =
     r.foreach(ABox.set(this, _)( _ => () ))
@@ -107,6 +115,11 @@ case class Settable[+T, +B <: Thing](accessValue : (SemanticValue[T, B] => Unit)
   def apply(nextHandler : SemanticValue[T, B] => Unit = _ => ()){
     accessValue(v => nextHandler(v))
   }
+
+
+  def apply : SemanticValue[T, B] @CPSRet =
+    continuations.shift{ k : (SemanticValue[T, B] => Any) => apply(s => k(s) : Unit) }
+
 
   def set : SemanticValue[T, B] @CPSRet =
     continuations.shift{ k : (SemanticValue[T, B] => Any) => apply(s => k(s) : Unit) }

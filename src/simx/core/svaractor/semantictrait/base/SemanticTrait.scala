@@ -25,7 +25,6 @@ import simx.core.svaractor.SVarActor
 import simx.core.svaractor.handlersupport.Types.CPSRet
 import simx.core.svaractor.semantictrait.base.Semantic.Value
 import simx.core.svaractor.semantictrait.base.TraitTypes.PartialEntityRelation
-import simx.core.svaractor.semantictrait.example.symbols
 import simx.core.svaractor.semantictrait.example.types.SemanticEntity
 import simx.core.svaractor.semantictrait.SemanticEntityBase
 import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
@@ -57,7 +56,7 @@ abstract class SpecificSemanticTrait[V <: Thing : TypeTag](val gs : GroundedSymb
   extends SemanticValue[SpecificSemanticTrait[V], SemanticTrait.SymbolType]
 {
   import CPST.cpsIterable
-  protected type SpecificEntityType <: SemanticType
+  type SpecificEntityType <: SemanticType
   final type SemanticType = SemanticValue[SemanticEntity.DataType, Symbols.entity.SymbolType with V]
   final type Type = V
 
@@ -90,16 +89,36 @@ abstract class SpecificSemanticTrait[V <: Thing : TypeTag](val gs : GroundedSymb
   val classes =
     SemanticTypeTrait.lookUp(typeOf[V])
 
-  def tryApply(v : SemanticEntity.ValueType)(implicit context: EntityUpdateHandling) : Option[SpecificEntityType]@CPSRet = {
+  def tryApply(v : SemanticEntity.ValueType)(implicit context: EntityUpdateHandling) : OptionalFail[SpecificEntityType]@CPSRet = {
     val checkResult = (desc.map(_.asInstanceOf[Semantic.Value[_]]) ++ classes).cps.foldLeft(List[Semantic.Value[_]]()){
       (result, req) => if (v matches req) result else req :: result
     }
     if (checkResult.isEmpty)
-      Some(createEntity(v))
+      SomeResult(createEntity(v))
     else
-      None //throw new Exception("Not wrappable: " + checkResult.mkString(" and ") + " not found for entity with id " + v.value)
+      Failed("Not wrappable: " + checkResult.mkString(" and ") + " not found for entity with id " + v.value)
   }
+
+  def wrap(v : SemanticEntity.ValueType)(implicit context: EntityUpdateHandling) : SpecificEntityType@CPSRet =
+    tryApply(v).get
 
   def apply(e : SemanticValue[SemanticEntity.DataType, Symbols.entity.SymbolType with V])(implicit context: EntityUpdateHandling) : SpecificEntityType@CPSRet =
     tryApply(e).get
+}
+
+sealed abstract class OptionalFail[T]{
+  def isDefined : Boolean
+  def getOrElse(exec : => T) : T
+  def get : T
+}
+
+case class SomeResult[T](get : T) extends OptionalFail[T]{
+  override def getOrElse(exec: => T): T = get
+  override def isDefined: Boolean = true
+}
+
+case class Failed[T](cause : String) extends OptionalFail[T]{
+  override def get: T = throw new Exception(cause)
+  override def getOrElse(exec: => T): T = exec
+  override def isDefined: Boolean = false
 }

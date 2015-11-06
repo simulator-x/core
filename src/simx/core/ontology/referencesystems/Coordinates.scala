@@ -25,6 +25,7 @@ import java.util.UUID
 
 import simplex3d.math.double._
 import functions._
+import simplex3d.math.doublex.functions._
 import simplex3d.math.floatx.ConstMat4f
 import simx.core.svaractor.{SVarActor, SVar}
 import simx.core.helper.SchemaAwareXML
@@ -73,15 +74,17 @@ object CoordinateSystemConverter{
   }
 
   def calcRot(newValue : ConstMat4) = {
-    val oriM = inverse(ConstMat4(rotationMat(vrpnToWorldRotation))) * newValue * ConstMat4(rotationMat(vrpnToWorldRotation))
+    val oriM = inverse(ConstMat4(rotationMat(vrpnToWorldRotation))) * newValue //* ConstMat4(rotationMat(vrpnToWorldRotation))
     ConstMat4(removeScale(ConstMat3(oriM(0).xyz,oriM(1).xyz,oriM(2).xyz)))
   }
 
 
   def targetToScreenCoordinates( newValue : ConstMat4 ) : ConstMat4f = {
-    val pos = calcPos(newValue)
-    val ori = calcRot(newValue)
-    ConstMat4f(ori(0), ori(1), ori(2), ConstVec4(pos, 1))
+//    val pos = calcPos(newValue)
+//    val ori = calcRot(newValue)
+//    ConstMat4f(ori(0), ori(1), ori(2), ConstVec4(pos, 1))
+
+    ConstMat4f(inverse(screenTransformation) * newValue)
   }
 
 
@@ -94,7 +97,7 @@ object CoordinateSystemConverter{
     new CoordinateSystemConverter[U](name)
 }
 
-class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform : ConstMat4 ){
+class CoordinateSystemConverter[U] (name : GroundedSymbol, transform : ConstMat4){
   //register this system
   Coordinates.setSystem(name, transform)
   //some shortcuts to the function calls
@@ -159,7 +162,7 @@ class CoordinateSystemConverter[U] protected( name : GroundedSymbol, transform :
 /**
  * holder for coordinate systems, providing conversion methods
  */
-protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4]{
+protected object Coordinates extends /*SVarActor with */ ReferenceSystem[ConstMat4]{
   private var names = Map[GroundedSymbol, UUID](Symbols.origin -> UUID.randomUUID)
   private var viewPlatformObserver : Option[SVarActor.Ref] = None
 
@@ -202,10 +205,10 @@ protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4]{
     viewPlatformObserver.get ! Update(vpf)
   }
 
-  override def shutdown(){
-    super.shutdown()
-    viewPlatformObserver.collect{ case obs : SVarActor => obs.shutdown() }
-  }
+//  override def shutdown(){
+//    super.shutdown()
+//    viewPlatformObserver.collect{ case obs : SVarActor => obs.shutdown() }
+//  }
 
   //for ease of use
   def convert[U]( toConvert : U, inSystem : GroundedSymbol, outSystem : UUID ) : U =
@@ -234,6 +237,7 @@ protected object Coordinates extends SVarActor with  ReferenceSystem[ConstMat4]{
     case value : Mat2x4 => outSystem * inSystem * value
     case value : Mat4   => outSystem * inSystem * value
     case value : Vec4   => outSystem * inSystem * value
+    case value : ConstMat4  => outSystem * inSystem * value
     case _                => throw NoConversionPossibleException(toConvert)
   }).asInstanceOf[V]
 

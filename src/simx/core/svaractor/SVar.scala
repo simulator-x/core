@@ -64,7 +64,16 @@ trait SVBase[+T, B <: T] extends Observability[T] with Accessibility[T] with Mut
     continuations.shift{ k : (T => Any) => get{ x => k(x) } }
 }
 
-trait StateParticle[T] extends SVBase[T, T] with Serializable
+private object StateParticleId {
+  val defaultId = UUID.randomUUID()
+}
+
+trait StateParticle[T] extends SVBase[T, T] with Serializable{
+  /**
+   * The unique id trough which a SVar is identified
+   */
+  def id: UUID = StateParticleId.defaultId
+}
 
 /**
  * This trait represents a state variable. State Variables
@@ -73,10 +82,7 @@ trait StateParticle[T] extends SVBase[T, T] with Serializable
  * @tparam T The datatype of the represented value.
  */
 trait SVar[T] extends StateParticle[T]  with Serializable{
-  /**
-   * The unique id trough which a SVar is identified
-   */
-  def id: UUID
+
 
   def initialOwner : SVarActor.Ref
 
@@ -96,6 +102,9 @@ trait SVar[T] extends StateParticle[T]  with Serializable{
 
   def as[T2](cInfo: ConversionInfo[T2, T]) : SVar[T2] =
     new ConvertedSVar(this, cInfo)
+
+  override def toString: String =
+    "SVar with id " + id
 }
 
 trait ImmutableSVar[+T, B <: T] extends SVBase[T, B] with Immutability[B] with Serializable{

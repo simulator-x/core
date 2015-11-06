@@ -31,6 +31,8 @@ import scala.util.continuations._
  * date: 19.09.2010
  */
 
+case class UnhandledMessage private[svaractor](msg : Any, reason : String = "")
+
 trait HandlerSupportImpl extends HandlerSupport{
   private type IdHandlerPair   = (IdType, Function[Any, Any])
   private type handlerList     = List[IdHandlerPair]
@@ -54,6 +56,7 @@ trait HandlerSupportImpl extends HandlerSupport{
     handler match{
       case pf : tmpType @unchecked => updateHandlers( classTag[T].runtimeClass, (generateId(),
         new PartialFunction[Any, Any] {
+          override def toString() = "Handler for type " + classTag[T]
           override def isDefinedAt(x: Any): Boolean = pf.isDefinedAt(x)
           override def apply(a: Any): Any = reset[Any, Any] {
             val ret = handler(a.asInstanceOf[T])
@@ -73,7 +76,7 @@ trait HandlerSupportImpl extends HandlerSupport{
     addHandler[T](pf)
   }
 
-  protected def removeHandler( id: Long, manifest : Class[_])  {
+  protected def removeHandler( id: IdType, manifest : Class[_])  {
     handlers.update(manifest, handlers.getOrElse(manifest, Nil).filterNot( _._1 == id ) )
   }
 
@@ -100,21 +103,16 @@ trait HandlerSupportImpl extends HandlerSupport{
         for ( ( manifest, list ) <- handlers )
           if ( manifest isAssignableFrom msgManifest )
             return applyHandlerList( list, msg )
+        UnhandledMessage(msg, "no matching handler found")
     }
   }
-
-  //private def storeContinuation( hOpt : HandlerOption ) {
-  //  hOpt collect { case (handler, manifest) => addSingleUseHandler(handler, manifest) }
-  //}
 
   protected[svaractor] def addSingleUseHandler[T](pf: handlerC_t, manifest : Class[_]) {
     updateHandlers(manifest, toRemovableTuple(pf, manifest, generateId() ), append = true )
   }
 
-  //  private def toRemovableTuple( pf : handlerC_t, manifest : Class[_], id : IdType ) =
-  //    id -> pf.andThen{ _ => removeHandler(id, manifest) }
-
   private[svaractor] def toRemovableTuple(pf : handlerC_t, manifest : Class[_], id : IdType) = id -> new PartialFunction[Any, Any] {
+    override def toString() = pf.toString()
     override def isDefinedAt(x: Any) = pf.isDefinedAt(x)
     override def apply(v1: Any) = {
       reset[Any, Any] {
@@ -125,8 +123,11 @@ trait HandlerSupportImpl extends HandlerSupport{
     }
   }
 
+  /*
+   This can cause severe errors, if called from another actor's context
+   */
   private[svaractor] def generateId() : IdType =
-    (lastId +=1, lastId)._2
+    (lastId += 1, lastId)._2
 
   private[svaractor] def updateHandlers( manifest : Class[_], toAdd : IdHandlerPair, append : Boolean = false ) {
     handlers.update(manifest, if (append) handlers.getOrElse(manifest, Nil) :+ toAdd else toAdd :: handlers.getOrElse(manifest, Nil) )
@@ -137,26 +138,24 @@ trait HandlerSupportImpl extends HandlerSupport{
 
   private type tmpType = PartialFunction[Any, _]
 
-  private[handlersupport] def applyHandlerList( list : handlerList, msg : Any ) : Any = list match {
-    case Nil => ()
-    case (_, handler) :: tail => handler match {
-      case pf : tmpType => if( pf isDefinedAt msg ) pf( msg ) else applyHandlerList(tail, msg)
-      case f => f(msg)
+  private[handlersupport] def applyHandlerList( list : handlerList, msg : Any ) : Any = {
+    if (list.isEmpty) return UnhandledMessage(msg, "no existing handler") else list.foreach {
+      case (_, pf: tmpType) => if (pf isDefinedAt msg) return pf(msg)
+      case (_, f) => return f(msg)
     }
+    UnhandledMessage(msg, "no matching handler in " + list.size + " available handlers:\n\t" + list.mkString("\n\t"))
   }
 
-  private def wrap[T, U](f : Function[T, U@CPSRet])(implicit manifest : ClassTag[T]) = new PartialFunction[Any, U@CPSRet]{
-    def isDefinedAt( x : Any ) =
-      if (manifest.runtimeClass isAssignableFrom x.getClass) definedAt( x.asInstanceOf[T] ) else false
-    def apply(v1: Any) = f.apply(v1.asInstanceOf[T])
-    private val definedAt : T => Boolean = f match {
-      case pf : PartialFunction[T, U] => pf.isDefinedAt
-      case _ => ( x : Any ) => true
+  private def wrap[T, U](func : Function[T, U@CPSRet])(implicit manifest : ClassTag[T]) : PartialFunction[Any, U@CPSRet] = func match {
+    case pf : PartialFunction[_, U@CPSRet@unchecked] => pf.asInstanceOf[PartialFunction[Any, U@CPSRet]]
+    case f => new PartialFunction[Any, U@CPSRet] {
+      override def toString() = "Wrapped handler for type " + manifest
+      def isDefinedAt(x: Any) = manifest.runtimeClass isAssignableFrom x.getClass
+      def apply(v1: Any) = f.apply(v1.asInstanceOf[T])
     }
   }
 
   // CPS helpers:
-
   protected def msgMatch[T](partialFunction: Function[T, Any])(msg : T) : Any@CPSRet =
     partialFunction(msg)
 
@@ -167,7 +166,7 @@ trait HandlerSupportImpl extends HandlerSupport{
     new If(condition)
 }
 
-protected class If (condition : => scala.Boolean@CPSRet){
+protected[core] class If (condition : => scala.Boolean@CPSRet){
   protected abstract class Else[+T]{self =>
     protected def createHalt[U >: T](func: U) : Else[U]@CPSRet
     def ElseIf(condition : => scala.Boolean@CPSRet) : Then@CPSRet

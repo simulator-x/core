@@ -20,7 +20,7 @@
 
 package simx.core.ontology
 
-import simx.core.entity.description.{EntityAspect, GeneralEntityDescription}
+import simx.core.entity.description._
 import simx.core.entity.typeconversion.ConvertibleTrait
 import simx.core.entity.Entity
 import simx.core.ontology.entities.Subelement
@@ -36,20 +36,30 @@ import simx.core.svaractor.semantictrait.base.BaseValueDescription
 class EntityDescription(aspects : List[EntityAspect],
                         name : Symbol = Symbol("unnamed-entity"),
                         path : List[Symbol] = Nil,
-                        annotations: Set[Annotation] = Set())
+                        annotations: Set[Annotation] = Set(),
+                        additionalProperties: SValSet = SValSet())
   extends SpecificEntityDescription(
-    if(annotations.isEmpty) PlainEntity else PlainEntity.setAnnotations(annotations), aspects.toList, name, path)
+    if(annotations.isEmpty) PlainEntity else PlainEntity.setAnnotations(annotations), aspects, name, path, Seq(), additionalProperties)
   with Serializable {
   def this(name : String, aspects : EntityAspect*) = this(aspects.toList, Symbol(name))
   def this(aspects : EntityAspect*) = this(aspects.toList)
+
+  def this(_name: Symbol, _additionalProperties: SVal.SValType[_]*) = this(
+    aspects = List[EntityAspect](),
+    name = _name,
+    path = List[Symbol](),
+    annotations = Set[Annotation](),
+    additionalProperties = SValSet(_additionalProperties:_*)
+  )
 }
 
 class SpecificEntityDescription(entityDesc : EntitySValDescription,
                                 val aspects    : List[EntityAspect],
                                 name       : Symbol,
                                 path       : List[Symbol] = Nil,
-                                features   : Seq[ConvertibleTrait[_]] = Seq())
-  extends Subelement(new SpecificDescription(entityDesc, aspects, name, path, features)) with Serializable
+                                features   : Seq[ConvertibleTrait[_]] = Seq(),
+                                additionalProperties: SValSet = SValSet())
+  extends Subelement(new SpecificDescription(entityDesc, aspects, name, path, features, additionalProperties)) with Serializable
 {
   def this(entityDesc : EntitySValDescription, aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
     this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)
@@ -60,10 +70,11 @@ protected[core] class SpecificDescription( entityDesc : EntitySValDescription,
                                            aspects    : List[EntityAspect],
                                            name       : Symbol,
                                            path       : List[Symbol] = Nil,
-                                           features   : Seq[ConvertibleTrait[_]] = Seq() )
+                                           features   : Seq[ConvertibleTrait[_]] = Seq(),
+                                           additionalProperties: SValSet = SValSet())
 
   extends GeneralEntityDescription(entityDesc, entityDesc.ctor, None, path :+ name,
-    if (features.nonEmpty) FeatureDefinition(features.toSet) :: aspects else aspects)
+    if (features.nonEmpty) FeatureDefinition(features.toSet) :: aspects else aspects, additionalProperties)
 {
   def this(entityDesc : EntitySValDescription, aspects : List[EntityAspect], features : ConvertibleTrait[_]* ) =
     this(entityDesc, aspects, Symbol("unnamed-entity"), Nil, features)

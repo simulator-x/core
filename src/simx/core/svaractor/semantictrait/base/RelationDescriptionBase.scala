@@ -20,12 +20,12 @@
 
 package simx.core.svaractor.semantictrait.base
 
+import simx.core.svaractor.handlersupport.If
 import simx.core.svaractor.handlersupport.Types.CPSRet
 import simx.core.svaractor.semantictrait.base.Semantic.Value
 import simx.core.svaractor.unifiedaccess.EntityUpdateHandling
 
-import scala.util.continuations
-import scala.util.continuations._
+
 
 /**
  * Created by dwiebusch on 30.11.14
@@ -63,12 +63,12 @@ class PartialRelation[T, U, S <: Thing](val desc : RelationDescriptionBase[T, U,
 
   // pattern matching would cause cps warning...
   override def subsumes(that: Value[_])(implicit context: EntityUpdateHandling) : Boolean@CPSRet =
-    if (that.isInstanceOf[Relation[_, Semantic.Value[_]@unchecked, _]]) {
+    new If (that.isInstanceOf[Relation[_, Semantic.Value[_]@unchecked, _]]) Then {
       val r = that.asInstanceOf[Relation[_, Semantic.Value[_], _]]
       r.valueDescription.groundedSymbol == desc.valueDescription.groundedSymbol && obj.subsumes(r.value._2)
-    } else if (that.isInstanceOf[ Value[T]@unchecked])
+    } ElseIf that.isInstanceOf[ Value[T]@unchecked] Then {
       ABox.matches(that, apply(that.asInstanceOf[Value[T]]))
-    else
+    }  Else
       false
 
 

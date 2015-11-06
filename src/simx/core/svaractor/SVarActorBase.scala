@@ -149,7 +149,7 @@ trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerS
   def ask(receiver : SVarActor.Ref) =
     Question(receiver)
 
-  protected object Result{
+  object Result{
     def of[T](access : (T => Any) => Any) : T@CPSRet =
       resultOf(access)
   }

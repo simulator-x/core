@@ -21,6 +21,7 @@
 package simx.core.svaractor.unifiedaccess
 
 import simx.core.entity.Entity
+import simx.core.svaractor.TimedRingBuffer
 import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
 import simx.core.worldinterface.WorldInterfaceHandling
 
@@ -34,7 +35,7 @@ trait RelationAccess extends UnifiedAccess{
 
   final def set(desc : PartialRelation[SelfType, _ <: Entity, _ <: EntityBase[_]])
                (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling){
-    set(desc, Unbuffered)
+    set(desc, TimedRingBuffer.defaultMode)
   }
 
   final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]], bufferMode : BufferMode)
@@ -47,7 +48,7 @@ trait RelationAccess extends UnifiedAccess{
                 handler : SelfType => Any)
                (implicit actorContext : WorldInterfaceHandling with EntityUpdateHandling)
   {
-    set(desc, handler, Unbuffered)
+    set(desc, handler, TimedRingBuffer.defaultMode)
   }
 
   final def set(desc : PartialRelation[SelfType, _ <: Entity , _ <: EntityBase[_]],

@@ -176,11 +176,12 @@ abstract class EntityAspect private (val componentType : GroundedSymbol,
 
   /**
    * wrapper to make cvar adding easier
-   * @param tuples the set of create parameters to be added
+   * @param sVars the set of create parameters to be added
    * @return a list of create parameters
    */
-  protected def addCVars( tuples : => TraversableOnce[SVal[_,_,_,_]] ) : NamedSValSet =
-    tuples.foldLeft(new NamedSValSet(aspectType))( (cps, cvar) => cps += cvar )
+  protected def addCVars( sVars : => SValSet ) : NamedSValSet =
+    new NamedSValSet(aspectType, sVars)
+    //tuples.foldLeft(new NamedSValSet(aspectType))( (cps, cvar) => cps += cvar )
 
   /**
    * wrapper to make cvar adding easier

@@ -22,6 +22,7 @@ package simx.core.svaractor.unifiedaccess
 
 import simx.core.entity.Entity
 import simx.core.entity.typeconversion.TypeInfo.DataTag
+import simx.core.svaractor.TimedRingBuffer
 import simx.core.svaractor.TimedRingBuffer.{Now, Unbuffered, BufferMode}
 import simx.core.worldinterface.WorldInterfaceHandling
 
@@ -38,7 +39,7 @@ final case class TypedRelation[S <: Entity : DataTag, O <: Entity : DataTag, X <
 
   protected type removeType = X
 
-  def publish(handler : X#SelfType => Any, bufferMode : BufferMode = Unbuffered)(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
+  def publish(handler : X#SelfType => Any, bufferMode : BufferMode = TimedRingBuffer.defaultMode)(implicit context : WorldInterfaceHandling with EntityUpdateHandling){
     val sval = description(this)
     (if (x == obj) subj else obj).set(sval, Now, bufferMode)((_ : Any) => x.set(sval, Now, bufferMode)(handler))
     context.setRelation(sval)

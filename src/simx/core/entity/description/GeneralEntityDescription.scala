@@ -38,7 +38,8 @@ class GeneralEntityDescription protected (val typeDef     : TypeInfo[Entity, Ent
                                           val createType  : (Entity, SVarActor)  => Entity,
                                           theHandler      : Option[Entity  => Any],
                                           val path        : List[Symbol],
-                                          val aspects     : Seq[EntityAspect]) extends Serializable {
+                                          val aspects     : Seq[EntityAspect],
+                                          val additionalProperties: SValSet = SValSet()) extends Serializable {
   //initially check validity of this description
   initialCheck(aspects)
 
@@ -47,7 +48,7 @@ class GeneralEntityDescription protected (val typeDef     : TypeInfo[Entity, Ent
   }
 
   def copy(newAspects : Seq[EntityAspect] = aspects) =
-    new GeneralEntityDescription(typeDef, createType, theHandler, path, newAspects)
+    new GeneralEntityDescription(typeDef, createType, theHandler, path, newAspects, additionalProperties)
 
   def createSVal(that : Entity) = typeDef.asConvertibleTrait.apply(that)
 

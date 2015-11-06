@@ -26,7 +26,7 @@ import simx.core.entity.typeconversion.{TypeInfo, ConvertibleTrait}
 import simx.core.entity.typeconversion.TypeInfo.DataTag
 import simx.core.ontology.types.OntologySymbol
 import simx.core.ontology.{types, SValDescription, Annotation}
-import simx.core.svaractor.SVarActor
+import simx.core.svaractor.{TimedRingBuffer, SVarActor}
 import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
 import simx.core.svaractor.semantictrait.base._
 import simx.core.worldinterface.WorldInterfaceHandling
@@ -58,7 +58,7 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
     new RelationDescription[S, O](leftDesc, relationName, rightDesc, owlLink, isSymmetric, annotations.map(OntologySymbol(_)).toSet)
 
   def asRelation[S2 <: S, O2 <: O, X <: Entity : DataTag](s: S2, o : O2, x : X ) =
-    new TypedRelation[S, O, X](s, setAnnotations(Set[Annotation](types.RelationSubject(s), types.RelationObject(o))), o, x)
+    new TypedRelation[S, O, X](s, setAnnotations(Set[Annotation](types.RelationSubject(s), types.RelationObject(o)) ++ annotations), o, x)
 
   def restrictTypes[NewS <: S , NewO <: O](newLeft : ConvertibleTrait[NewS], newRight : ConvertibleTrait[NewO]) =
     new RelationDescription[NewS, NewO](newLeft, this, newRight, owlLink, isSymmetric)(newLeft.typeTag, newLeft.classTag, newRight.classTag, newRight.typeTag)
@@ -96,11 +96,11 @@ class RelationDescription[S <: Entity : DataTag  : ClassTag, O <: Entity : Class
   def observe(tuple : (S, O)) =
     tuple._1.observe(asRelation(tuple._1, tuple._2, null).description)
 
-  def set(subj : S, obj : O, bufferMode : BufferMode = Unbuffered)(implicit actor : WorldInterfaceHandling with EntityUpdateHandling) : Unit =
+  def set(subj : S, obj : O, bufferMode : BufferMode = TimedRingBuffer.defaultMode)(implicit actor : WorldInterfaceHandling with EntityUpdateHandling) : Unit =
     asRelation(subj, obj, subj).publish(_ => {}, bufferMode)
 
   def set(tuple : ( S, O ))(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
-    set(tuple, Unbuffered)
+    set(tuple, TimedRingBuffer.defaultMode)
 
   def set(tuple : ( S, O ), bufferMode : BufferMode)(implicit actor : WorldInterfaceHandling  with EntityUpdateHandling) : Unit =
     set(tuple._1, tuple._2, bufferMode)

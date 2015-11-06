@@ -1,0 +1,344 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE Ontology [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     ontologyIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl">
+    <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Declaration>
+        <Class IRI="#Action"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Application"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Aspect"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BinaryRelation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Component"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Concept"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Entity"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Event"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#HasPart"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#NullType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#PartOf"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Property"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Relation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#RelationObject"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#RelationSubject"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#SVarDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Siris_Concept"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Siris_DataType"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#UnaryRelation"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#SimX_BinaryRelation"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#basedOn"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#forComponent"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasAspect"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasDataType"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasProperty"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#providesAspect"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#providesEvent"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#providesProperty"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#requiresEvent"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#requiresProperty"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#supportsAspect"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#usesComponent"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#SimX_UnaryRelation"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasId"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasValue"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#inPackage"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SimXCore_NullType"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SimXCore_RelationDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SimXCore_RelationDescriptionDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#simx.core.svaractor.unifiedaccess.Relation"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#hasAnnotation"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#hasDefaultValue"/>
+    </Declaration>
+    <SubClassOf>
+        <Class IRI="#Action"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Application"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Aspect"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BinaryRelation"/>
+        <Class IRI="#Relation"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Component"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Entity"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Event"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#HasPart"/>
+        <Class IRI="#BinaryRelation"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#NullType"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#PartOf"/>
+        <Class IRI="#BinaryRelation"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Property"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Relation"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#RelationObject"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#RelationSubject"/>
+        <Class IRI="#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#SVarDescription"/>
+        <Class IRI="#Siris_Concept"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#UnaryRelation"/>
+        <Class IRI="#Relation"/>
+    </SubClassOf>
+    <ClassAssertion>
+        <Class IRI="#NullType"/>
+        <NamedIndividual IRI="#SimXCore_NullType"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#Siris_DataType"/>
+        <NamedIndividual IRI="#simx.core.svaractor.unifiedaccess.Relation"/>
+    </ClassAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="#basedOn"/>
+        <NamedIndividual IRI="#SimXCore_NullType"/>
+        <NamedIndividual IRI="#SimXCore_NullType"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="#hasDataType"/>
+        <NamedIndividual IRI="#SimXCore_RelationDescription"/>
+        <NamedIndividual IRI="#simx.core.svaractor.unifiedaccess.Relation"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="#basedOn"/>
+        <NamedIndividual IRI="#SimXCore_RelationDescriptionDescription"/>
+        <NamedIndividual IRI="#SimXCore_RelationDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#basedOn"/>
+        <Class IRI="#SVarDescription"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#hasDataType"/>
+        <Class IRI="#Property"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#providesAspect"/>
+        <Class IRI="#Component"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#providesEvent"/>
+        <Class IRI="#Component"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#providesProperty"/>
+        <Class IRI="#Aspect"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#requiresEvent"/>
+        <Class IRI="#Component"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#requiresProperty"/>
+        <Class IRI="#Aspect"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#usesComponent"/>
+        <Class IRI="#Application"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#basedOn"/>
+        <Class IRI="#SVarDescription"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#hasAspect"/>
+        <Class IRI="#Aspect"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#hasDataType"/>
+        <Class IRI="#Siris_DataType"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#hasProperty"/>
+        <Class IRI="#Property"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#providesAspect"/>
+        <Class IRI="#Aspect"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#providesEvent"/>
+        <Class IRI="#Event"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#providesProperty"/>
+        <Class IRI="#SVarDescription"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#requiresEvent"/>
+        <Class IRI="#Event"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#requiresProperty"/>
+        <Class IRI="#SVarDescription"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#supportsAspect"/>
+        <Class IRI="#Aspect"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#usesComponent"/>
+        <Class IRI="#Component"/>
+    </ObjectPropertyRange>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#usesComponent"/>
+            <ObjectProperty IRI="#supportsAspect"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#supportsAspect"/>
+    </SubObjectPropertyOf>
+    <FunctionalDataProperty>
+        <DataProperty IRI="#hasId"/>
+    </FunctionalDataProperty>
+    <DataPropertyDomain>
+        <DataProperty IRI="#SimX_UnaryRelation"/>
+        <Class IRI="#Entity"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#hasValue"/>
+        <Class IRI="#Property"/>
+    </DataPropertyDomain>
+    <DataPropertyRange>
+        <DataProperty IRI="#hasValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <AnnotationPropertyRange>
+        <AnnotationProperty IRI="#hasDefaultValue"/>
+        <AbbreviatedIRI>xsd:string</AbbreviatedIRI>
+    </AnnotationPropertyRange>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 3.4.2) http://owlapi.sourceforge.net -->
+

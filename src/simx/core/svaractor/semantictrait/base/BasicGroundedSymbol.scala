@@ -46,6 +46,9 @@ sealed abstract class GroundedSymbolBase[+Symbol <: Thing](override val toString
 
   def and[ThatSym <: Thing](that : SemanticTypeTrait[_, _<: Base, ThatSym]) : GroundedSymbolBase[Symbol with ThatSym]=
     and[ThatSym](that.valueDescription.groundedSymbol)
+
+  def ::[ThatSym <: Thing](that : SemanticTypeTrait[_, _<: Base, ThatSym]) : GroundedSymbolBase[Symbol with ThatSym]=
+    and[ThatSym](that.valueDescription.groundedSymbol)
 }
 
 sealed trait GroundedSymbolFeatures extends Serializable{

@@ -26,7 +26,7 @@ import simx.core.entity.typeconversion.ProvideConversionInfo
 import simx.core.entity.description.{SValSet, EntityAspect}
 import simx.core.ontology.{types, Symbols}
 import simx.core.component.remote.{RemoteActor, Start}
-import simx.core.svaractor.SVarActor
+import simx.core.svaractor.{TimedRingBuffer, SVarActor}
 import simx.core.svaractor.TimedRingBuffer.{Unbuffered, BufferMode}
 import collection.mutable
 import java.util.UUID
@@ -47,7 +47,7 @@ protected[core] trait ComponentCreation extends SVarActor with EntityCreationHan
 
   private def requestConfig(component : SVarActor.Ref, c : ComponentAspect[_], e : Entity){
     ask[SValSet](component, GetInitialConfigValuesMsg(UUID.randomUUID(), c, e)){ set =>
-      val toCreate  = set.values.flatMap( _.map( _.asProvide.wrapped -> Unbuffered) )
+      val toCreate  = set.values.flatMap( _.map( _.asProvide.wrapped -> TimedRingBuffer.defaultMode) )
 
       if (toCreate.nonEmpty)
         openCreateRequests.update(e, component -> toCreate.toList)

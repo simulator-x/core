@@ -1,0 +1,2137 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE Ontology [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicDescriptions.owl"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicDescriptions.owl">
+    <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Import>http://localhost:8080/core/ontologies/concepts/BasicTypes.owl</Import>
+    <Declaration>
+        <Class IRI="#BaseSVarDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#EntityDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ExtendedSVarDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#UserDescription"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ValidSVarDescription"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#describesEvent"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#describesProperty"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasCreateParameter"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#providesFunction"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ActorDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AlignmentDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AngleDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AngularFactorDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AnyListDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ApplicationDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ArmDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AttractorAttractionFactorDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AttractorStrengthDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_AudioFileDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ButtonCenterDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ButtonLeftDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ButtonRightDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ByteDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_BytesDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ColladaFileDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ColladaObjectIdDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Color"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ComponentDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ComponentNameDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ComponentTypeDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ConfigurationDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ContainerDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_DamageDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_DirectionDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_DiscretePosition2DDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_EnabledDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_EnumerationDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_EventDescriptionDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_FactorDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_FileDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_FontDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_FpsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_GhostDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_HalfExtendsDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_HealthDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_HeightDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IPDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IdentifierDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IdentifiersDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ImageDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_InitializeDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IntegersDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_IntensityDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_InteractionsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_KeyboardDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_LengthDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_LivesDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_LongDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ManaDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MatrixDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MaxAccMagDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MaxAttractorsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MaxNeighborsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MinAttractorDistanceDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToNeighborsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToPredatorsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_MouseDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_NameDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_NamedContainerDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_NeighborDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_NormalDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_OrientationDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_OriginDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ParentElementDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_PortDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Position2DDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_PositionDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ProbabilityDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_RadiusDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_RealsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_RelationObjectDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_RelationSubjectDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ResolutionDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ScaleDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_SimulationSpeedDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_StateDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_SubElementDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TangibleSurfaceDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_ThresholdDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TimeDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TimeInSecondsDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TransformationDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TuioCursorsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TuioObjectsDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_TypDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_UpVectorDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_UserDescription"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Vector2Description"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Vector2ListDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Vector4ListDesc"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#SirisCore_Vector4fDescription"/>
+    </Declaration>
+    <EquivalentClasses>
+        <Class IRI="#BaseSVarDescription"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#EntityDescription"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <SubClassOf>
+        <Class IRI="#BaseSVarDescription"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SVarDescription"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#EntityDescription"/>
+        <Class IRI="#ValidSVarDescription"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ExtendedSVarDescription"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SVarDescription"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#UserDescription"/>
+        <Class IRI="#EntityDescription"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ValidSVarDescription"/>
+        <Class IRI="#BaseSVarDescription"/>
+    </SubClassOf>
+    <SubClassOf>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SVarDescription"/>
+        </ObjectSomeValuesFrom>
+        <Class IRI="#ExtendedSVarDescription"/>
+    </SubClassOf>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Relation"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SimXCore_RelationDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Entity"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Chirality"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#EntityType"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_EntityTypeDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Milliseconds"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_MillisecondsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Ray"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_RayDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#RelativeTo"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_RelativeToDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Seconds"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_SecondsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Token"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_TokenDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#Function"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Actor"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ActorDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Alignment"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AlignmentDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Angle"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AngleDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#AngularFactor"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AngularFactorDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#AnyList"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AnyListDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Application"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ApplicationDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Arm"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ArmDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#AttractorAttractionFactor"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AttractorAttractionFactorDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#AttractorStrength"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AttractorStrengthDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#AudioFile"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_AudioFileDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Boolean"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Button_Center"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ButtonCenterDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Button"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Button_Left"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ButtonLeftDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Button_Right"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ButtonRightDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Byte"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ByteDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Bytes"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_BytesDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ColladaFile"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ColladaFileDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ColladaObjectId"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ColladaObjectIdDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Component"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ComponentDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ComponentName"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ComponentNameDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ComponentType"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ComponentTypeDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Configuration"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ConfigurationDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Container"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ContainerDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Damage"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_DamageDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Direction"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_DirectionDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#DiscretePosition2D"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_DiscretePosition2DDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Enabled"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_EnabledDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Enumeration"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_EnumerationDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#EventDescription"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_EventDescriptionDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Factor"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_FactorDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#File"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_FileDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Font"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_FontDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Fps"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_FpsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Ghost"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_GhostDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#HalfExtends"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_HalfExtendsDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Health"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_HealthDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Height"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_HeightDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Ip"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IPDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Identifier"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IdentifierDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Identifiers"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IdentifiersDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Image"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ImageDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Initialize"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_InitializeDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Integer"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Integers"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IntegersDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Intensity"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_IntensityDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Interactions"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_InteractionsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_0"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_1"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_2"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_3"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_4"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_5"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_6"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_7"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_8"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_9"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Down"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Home"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Left"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Minus"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Plus"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Right"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Space"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_Up"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_a"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_b"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_c"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_d"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_e"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_f"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_g"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_h"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_i"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_j"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_k"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_l"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_m"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_n"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_o"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_p"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_q"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_r"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_s"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_t"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_u"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_v"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_w"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_x"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_y"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Key_z"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Keyboard"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_KeyboardDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Length"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_LengthDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Lives"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_LivesDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Long"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_LongDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Mana"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ManaDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Matrix"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MatrixDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MaxAccMag"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MaxAccMagDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MaxAttractors"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MaxAttractorsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MaxNeighbors"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MaxNeighborsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MinAttractorDistance"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MinAttractorDistanceDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MinDistanceToNeighbors"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToNeighborsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#MinDistanceToPredators"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToPredatorsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Mouse"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_MouseDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Name"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_NameDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#NamedContainer"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_NamedContainerDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Neighbor"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_NeighborDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Normal"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_NormalDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Orientation"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_OrientationDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Origin"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_OriginDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#ParentElement"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ParentElementDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Port"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_PortDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Position2D"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Position2DDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Position"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_PositionDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Probability"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ProbabilityDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Radius"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_RadiusDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Real"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Reals"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_RealsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#RelationObject"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_RelationObjectDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#RelationSubject"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_RelationSubjectDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Resolution"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ResolutionDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Scale"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ScaleDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#SimulationSpeed"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_SimulationSpeedDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#State"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_StateDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#String"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#SubElement"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_SubElementDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TangibleSurface"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TangibleSurfaceDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Threshold"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_ThresholdDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Time"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TimeDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TimeInSeconds"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TimeInSecondsDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Transformation"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TransformationDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioCursors"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TuioCursorsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#TuioObjects"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TuioObjectsDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Typ"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_TypDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#UpVector"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_UpVectorDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#User"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_UserDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Vector2"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Vector2Description"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Vector2List"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Vector2ListDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Vector3"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Vector4List"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Vector4ListDesc"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Vector4"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SirisCore_Vector4fDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+        <NamedIndividual IRI="#simx.core.helper.Ray"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+        <NamedIndividual IRI="#simx.core.helper.SpeechRecognitionResult"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Siris_DataType"/>
+        <NamedIndividual IRI="#simx.core.helper.chirality.Chirality"/>
+    </ClassAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.entity.Entity"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
+        <NamedIndividual IRI="#simx.core.helper.chirality.Chirality"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SimxCoreComponent_EntityTypeDescription"/>
+        <NamedIndividual IRI="#SirisCore_TypDesc"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_EntityTypeDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SimxCoreComponent_MillisecondsDescription"/>
+        <NamedIndividual IRI="#SirisCore_TimeDesc"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_MillisecondsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_RayDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_RayDescription"/>
+        <NamedIndividual IRI="#simx.core.helper.Ray"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_RelativeToDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_RelativeToDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.ontology.GroundedSymbol"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SimxCoreComponent_SecondsDescription"/>
+        <NamedIndividual IRI="#SirisCore_TimeDesc"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_SecondsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_SecondsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Float"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_TokenDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_TokenDescription"/>
+        <NamedIndividual IRI="#simx.core.helper.SpeechRecognitionResult"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasOperatorType"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#InfixOperatorType"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <Annotation>
+            <AnnotationProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasParameterPosition"/>
+            <Literal datatypeIRI="&xsd;integer">1</Literal>
+        </Annotation>
+        <Annotation>
+            <AnnotationProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasRole"/>
+            <Literal datatypeIRI="&xsd;string">pos</Literal>
+        </Annotation>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasParameter"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <NamedIndividual IRI="#SirisCore_PositionDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <Annotation>
+            <AnnotationProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasParameterPosition"/>
+            <Literal datatypeIRI="&xsd;integer">2</Literal>
+        </Annotation>
+        <Annotation>
+            <AnnotationProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasRole"/>
+            <Literal datatypeIRI="&xsd;string">newCs</Literal>
+        </Annotation>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasParameter"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <NamedIndividual IRI="#SirisCore_TransformationDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasReturnValue"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <NamedIndividual IRI="#SirisCore_PositionDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_ActorDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.svaractor.SVarActor.Ref"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AlignmentDescription"/>
+        <NamedIndividual IRI="#SirisCore_EnumerationDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AngleDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AngularFactorDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_AnyListDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.collection.immutable.NothingList"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ApplicationDescription"/>
+        <NamedIndividual IRI="#SirisCore_NameDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ArmDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AttractorAttractionFactorDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AttractorStrengthDescription"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_AudioFileDescription"/>
+        <NamedIndividual IRI="#SirisCore_FileDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Boolean"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ButtonCenterDescription"/>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ButtonLeftDescription"/>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ButtonRightDescription"/>
+        <NamedIndividual IRI="#SirisCore_ButtonDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_ByteDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Byte"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_BytesDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.ByteArray"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ColladaFileDescription"/>
+        <NamedIndividual IRI="#SirisCore_FileDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ColladaObjectIdDescription"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Color"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#java.awt.Color"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ComponentDescription"/>
+        <NamedIndividual IRI="#SirisCore_ActorDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ComponentNameDescription"/>
+        <NamedIndividual IRI="#SirisCore_NameDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_ComponentTypeDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.ontology.GroundedSymbol"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ConfigurationDescription"/>
+        <NamedIndividual IRI="#SirisCore_NamedContainerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_ContainerDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.entity.description.SValSet"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_DamageDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_DirectionDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_DiscretePosition2DDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.ConstVec2i"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_EnabledDescription"/>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_EnumerationDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.ontology.types.TypeDefinitions.Enum"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_EventDescriptionDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.worldinterface.eventhandling.EventDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_FactorDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_FileDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#java.lang.String"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_FontDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#java.awt.Font"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_FpsDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_GhostDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_HalfExtendsDesc"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_HealthDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_HeightDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_IPDescription"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_IdentifierDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Symbol"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_IdentifiersDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.SymbolList"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_ImageDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#java.awt.image.BufferedImage"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_InitializeDescription"/>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Int"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_IntegersDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.IntArray"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_IntensityDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_InteractionsDescription"/>
+        <NamedIndividual IRI="#SirisCore_AnyListDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_KeyDescription"/>
+        <NamedIndividual IRI="#SirisCore_BooleanDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_KeyboardDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_LengthDesc"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_LivesDescription"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_LongDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Long"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ManaDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_MatrixDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.floatx.ConstMat4f"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MaxAccMagDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MaxAttractorsDescription"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MaxNeighborsDescription"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MinAttractorDistanceDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToNeighborsDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MinDistanceToPredatorsDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_MouseDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_NameDescription"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_NamedContainerDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.entity.description.NamedSValSet"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_NeighborDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_NormalDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_OrientationDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.floatx.ConstQuat4f"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_OriginDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ParentElementDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_PortDescription"/>
+        <NamedIndividual IRI="#SirisCore_IntegerDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_Position2DDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector2Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_PositionDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ProbabilityDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_RadiusDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Float"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_RealsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.FloatArray"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_RelationObjectDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_RelationSubjectDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ResolutionDescription"/>
+        <NamedIndividual IRI="#SirisCore_DiscretePosition2DDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ScaleDescription"/>
+        <NamedIndividual IRI="#SirisCore_TransformationDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_SimulationSpeedDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_StateDescription"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#java.lang.String"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_SubElementDescription"/>
+        <NamedIndividual IRI="#SirisCore_StringDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_TangibleSurfaceDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SirisCore_EntityDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_ThresholdDescription"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_TimeDesc"/>
+        <NamedIndividual IRI="#SirisCore_LongDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_TimeInSecondsDesc"/>
+        <NamedIndividual IRI="#SirisCore_RealDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_TransformationDescription"/>
+        <NamedIndividual IRI="#SirisCore_MatrixDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_TuioCursorsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.collection.immutable.SymbolConstVec2HashMap"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_TuioObjectsDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.collection.immutable.SymbolTupleConstVec2FloatMap"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_TypDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.ontology.GroundedSymbol"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="#SirisCore_UpVectorDescription"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Vector2Description"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.floatx.ConstVec2f"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Vector2ListDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.Vec2List"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Vector3Description"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.floatx.ConstVec3f"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Vector4ListDesc"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#scala.ConstVec4List"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SirisCore_Vector4fDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simplex3d.math.floatx.ConstVec4f"/>
+    </ObjectPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#hasName"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <Literal datatypeIRI="&xsd;string">relativeTo</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/Actions.owl#implementedBy"/>
+        <NamedIndividual IRI="#SimxFunction_PositionRelativeToTransformationAsPosition"/>
+        <Literal datatypeIRI="&xsd;string">simx.core.ontology.functions.DefaultImplementations.realtiveTo</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#hasTypeString"/>
+        <NamedIndividual IRI="#simx.core.helper.Ray"/>
+        <Literal datatypeIRI="&xsd;string">simx.core.helper.Ray</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#hasTypeString"/>
+        <NamedIndividual IRI="#simx.core.helper.SpeechRecognitionResult"/>
+        <Literal datatypeIRI="&xsd;string">simx.core.helper.SpeechRecognitionResult</Literal>
+    </DataPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#hasTypeString"/>
+        <NamedIndividual IRI="#simx.core.helper.chirality.Chirality"/>
+        <Literal datatypeIRI="&xsd;string">simx.core.helper.chirality.Chirality</Literal>
+    </DataPropertyAssertion>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#describesEvent"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#EventDescription"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#describesProperty"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#SVarDescription"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#describesEvent"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Event"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#describesProperty"/>
+        <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </ObjectPropertyRange>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#providesProperty"/>
+            <ObjectProperty IRI="#describesProperty"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasProperty"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#requiresProperty"/>
+            <ObjectProperty IRI="#describesProperty"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasProperty"/>
+    </SubObjectPropertyOf>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <IRI>#SimxFunction_PositionRelativeToTransformationAsPosition</IRI>
+        <Literal datatypeIRI="&xsd;string"></Literal>
+    </AnnotationAssertion>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 3.5.0) http://owlapi.sourceforge.net -->
+

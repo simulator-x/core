@@ -125,13 +125,17 @@ trait EventProvider extends SVarActor with WorldInterfaceHandling {
     if (!registeredEvents.contains(desc))
       provideEvent(desc, Some(e))
     else
-      emitEvent(e)
+      _emitEvent(e)
   }
 
   object publishDevice extends OntologySymbol('publishDevice)
 
   @deprecated("using emit event directly is deprecated, use the emit function of the associated event description instead", "today")
-  protected def emitEvent( e : Event ) {
+  protected def emitEvent( e : Event ): Unit = {
+    _emitEvent(e)
+  }
+
+  private def _emitEvent( e : Event ) {
     toRemove.foreach{ internalRemoveEventHandler(_) }
     toRemove = Set()
     eventHandlers.getOrElse( e.name, Set() ).foreach { pair =>

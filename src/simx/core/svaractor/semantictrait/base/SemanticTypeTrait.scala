@@ -26,7 +26,7 @@ import scala.reflect.runtime.universe.typeOf
  * Created by dwiebusch on 30.11.14
  */
 object SemanticTypeTrait{
-  private val vdType = typeOf[Semantic.Type[_]]
+  private val vdType = typeOf[Thing]
   private val registry = collection.mutable.Map[String, Semantic.Type[_]]()
   protected def register(v : Semantic.Type[_]): Unit = synchronized{
     registry += v.getClass.getName.replaceAll("package\\$", "") -> v
@@ -42,9 +42,16 @@ object SemanticTypeTrait{
   }
 
   def lookUp(tpe : reflect.runtime.universe.Type) : Iterable[Semantic.Type[_]] = {
-    tpe.baseClasses.filter { _.asType.toType <:< vdType }.
-      filterNot { bc => bc.fullName.contains("<refinement>") || bc.asType.toType.erasure == vdType.erasure}.
-      map(x => getOrLoad(x.asClass.fullName))
+    val a = tpe.baseClasses.filter { _.asType.toType <:< vdType }
+    // TODO: remove this hack
+    val b = a.head.toString.split(" ").filter(_ contains ".SelfBase").
+      map(_.replaceAll(".SelfBase.", "")).
+      map(_.replaceAll(".SelfBase", "")).
+      map(_.replaceAll("simx.core.ontology.Symbols.", "")).
+      map(s => s(0).toUpper + s.tail).
+      map("simx.core.ontology.types." + _ )
+//      a.filterNot { bc => bc.fullName.contains("<refinement>") || bc.asType.toType.erasure == vdType.erasure}.
+    b.map(x => getOrLoad(x))
   }
 }
 
@@ -53,16 +60,9 @@ abstract class SemanticType[T, +B <: Base, S <: Thing](protected val tpe : Class
                                                        protected val doRegister : Boolean = false)
   extends SemanticTypeTrait[T, B, S] with Serializable
 {
-  self =>
-
   final type ValueType = SemanticValue[T, S]
   final type DataType = T
   final type Type = S
-
-  override def apply(v: T) = new SemanticValue[T, S]{
-    override val valueDescription = self.valueDescription
-    override val value = v
-  }
 }
 
 trait SemanticTypeTrait[T, +B <: Base, +S <: Thing]
@@ -75,10 +75,11 @@ trait SemanticTypeTrait[T, +B <: Base, +S <: Thing]
   val value =
     this
 
-  def and[X <: Thing](that : SemanticTypeTrait[_, _<: Base, X]) =
+  def ::[X <: Thing](that : SemanticTypeTrait[_, _<: Base, X]) =
     valueDescription.groundedSymbol and that.valueDescription.groundedSymbol
 
-  def apply(v: T): SemanticValue[T, S]
+  def apply(v: T): SemanticValue[T, S] =
+    FinalSemanticValue(valueDescription, v)
 
   def apply(v : Semantic.Value[_]) : SemanticValue[T, S] =
     if (v.valueDescription.subsumes(valueDescription) && v.value.getClass == tpe)

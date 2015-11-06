@@ -20,28 +20,24 @@
 
 package simx.core
 
+import java.lang.reflect.Constructor
+import java.net.InetAddress
+
+import akka.actor.Props
+import simx.core.component.{Component, ExecutionStrategyHandling}
+import simx.core.components.io.IORegistryHandling
+import simx.core.entity.Entity
+import simx.core.entity.component.{ComponentEntityDescription, _}
+import simx.core.helper.{ExecSerialized, Execute, IO, Splash}
+import simx.core.ontology.{EntityDescription, types}
+import simx.core.svaractor.SVarActor
 import simx.core.svaractor.SVarActor.Ref
 import simx.core.svaractor.handlersupport.Types.CPSRet
+import simx.core.svaractor.unifiedaccess.{EntityBase, EntityUpdateHandling}
+import simx.core.worldinterface.WorldInterfaceHandling
 
-import collection.immutable
-
-import components.io.IORegistryHandling
-import component.{Component, ExecutionStrategyHandling}
-import simx.core.entity.component._
-import worldinterface.WorldInterfaceHandling
-import reflect.{ClassTag, classTag}
-import simx.core.helper.{ExecSerialized, Execute, Splash}
-import svaractor.SVarActor
-import akka.actor.Props
-import java.net.InetAddress
-import simx.core.ontology.{types, EntityDescription}
-import simx.core.entity.Entity
-import simx.core.entity.component.ComponentEntityDescription
-import java.lang.reflect.Constructor
-import javax.swing.{ImageIcon, JOptionPane}
-import simx.core.svaractor.unifiedaccess.{EntityUpdateHandling, EntityBase}
-
-import scala.util.continuations.cpsParam
+import scala.collection.immutable
+import scala.reflect.{ClassTag, classTag}
 
 /**
  *
@@ -71,17 +67,8 @@ abstract class SimXApplicationMain[T <: SimXApplication : ClassTag] private ( p 
     SVarActor.createActor(p(args), None)
   }
 
-  protected def askForOption(question: String) =
-    1 == JOptionPane.showOptionDialog(
-      null,
-      question,
-      "SimX Application Configuration",
-      JOptionPane.YES_NO_OPTION,
-      JOptionPane.QUESTION_MESSAGE,
-      new ImageIcon(Splash.loadLogo.getScaledInstance(32,32,java.awt.Image.SCALE_SMOOTH)),
-      Array("No", "Yes"),
-      "Yes"
-    )
+  @deprecated("Use simx.core.helper.IO.askForOption instead.", "17-06-2015")
+  def askForOption(question: String) = IO.askForOption(question)
 }
 
 /**
@@ -101,9 +88,10 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
   protected var debug = true
 
   /**
-   * Shows the splash screen and starts the component creation
+   * Shows the splash screen and starts the component creation.
    */
   override def startUp() {
+    super.startUp()
     splash.show()
     onStartUp()
     create(applicationConfiguration)
@@ -164,6 +152,23 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
     }
   }
 
+  private var additionalConfiguration = List[() => Unit]()
+  private var configurationDone = false
+
+  /**
+   * Add a function that will be executed after the createEntities step and before the finishConfiguration step.
+   * This method should be called during object construction
+   */
+  protected def addAdditionalConfigurationStep(configure: () => Unit): Unit = {
+    if(!configurationDone)
+      additionalConfiguration ::= configure
+    else
+      println("[warn][SimXApplication] " +
+        "'addAdditionalConfigurationStep' called during or after configuration application. " +
+        "Discarding passed function. " +
+        "The method 'addAdditionalConfigurationStep' should be called during object construction.")
+  }
+
   /**
    * Should be called when all components are created. The configuration of components and creation of entities will be
    * started and the method finishConfiguration() be called.
@@ -177,6 +182,8 @@ with ExecutionStrategyHandling with IORegistryHandling with EntityUpdateHandling
       println("[info][SimXApplication] Creating entities")
       createEntities()
       splash.dispose()
+      configurationDone = true
+      additionalConfiguration.foreach(_.apply())
       println("[info][SimXApplication] Configuring application")
       finishConfiguration()
     })
