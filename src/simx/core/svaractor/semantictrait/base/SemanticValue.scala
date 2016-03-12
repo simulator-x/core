@@ -117,7 +117,7 @@ case class Settable[+T, +B <: Thing](accessValue : (SemanticValue[T, B] => Unit)
   }
 
 
-  def apply : SemanticValue[T, B] @CPSRet =
+  def apply() : SemanticValue[T, B] @CPSRet =
     continuations.shift{ k : (SemanticValue[T, B] => Any) => apply(s => k(s) : Unit) }
 
 

@@ -94,7 +94,7 @@ sealed case class Question(receiver : SVarActor.Ref){
     _apply(msg, c)
 }
 
-trait SVarActorBase extends Actor with SVarActorContext[SVarActor] with HandlerSupportImpl with Loggable{
+trait SVarActorBase extends Actor with HandlerSupportImpl with Loggable{
   val printWarnings = true
 
   protected implicit val actorContext : this.type =

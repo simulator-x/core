@@ -40,6 +40,7 @@ import scala.xml.{XML, Node}
 object Calibration {
   def apply(xmlFile: File): Calibration = {
     Symbols.vrpn
+    Symbols.kinect
     val calibrationXml = XML.loadFile(xmlFile)
     val xStream = new XStream()
     val data = xStream.fromXML(calibrationXml.toString()).asInstanceOf[CalibrationData]
@@ -54,6 +55,10 @@ object Calibration {
       data.display
     )
   }
+
+  abstract sealed class StereoType
+  case object FrameSequential extends StereoType
+  case object TwoScreens extends StereoType
 }
 
 /**
@@ -61,10 +66,10 @@ object Calibration {
  * Created by martin on 12.08.15.
  */
 class Calibration(
-  screenTransformation: ConstMat4,
+  val screenTransformation: ConstMat4,
   screenSize: (Double, Double),
   screenResolution: (Int, Int) = (1920, 1080),
-  coordinateSystemName: GroundedSymbol = Symbols.vrpn,
+  coordinateSystemName: GroundedSymbol = Symbols.kinect,
   display: Int = 0
 ) {
 
@@ -76,23 +81,30 @@ class Calibration(
   def targetToScreenCoordinates(v : ConstVec3): ConstVec3f =
     ConstVec3f(converter.toRefCoords(ConstMat4f(Mat4x3.translate(v)))(3).xyz)
 
-  def createDisplaySetupDescription(fullscreen : Boolean = false, stereo: Boolean = false): DisplaySetupDesc = {
+  def createDisplaySetupDescription(fullscreen : Boolean = false, stereo: Option[Calibration.StereoType] = None): DisplaySetupDesc = {
     //val widthOfScreenInMeters: Double = widthInPx / dpi * 0.0254
     val transformation                = Mat4f.Identity
     val eyeSeparation                 = Some( 0.065f )
     val resolution                    = if (fullscreen) None else Some(screenResolution)
     val size                          = screenSize //widthOfScreenInMeters * heightInPx / widthInPx
 
-    if(stereo) {
-      val rightEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.RightEye, eyeSeparation))
-      val leftEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.LeftEye, eyeSeparation))
+    stereo match {
+      case None =>
+        val displayDesc = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.RightEye, Some( 0.0f )))
+        new DisplaySetupDesc().addDevice(new DisplayDevice(Some((display, 0, 0)), displayDesc :: Nil, LinkType.SingleDisplay), 0)
+      case Some(_: Calibration.TwoScreens.type) =>
+        val rightEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.RightEye, eyeSeparation))
+        val leftEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.LeftEye, eyeSeparation))
 
-      new DisplaySetupDesc().
-        addDevice(new DisplayDevice(Some((display, 1, 0)), leftEyeDisplay :: Nil, LinkType.SingleDisplay), 0).
-        addDevice(new DisplayDevice(Some((display, 0, 0)), rightEyeDisplay :: Nil, LinkType.SingleDisplay), 0)
-    } else {
-      val displayDesc = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.RightEye, Some( 0.0f )))
-      new DisplaySetupDesc().addDevice(new DisplayDevice(Some((display, 0, 0)), displayDesc :: Nil, LinkType.SingleDisplay), 0)
+        new DisplaySetupDesc().
+          addDevice(new DisplayDevice(Some((display, 1, 0)), leftEyeDisplay :: Nil, LinkType.SingleDisplay), 0).
+          addDevice(new DisplayDevice(Some((display, 0, 0)), rightEyeDisplay :: Nil, LinkType.SingleDisplay), 0)
+      case Some(_: Calibration.FrameSequential.type) =>
+        val rightEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.RightEye, eyeSeparation))
+        val leftEyeDisplay = new DisplayDesc(resolution, size, transformation, new CamDesc(0, Eye.LeftEye, eyeSeparation))
+
+        new DisplaySetupDesc().
+          addDevice(new DisplayDevice(None , rightEyeDisplay :: leftEyeDisplay :: Nil, LinkType.FrameSequential), 0)
     }
   }
 

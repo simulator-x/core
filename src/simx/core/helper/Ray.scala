@@ -41,7 +41,7 @@ object Ray {
     println("result = " +  findCenter(ray1, ray2))
   }
 
-  def fromXml(xml: Node): Ray = {
+  def from(xml: Node): Ray = {
     val xStream = new XStream()
     val loadedRay = xStream.fromXML(xml.toString()).asInstanceOf[Ray]
     Ray(loadedRay.origin, simplex3d.math.double.functions.normalize(loadedRay.direction))
@@ -54,6 +54,7 @@ object Ray {
   def findCenter(ray1 : Ray, ray2 : Ray) = {
     val params = inverse(ConstMat3(-ray1.direction, ray2.direction, cross(ray1.direction, ray2.direction))) *
       (ray1.origin - ray2.origin)
+    println("error: " + length((ray1 * params.x * 0.5 + ray2 * params.y * 0.5) - (ray1 * params.x)))
     ray1 * params.x * 0.5 + ray2 * params.y * 0.5
   }
 
@@ -61,6 +62,10 @@ object Ray {
     val x = rays.flatMap( cr => rays.filterNot(_ == cr).map(cr -> _).map(tuple => findCenter(tuple._1, tuple._2)))
     centerOf(x.map(_.toConst))
   }
+  
+  def from(m: ConstMat4) = {
+    new Ray(m(3).xyz, m(2).xyz)
+  } 
 }
 
 class Ray(val origin: ConstVec3, val direction: ConstVec3) {
@@ -73,10 +78,12 @@ class Ray(val origin: ConstVec3, val direction: ConstVec3) {
   def *(x : Double) = origin + x * direction
 
   def originInGlobal(trackingData : ConstMat4) : ConstVec3 =
-    trackingData(3).xyz + functions.inverse(Mat3(trackingData)) * origin
+    //trackingData(3).xyz + functions.inverse(Mat3(trackingData)) * origin
+    (trackingData * Vec4(origin,1)).xyz
 
   def directionInGlobal(trackingData : ConstMat4) : ConstVec3 =
-    functions.inverse(Mat3(trackingData)) * direction
+    //functions.inverse(Mat3(trackingData)) * direction
+    Mat3(trackingData) * direction
 
   def closestPointOnRay(to : ConstVec3) : ConstVec3 = {
     origin + direction * dot(to - origin, direction) / functions.length(direction)

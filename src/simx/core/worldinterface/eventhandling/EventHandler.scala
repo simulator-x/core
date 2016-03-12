@@ -128,7 +128,7 @@ trait EventProvider extends SVarActor with WorldInterfaceHandling {
       _emitEvent(e)
   }
 
-  object publishDevice extends OntologySymbol('publishDevice)
+  private object publishDevice extends OntologySymbol('publishDevice)
 
   @deprecated("using emit event directly is deprecated, use the emit function of the associated event description instead", "today")
   protected def emitEvent( e : Event ): Unit = {

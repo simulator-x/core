@@ -27,7 +27,6 @@ object Matrix {
   def rotationMat(from : ConstVec3, to : ConstVec3) : ConstMat3 = {
     val rotAxis = normalize(cross(to, from))
     val angle = acos(dot(normalize(to), normalize(from)))
-    println(rotAxis, angle)
     simplex3d.math.doublex.functions.rotationMat(angle, rotAxis)
   }
 }

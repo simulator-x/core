@@ -40,11 +40,6 @@ import typeconversion.TypeInfo.DataTag
 private object internalEntityOption extends BasicGroundedSymbol
 private object SelfDesc extends SValDescription(NullType as internalEntityOption withType classOf[Option[Entity]])
 
-object Entity {
-  def withProperty[T](property: T) = property
-  def withProperties[T](property: T) = property
-}
-
 class Entity private(val description : GeneralEntityDescription,
                      val id : java.util.UUID,
                      val sVars : Map[Symbol, List[SVarContainer[_]]],

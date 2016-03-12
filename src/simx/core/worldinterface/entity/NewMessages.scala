@@ -30,7 +30,7 @@ import simx.core.worldinterface.entity.filter.EntityFilter
  * Created by martin 
  * on 21/04/15.
  */
-private[worldinterface] case class CreationMessageNew(e : Entity, reference: UUID)
+private[worldinterface] case class EntityAppearance(e : Entity, reference: UUID)
 private[worldinterface] case class RequestEntities(filter: EntityFilter)
 private[worldinterface] case class AddOnEntityAppearanceListener(actor : SVarActor.Ref, filter: EntityFilter, reference: UUID = UUID.randomUUID())
 private[worldinterface] case class OnOneEntityAppearance(filter: EntityFilter)

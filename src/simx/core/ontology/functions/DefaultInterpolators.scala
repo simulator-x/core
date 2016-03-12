@@ -69,6 +69,12 @@ class DataTypeBasedLinearInterpolator[DataType, S <: Thing] extends LinearInterp
       case newerValue: java.lang.Boolean =>
         val olderValue = older.asInstanceOf[java.lang.Boolean]
         (if(ratio <= 0.5f) newerValue else olderValue).asInstanceOf[DataType]
+      case newerValue: simx.core.helper.Ray =>
+        val olderValue = older.asInstanceOf[simx.core.helper.Ray]
+        simx.core.helper.Ray(
+          ConstVec3f(newerValue.origin    + ((olderValue.origin    - newerValue.origin)    * ratio)),
+          ConstVec3f(newerValue.direction + ((olderValue.direction - newerValue.direction) * ratio))
+        ).asInstanceOf[DataType]
       case _ => throw new Exception("[error][DataTypeBasedLinearInterpolator] No interpolation rule for type '" + newer.getClass.getCanonicalName + "' found.")
     }    
   }

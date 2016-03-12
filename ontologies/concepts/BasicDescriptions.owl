@@ -407,9 +407,23 @@
     <ClassAssertion>
         <ObjectSomeValuesFrom>
             <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Gesture"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/applications/examples/ai/examples-ai.owl#SimxCore_GestureDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
             <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Chirality"/>
         </ObjectSomeValuesFrom>
         <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#describesProperty"/>
+            <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#Device"/>
+        </ObjectSomeValuesFrom>
+        <NamedIndividual IRI="#SimxCoreComponent_DeviceDescription"/>
     </ClassAssertion>
     <ClassAssertion>
         <ObjectSomeValuesFrom>
@@ -1469,6 +1483,11 @@
         <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.entity.Entity"/>
     </ObjectPropertyAssertion>
     <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/applications/examples/ai/examples-ai.owl#SimxCore_GestureDescription"/>
+        <NamedIndividual IRI="#SimxCoreComponent_EntityTypeDescription"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
         <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
         <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
         <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
@@ -1477,6 +1496,16 @@
         <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
         <NamedIndividual IRI="#SimxCoreComponent_ChiralityDescription"/>
         <NamedIndividual IRI="#simx.core.helper.chirality.Chirality"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#forComponent"/>
+        <NamedIndividual IRI="#SimxCoreComponent_DeviceDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/components/core/SimxCoreComponent.owl#SirisCore_CoreComponent"/>
+    </ObjectPropertyAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#hasDataType"/>
+        <NamedIndividual IRI="#SimxCoreComponent_DeviceDescription"/>
+        <NamedIndividual IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/concepts/BasicTypes.owl#simx.core.ontology.GroundedSymbol"/>
     </ObjectPropertyAssertion>
     <ObjectPropertyAssertion>
         <ObjectProperty IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#basedOn"/>

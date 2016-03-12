@@ -47,7 +47,6 @@ import Iterate.wrapIt
 
 object Test2{
   def test(v : Radius): Unit ={
-//    println(v)
   }
 
   val r = Radius(1)
@@ -55,7 +54,6 @@ object Test2{
   test(r)
 
   def main(args: Array[java.lang.String]) {
-//    SetLocationAction -> SetRadiusAction
     SVarActor.createActor(new SVarActor with EntityUpdateHandling {
 
 
@@ -82,22 +80,12 @@ object Test2{
           Anything set
           Position2D set
           affectedBy(Gravity(Vec3f.Zero)) set
-          Container(SValSet()) apply
+          Container(SValSet()) apply()
 
         if ( e isA Vehicle ) {
           //println((Vehicle(carEntity) attain has(Radius(2))).get.get(Radius))
-//          val vehicle = carEntity as Vehicle
-//          vehicle moveTo Location("Wuerzburg")
+          Vehicle(carEntity) moveTo Location("Wuerzburg")
         }
-
-//        val k = (carEntity as Vehicle)
-
-
-
-//        def as[V <: SpecificSemanticTrait[_ <: Thing]](x : V):x.SpecificEntityType ={
-//          null.asInstanceOf[x.SpecificEntityType]
-//        }
-
       }
     })
   }
@@ -107,11 +95,6 @@ object Test2{
 case class X(in : Semantic.Entity[_ <: Thing]){
   def isA(a : SpecificSemanticTrait[_ <: Thing])(implicit context : EntityUpdateHandling) : scala.Boolean@CPSRet =
     a.tryApply(in).isDefined
-
-
-//  def as[V <: SpecificSemanticTrait[_ <: Thing]](x : V)(implicit context : EntityUpdateHandling) : x.SpecificEntityType@CPSRet ={
-//    x.apply(in).asInstanceOf[x.SpecificEntityType]
-//  }
 }
 
 

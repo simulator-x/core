@@ -171,6 +171,9 @@
         <Class IRI="#DiscretePosition2D"/>
     </Declaration>
     <Declaration>
+        <Class IRI="#Done"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#Edge"/>
     </Declaration>
     <Declaration>
@@ -304,6 +307,9 @@
     </Declaration>
     <Declaration>
         <Class IRI="#Identifiers"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Idle"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Image"/>
@@ -478,6 +484,9 @@
     </Declaration>
     <Declaration>
         <Class IRI="#Keyboard"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Kinect"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Knee"/>
@@ -790,6 +799,9 @@
     </Declaration>
     <Declaration>
         <Class IRI="#Vector4List"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vicon"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Vrpn"/>
@@ -1229,6 +1241,10 @@
         <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
     </SubClassOf>
     <SubClassOf>
+        <Class IRI="#Done"/>
+        <Class IRI="#Event"/>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="#Edge"/>
         <Class IRI="#Math"/>
     </SubClassOf>
@@ -1463,6 +1479,10 @@
     <SubClassOf>
         <Class IRI="#Identifiers"/>
         <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Idle"/>
+        <Class IRI="#Event"/>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="#Image"/>
@@ -1730,6 +1750,10 @@
     </SubClassOf>
     <SubClassOf>
         <Class IRI="#Keyboard"/>
+        <Class IRI="#InputDevice"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Kinect"/>
         <Class IRI="#InputDevice"/>
     </SubClassOf>
     <SubClassOf>
@@ -2359,6 +2383,10 @@
     <SubClassOf>
         <Class IRI="#Vector4List"/>
         <Class IRI="http://www.hci.uni-wuerzburg.de/ontologies/simx/SimxCoreOntology.owl#Property"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vicon"/>
+        <Class IRI="#InputDevice"/>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="#Vrpn"/>

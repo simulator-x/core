@@ -177,9 +177,12 @@ object IO {
     case _ => throw new Exception("[error][simx.core.helper.IO] while parsing file " + f.getAbsolutePath)
   }
 
-  def dateTimeFileFrom(f: File) = {
+  def dateTimeFileFrom(f: File, append: Boolean = true) = {
     val (name, extension) = split(f)
-    new File(f.getParent, name + "-" + getDateTimeString + extension.map{"." + _}.getOrElse(""))
+    if(append)
+      new File(f.getParent, name + "-" + getDateTimeString + extension.map{"." + _}.getOrElse(""))
+    else
+      new File(f.getParent, getDateTimeString + "-" + name + extension.map{"." + _}.getOrElse(""))
   }
 
   def removeExtension(f: File) = {

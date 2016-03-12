@@ -36,12 +36,22 @@ import simx.core.worldinterface.entity.filter.EntityFilter
  */
 private[worldinterface] trait NewEntityRegistrationHandling extends WorldInterfaceHandlingBase {
 
-  private type CreationMessageHandler = (Entity) => Any
+  private class CreationMessageHandler(f: (Entity) => Any) {
+    private var calledOnce = Set[Entity]()
+
+    def apply(e: Entity): Unit = {
+      if(!calledOnce.contains(e)) {
+        calledOnce += e
+        f.apply(e)
+      }
+    }
+  }
+
   private var creationMessageHandlers = Map[UUID, CreationMessageHandler]()
 
   override def preStart(): Unit = {
     super.preStart()
-    addHandler[CreationMessageNew]{msg =>
+    addHandler[EntityAppearance]{msg =>
       creationMessageHandlers.get(msg.reference).collect{case h => h.apply(msg.e)}
     }
   }
@@ -69,7 +79,7 @@ private[worldinterface] trait NewEntityRegistrationHandling extends WorldInterfa
   final protected def onEntityAppearance(filter : EntityFilter)(f : Entity => Any) {
     val request = AddOnEntityAppearanceListener( self, filter )
     WorldInterfaceActor ! request
-    creationMessageHandlers = creationMessageHandlers.updated(request.reference, f)
+    creationMessageHandlers = creationMessageHandlers.updated(request.reference, new CreationMessageHandler(f))
   }
 
   /**

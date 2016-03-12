@@ -238,6 +238,7 @@ protected object Coordinates extends /*SVarActor with */ ReferenceSystem[ConstMa
     case value : Mat4   => outSystem * inSystem * value
     case value : Vec4   => outSystem * inSystem * value
     case value : ConstMat4  => outSystem * inSystem * value
+    case value : ConstMat4f  => (ConstMat4f(outSystem) * ConstMat4f(inSystem) * value).toConst
     case _                => throw NoConversionPossibleException(toConvert)
   }).asInstanceOf[V]
 

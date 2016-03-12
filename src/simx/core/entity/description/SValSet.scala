@@ -276,12 +276,14 @@ class TypedSValSet[U](params: SValBase[U, _ <: U]*) extends mutable.HashMap[Symb
         }
     }
 
+  def allSVals = values.flatten.map(_.asSVal)
+
   /**
    * Returns an [[EntityFilter]] that matches entities
    * which possess properties that equal all [[SVal]]s in this set (using [[SValEquals]]).
    */
   def toFilter: EntityFilter =
-    combineFilters(values.flatten.map(_.asSVal).map{sVal => SValEquals(sVal)}.toList)
+    combineFilters(allSVals.map{sVal => SValEquals(sVal)}.toList)
 
   private def combineFilters(filters: List[EntityFilter]): EntityFilter = filters match {
     case head :: Nil => head

@@ -95,7 +95,14 @@ private[worldinterface] trait NewEntityRegistration extends WorldInterfaceActorB
   protected def _registerEntity(e: Entity): Unit = {
 //    println("Added '" + e.getSimpleName + "' to the new entity registry")
     registeredEntities += e
-    e.onUpdate(notifyRegistrationListeners)
+//    e.onUpdate(notifyRegistrationListeners)
+//    notifyRegistrationListeners(e)
+    //var firstTime = true //TODO check why observe triggers twice
+    e.onUpdate(entity => {
+      //if(firstTime) firstTime = false
+      //else
+      notifyRegistrationListeners(entity)
+    })
     notifyRegistrationListeners(e)
   }
 
@@ -106,9 +113,11 @@ private[worldinterface] trait NewEntityRegistration extends WorldInterfaceActorB
 
   private def notifyRegistrationListeners(registeredEntity: Entity): Unit = {
     scala.util.continuations.reset {
-      entityRegistrationListeners.cps.filter(_.filter(registeredEntity)).foreach(
-        listener => listener.actor ! CreationMessageNew(registeredEntity, listener.reference)
+      val matchingListeners = entityRegistrationListeners.cps.filter(_.filter(registeredEntity))
+      matchingListeners.foreach(
+        listener => listener.actor ! EntityAppearance(registeredEntity, listener.reference)
       )
+
 
       //TODO add 'partition' to cps
       val matching = onNextRegistrationRequests.cps.filter(_.filter.apply(registeredEntity))
